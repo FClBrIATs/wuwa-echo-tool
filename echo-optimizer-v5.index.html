@@ -208,6 +208,8 @@ details.how-to summary{padding:7px 11px;cursor:pointer;color:#0369a1;font-weight
 details.how-to summary::-webkit-details-marker{display:none;}
 details.how-to[open] summary::after{content:'▲';font-size:8px;margin-left:auto;}
 details.how-to:not([open]) summary::after{content:'▼';font-size:8px;margin-left:auto;}
+details.stat-detail summary::-webkit-details-marker{display:none;}
+details.stat-detail[open]>summary span:first-child{transform:rotate(90deg);display:inline-block;}
 .how-to-body{padding:8px 12px 10px;color:#0c4a6e;line-height:1.85;border-top:1px solid #bae6fd;}
 
 /* ============================================================
@@ -642,7 +644,7 @@ details.how-to:not([open]) summary::after{content:'▼';font-size:8px;margin-lef
         <div class="card-body" id="judgeResult"><div class="info-box">新規音骸のサブステを入力して「判定する」を押してください。</div></div>
       </div>
       <div class="card">
-        <div class="card-head"><h2>残スロット 期待確率</h2></div>
+        <div class="card-head"><h2>強化継続 vs 新規 比較</h2></div>
         <div class="card-body" id="probResult"><div style="color:var(--text3);font-size:11px;">判定実行後に表示されます</div></div>
       </div>
     </div>
@@ -2099,27 +2101,76 @@ function runJudge(){
   const targetIdx=cmpIdx>=0?cmpIdx:sorted[0].idx;
   const compareScore=scores[targetIdx].score;
   const targetName=S.echoes[targetIdx].name;
+  const slotNo=targetIdx+1;
+
+  // 自動選択の場合、セレクトの表示をスロット番号付きに更新
+  if(cmpIdx<0){
+    const sel=document.getElementById('compareSlot');
+    if(sel) sel.options[0].text=`自動（スロット${slotNo}）`;
+  }
 
   const E=getPartials().E;
   const fmt=v=>E>0?`+${(v/E*100).toFixed(2)}%`:(v*10000).toFixed(0);
   const needed=compareScore-currentScore;
   const curCol=currentScore>=compareScore?'var(--green)':'var(--p)';
 
+  // 比較先音骸をecho-card風で表示
+  const te=S.echoes[targetIdx];
+  // メインステ行
+  const cd=te.main.cost?COST_DATA[te.main.cost]:null;
+  const st1=cd&&te.main.key1?cd.stats.find(s=>s.key===te.main.key1):null;
+  const m1str=st1?`${st1.name}  ${st1.val}${st1.unit}`:'';
+  let m2str='';
+  if(cd){
+    if(cd.fixedAtk!=null) m2str=`攻撃力  ${cd.fixedAtk}`;
+    else if(cd.fixedHp!=null) m2str=`HP  ${cd.fixedHp}`;
+  }
+  const mainHTML=(m1str||m2str)?`
+    <div style="display:flex;gap:6px;margin-bottom:4px;padding-bottom:5px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+      ${m2str?`<span style="font-size:10px;color:var(--text2);background:#f1f5f9;padding:2px 6px;border-radius:3px;">${m2str}</span>`:''}
+      ${m1str?`<span style="font-size:10px;font-weight:700;color:var(--p);">${m1str}</span>`:''}
+    </div>`:'';
+  // サブステ行
+  const subHTML=te.subs.map(s=>{
+    if(!s.key||s.val==='') return `<div class="sub-row"><span style="color:var(--text3);font-size:10px;">　</span></div>`;
+    const sd=SUB_STATS.find(x=>x.key===s.key);
+    const label=sd?sd.name:s.key;
+    const score=mv(s.key,s.val);
+    const P=getPartials();
+    const mvPct=P.E>0?(score/P.E*100).toFixed(2)+'%':(score*10000).toFixed(0);
+    return `<div class="sub-row">
+      <span class="sname" style="width:auto;min-width:5em;">${label}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;flex:1;">${s.val}${sd?.unit||''}</span>
+      <span class="sub-mv" style="color:var(--p);">${mvPct}</span>
+    </div>`;
+  }).join('');
+
+  const echoCardHTML=`
+    <div class="echo-card" style="margin-top:8px;">
+      <div class="echo-head">
+        <span class="slot-lbl">SLOT ${slotNo}</span>
+        <span style="font-size:11px;font-weight:500;flex:1;padding:3px 6px;">${targetName||'名前なし'}</span>
+        <span class="echo-score-badge" style="background:#f1f5f9;color:var(--text2);">${fmt(compareScore)}</span>
+      </div>
+      <div class="echo-body">${mainHTML}${subHTML}</div>
+    </div>`;
+
   document.getElementById('judgeResult').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
       <div class="ed-box"><div class="ed-val" style="color:${curCol}">${fmt(currentScore)}</div><div class="ed-label">新規音骸 現スコア</div></div>
-      <div class="ed-box"><div class="ed-val" style="font-size:17px;color:var(--text2)">${fmt(compareScore)}</div><div class="ed-label">比較先：${targetName}</div></div>
+      <div class="ed-box"><div class="ed-val" style="font-size:17px;color:var(--text2)">${fmt(compareScore)}</div><div class="ed-label">スロット${slotNo}（比較先）</div></div>
     </div>
     <div class="${currentScore>=compareScore?'info-box':'warn-box'}">
       ${currentScore>=compareScore
         ?'✅ 現時点で比較先を上回っています！交換推奨。'
         :`残り${remainSlots}枠で <strong>${E>0?'+'+(needed/E*100).toFixed(2)+'%':fmt(needed)}</strong> 以上のスコアが必要。`}
     </div>
+    ${echoCardHTML}
     <div style="margin-top:10px;display:flex;gap:6px;">
       <button id="swapBtn" class="btn" onclick="swapToEquipped(${targetIdx},${usedSlots})"
-        data-label="🔄 比較先（${targetName}）を新規音骸で上書き"
+        data-label="🔄 スロット${slotNo}を新規音骸で上書き"
         style="flex:1;font-size:11px;padding:6px;background:var(--border);color:var(--text2);border:1px solid var(--border2);">
-        🔄 比較先（${targetName}）を新規音骸で上書き
+        🔄 スロット${slotNo}を新規音骸で上書き
       </button>
       <button id="swapCancelBtn" class="btn" onclick="cancelSwap()"
         style="display:none;font-size:11px;padding:6px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">
@@ -2144,22 +2195,56 @@ function updateProbability(remainSlots,needed){
   SUB_STATS.forEach(sd=>sd.vals.forEach(v=>allOptions.push(mv(sd.key,v))));
   const mu=allOptions.reduce((s,v)=>s+v,0)/allOptions.length;
   const sigma2=allOptions.reduce((s,v)=>s+(v-mu)**2,0)/allOptions.length;
+  const E=getPartials().E;
+
+  // 現在の音骸：残スロットで必要スコアを超える確率
   const sigma=Math.sqrt(sigma2*remainSlots);
   const meanTotal=mu*remainSlots;
   const z=(needed-meanTotal)/Math.max(sigma,.0001);
   const prob=Math.min(100,Math.max(0,(1-normalCDF(z))*100));
-  const col=prob>60?'#15803d':prob>30?'#d97706':'#dc2626';
-  const E=getPartials().E;
+
+  // 新規音骸（+0、5枠すべて未開放）：全5枠でライン超え確率
+  const sigma5=Math.sqrt(sigma2*5);
+  const mean5=mu*5;
+  const z5=(needed-mean5)/Math.max(sigma5,.0001);
+  const prob5=Math.min(100,Math.max(0,(1-normalCDF(z5))*100));
+
+  const col =prob >60?'#15803d':prob >30?'#d97706':'#dc2626';
+  const col5=prob5>60?'#15803d':prob5>30?'#d97706':'#dc2626';
+
+  // 推奨判定
+  const diff=prob-prob5;
+  let rec,recCls;
+  if(diff>=5){
+    rec='✅ 強化継続を推奨 — 現在の音骸の方が期待値が高い';
+    recCls='info-box';
+  } else if(diff<=-5){
+    rec='🔄 新規音骸の厳選を推奨 — 新規の方が期待値が高い';
+    recCls='warn-box';
+  } else {
+    rec='⚖️ 差がわずか — どちらでも大差なし';
+    recCls='info-box';
+  }
+
+  const fmtPct=v=>E>0?`${(v/E*100).toFixed(2)}%`:(v*10000).toFixed(0);
 
   d.innerHTML=`
-    <div class="prob-display">
-      <div class="prob-val" style="color:${col}">${prob.toFixed(1)}%</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:4px;">交換ライン超え確率（残${remainSlots}枠）</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div class="ed-box">
+        <div class="prob-val" style="color:${col};font-size:28px;">${prob.toFixed(1)}%</div>
+        <div class="ed-label">現在の音骸<br>（残${remainSlots}枠）</div>
+      </div>
+      <div class="ed-box">
+        <div class="prob-val" style="color:${col5};font-size:28px;">${prob5.toFixed(1)}%</div>
+        <div class="ed-label">新規音骸 +0<br>（全5枠）</div>
+      </div>
     </div>
+    <div class="${recCls}" style="margin-bottom:10px;">${rec}</div>
     <div class="divider"></div>
     <div style="font-size:10px;color:var(--text2);line-height:1.9;">
-      1枠平均期待スコア：<b>${E>0?(mu/E*100).toFixed(2)+'%':(mu*10000).toFixed(0)}</b><br>
-      必要1枠平均：<b>${E>0?((needed/remainSlots)/E*100).toFixed(2)+'%':((needed/remainSlots)*10000).toFixed(0)}</b><br>
+      1枠平均期待スコア：<b>${fmtPct(mu)}</b><br>
+      必要1枠平均（現在）：<b>${fmtPct(needed/remainSlots)}</b><br>
+      必要1枠平均（新規）：<b>${fmtPct(needed/5)}</b><br>
       <span style="font-size:9px;color:var(--text3)">※ 全サブステ均等出現を仮定した概算</span>
     </div>`;
 }
