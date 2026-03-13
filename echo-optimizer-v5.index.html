@@ -77,6 +77,14 @@ input:focus,select:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,2
 .auto-val{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);padding:5px 8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;min-width:48px;text-align:right;white-space:nowrap;}
 .auto-breakdown{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.7;font-family:'IBM Plex Mono',monospace;}
 .auto-breakdown span{color:var(--text2);}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:4px 8px;margin-bottom:4px;}
+.detail-item{display:flex;flex-direction:column;gap:2px;}
+.detail-item label{font-size:10px;color:var(--text3);}
+.detail-item input{width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--card);color:var(--text1);box-sizing:border-box;}
+.detail-item .unit{font-size:10px;color:var(--text3);text-align:right;}
+.detail-total{font-size:11px;color:var(--p);font-family:'IBM Plex Mono',monospace;padding:3px 6px;background:var(--bg);border-radius:4px;margin-bottom:6px;text-align:right;}
+.detail-attr-section{margin-bottom:8px;}
+.detail-attr-label{font-size:11px;font-weight:600;margin-bottom:3px;}
 .stat-section-label{font-size:10px;letter-spacing:1.2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin:6px 0 3px 0;font-family:'IBM Plex Sans',sans-serif;}
 
 .attr-icon{width:16px;height:16px;flex-shrink:0;display:inline-block;vertical-align:middle;}
@@ -331,20 +339,29 @@ details.stat-detail[open]>summary span:first-child{transform:rotate(90deg);displ
         <div class="card-body">
           <details class="how-to"><summary>📖 使い方</summary>
           <div class="how-to-body">
-            <b>手動入力</b>：自動加算されないバフ（キャラスキル等）を直接入力します。<br>
-            <b>自動加算</b>：ハーモニー・武器キャラ登録・音骸メインステのバフを自動で計算に反映します。ONの場合、各欄に「自動」行で内訳が表示されます。<br>
+            <b>合計値入力</b>：キャラの全ステータスをそのまま入力します。登録データは使用されません。<br>
+            <b>項目別入力</b>：ハーモニー・武器・キャラ・音骸メイン/サブの内訳を入力します。登録データがあれば自動入力されます（手動で上書き可）。<br>
             <b>使用属性</b>：選択した属性のバフのみ計算に使用します。<br>
             <b>ダメージ比率</b>：各スキルの比率に応じてスコアの重み付けが変わります。合計100を推奨。
           </div>
         </details>
-        <div class="sec-title" style="margin-top:8px;">キャラ / 武器 選択</div>
+
+        <!-- 入力モード切り替え -->
+        <div class="mode-sw" style="margin:8px 0 10px;">
+          <button id="inputModeBtn_total" class="mode-btn active" onclick="setInputMode('total',this)">合計値入力</button>
+          <button id="inputModeBtn_detail" class="mode-btn" onclick="setInputMode('detail',this)">項目別入力</button>
+        </div>
+
+        <!-- キャラ/武器 選択（項目別のみ表示） -->
+        <div id="cw_select_block">
+          <div class="sec-title">キャラ / 武器 選択</div>
           <div class="stat-row">
             <span class="sname">キャラ</span>
             <select id="sel_chara" onchange="onCharaWeaponChange();recalcAll()" style="flex:1;font-size:11px;">
               <option value="">なし</option>
             </select>
           </div>
-          <div class="stat-row" style="margin-bottom:10px;">
+          <div class="stat-row" style="margin-bottom:6px;">
             <span class="sname">武器</span>
             <select id="sel_weapon" onchange="onCharaWeaponChange();recalcAll()" style="flex:1;font-size:11px;">
               <option value="">なし</option>
@@ -352,183 +369,136 @@ details.stat-detail[open]>summary span:first-child{transform:rotate(90deg);displ
           </div>
           <div class="sub-note" id="note_charaweapon"></div>
           <div class="divider"></div>
-          <!-- 自動加算トグル -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 10px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;">
-            <button id="autoBuffBtn" class="btn btn-d" style="padding:4px 12px;font-size:11px;min-width:80px;" onclick="toggleAutoBuff()">自動加算 OFF</button>
-            <span style="font-size:10px;color:var(--text2);">ハーモニー・武器・キャラ・音骸/サブのバフを計算に反映。<br>OFFにすると手動入力値のみで計算します。</span>
-          </div>
-          <div class="mode-sw">
-            <button class="mode-btn active" onclick="setStatMode('atk',this)">攻撃力基準</button>
-            <button class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
-            <button class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
-          </div>
-          <!-- 基礎/全体 -->
+        </div>
+
+        <div class="mode-sw">
+          <button class="mode-btn active" onclick="setStatMode('atk',this)">攻撃力基準</button>
+          <button class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
+          <button class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
+        </div>
+
+        <!-- ===== 合計値モード ===== -->
+        <div id="block_total">
           <div class="stat-row">
             <span class="sname" id="lbl_base">基礎攻撃力</span>
-            <input type="number" step="any" id="inp_base" placeholder="例：1000" oninput="S.base_stat=this.value;recalcAll();autoSize(this)">
+            <input type="number" step="any" id="inp_base" placeholder="必須" oninput="S.base_stat=this.value;recalcAll();autoSize(this)" style="border-color:var(--p)">
           </div>
-          <div class="auto-stat-row" id="auto_row_base" style="display:none">
-            <span class="sname" style="color:var(--green)" id="lbl_base_auto">基礎（自動）</span>
-            <div class="auto-stat-block">
-              <div class="auto-val" id="auto_val_base">+0</div>
-              <div class="auto-breakdown" id="auto_bd_base"></div>
-            </div>
-          </div>
+          <div id="base_warn" class="warn-box" style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠ 基礎攻撃力が未入力です。攻撃力%系のスコアが正しく計算されません。</div>
           <div class="stat-row">
             <span class="sname" id="lbl_total">全体攻撃力</span>
             <input type="number" step="any" id="inp_total" placeholder="例：2000" oninput="S.total_stat=this.value;recalcAll();autoSize(this)">
           </div>
-          <div class="auto-stat-row" id="auto_row_total" style="display:none">
-            <span class="sname" style="color:var(--green)" id="lbl_total_auto">全体（自動）</span>
-            <div class="auto-stat-block">
-              <div class="auto-val" id="auto_val_total">+0</div>
-              <div class="auto-breakdown" id="auto_bd_total"></div>
-            </div>
-          </div>
-          <div class="sub-note" id="note_addend"></div>
           <div class="divider"></div>
-          <!-- クリ：手動 -->
           <div class="stat-row">
-            <span class="sname">クリ率（手動）</span>
+            <span class="sname">クリ率</span>
             <input type="number" step="any" id="inp_cr" placeholder="例: 60" oninput="S.crit_rate=this.value;recalcAll();autoSize(this)">
             <span class="unit">%</span>
           </div>
-          <!-- クリ率：自動加算 -->
-          <div class="auto-stat-row" id="auto_row_cr" style="display:none">
-            <span class="sname" style="color:var(--green)">クリ率（自動）</span>
-            <div class="auto-stat-block">
-              <div class="auto-val" id="auto_val_cr">+0%</div>
-              <div class="auto-breakdown" id="auto_bd_cr"></div>
-            </div>
-            <span class="unit">%</span>
-          </div>
-          <div class="sub-note" id="note_cr"></div><div class="hint">自動加算ONなら「自動」行に内訳（ハーモニー・武器・キャラ・音骸）が表示されます。</div>
-          <!-- クリダメ：手動 -->
           <div class="stat-row">
-            <span class="sname">クリダメ（手動）</span>
+            <span class="sname">クリダメ</span>
             <input type="number" step="any" id="inp_cd" placeholder="例: 150" oninput="S.crit_dmg=this.value;recalcAll();autoSize(this)">
             <span class="unit">%</span>
           </div>
-          <!-- クリダメ：自動加算 -->
-          <div class="auto-stat-row" id="auto_row_cd" style="display:none">
-            <span class="sname" style="color:var(--green)">クリダメ（自動）</span>
-            <div class="auto-stat-block">
-              <div class="auto-val" id="auto_val_cd">+0%</div>
-              <div class="auto-breakdown" id="auto_bd_cd"></div>
-            </div>
-            <span class="unit">%</span>
-          </div>
-          <div class="sub-note" id="note_cd"></div>
         </div>
+
+        <!-- ===== 項目別モード ===== -->
+        <div id="block_detail" style="display:none;">
+          <!-- 基礎攻撃力 内訳 -->
+          <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_base_weapon" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+            <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_base_chara" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+            <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_base_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+          </div>
+          <div class="detail-total" id="dt_base">合計: 0</div>
+          <div class="divider"></div>
+          <!-- 全体攻撃力 内訳 -->
+          <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>%バフ（H）</label><input type="number" step="any" id="di_stat_pct_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>%バフ（武器/キャラ）</label><input type="number" step="any" id="di_stat_pct_cw" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>%バフ（音骸M）</label><input type="number" step="any" id="di_stat_pct_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>%バフ（音骸S）</label><input type="number" step="any" id="di_stat_pct_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>実数（音骸M）</label><input type="number" step="any" id="di_stat_flat_em" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+            <div class="detail-item"><label>実数（音骸S）</label><input type="number" step="any" id="di_stat_flat_es" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+            <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_stat_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+          </div>
+          <div class="detail-total" id="dt_total">全体: 0</div>
+          <div class="divider"></div>
+          <!-- クリ率 内訳 -->
+          <div class="sec-title">クリ率</div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_cr_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>武器/キャラ</label><input type="number" step="any" id="di_cr_cw" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>音骸メイン</label><input type="number" step="any" id="di_cr_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>音骸サブ</label><input type="number" step="any" id="di_cr_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_cr_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          </div>
+          <div class="detail-total" id="dt_cr">合計: 0%</div>
+          <div class="divider"></div>
+          <!-- クリダメ 内訳 -->
+          <div class="sec-title">クリダメ</div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_cd_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>武器/キャラ</label><input type="number" step="any" id="di_cd_cw" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>音骸メイン</label><input type="number" step="any" id="di_cd_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>音骸サブ</label><input type="number" step="any" id="di_cd_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_cd_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          </div>
+          <div class="detail-total" id="dt_cd">合計: 0%</div>
+        </div>
+
       </div>
+    </div>
 
       <div class="card">
         <div class="card-head"><h2>ダメバフ</h2></div>
         <div class="card-body">
           <div class="sec-title">属性バフ</div>
-          <div class="stat-row">
-            <span class="sname" style="color:#ef4444">焦熱バフ（手動）</span>
-            <input type="number" step="any" id="inp_dfire" placeholder="例: 0" oninput="S.dmg_fire=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span>
+
+          <!-- 合計値モード：従来の1行入力 -->
+          <div id="dmgbuf_total">
+            <div class="stat-row"><span class="sname" style="color:#ef4444">焦熱</span><input type="number" step="any" id="inp_dfire" placeholder="0" oninput="S.dmg_fire=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname" style="color:#3b82f6">凝縮</span><input type="number" step="any" id="inp_dice" placeholder="0" oninput="S.dmg_ice=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname" style="color:#a855f7">電導</span><input type="number" step="any" id="inp_dthunder" placeholder="0" oninput="S.dmg_thunder=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname" style="color:#22c55e">気動</span><input type="number" step="any" id="inp_dwind" placeholder="0" oninput="S.dmg_wind=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname" style="color:#eab308">回折</span><input type="number" step="any" id="inp_dlight" placeholder="0" oninput="S.dmg_light=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname" style="color:#ec4899">消滅</span><input type="number" step="any" id="inp_ddark" placeholder="0" oninput="S.dmg_dark=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname">全属性</span><input type="number" step="any" id="inp_dall" placeholder="0" oninput="S.dmg_all=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
           </div>
-          <div class="auto-stat-row" id="auto_row_dfire" style="display:none">
-            <span class="sname" style="color:var(--green)">焦熱バフ（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dfire">+0%</div><div class="auto-breakdown" id="auto_bd_dfire"></div></div>
-            <span class="unit">%</span>
+
+          <!-- 項目別モード：内訳入力 -->
+          <div id="dmgbuf_detail" style="display:none;">
+            <div class="sub-note" style="margin-bottom:6px;">各属性の内訳を入力してください。登録データは自動入力されます。</div>
+            <!-- 属性ループはJSで生成 -->
+            <div id="di_attr_rows"></div>
+            <div class="sec-title" style="margin-top:8px;">全属性バフ</div>
+            <div class="detail-grid">
+              <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_dall_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+              <div class="detail-item"><label>武器/キャラ</label><input type="number" step="any" id="di_dall_cw" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+              <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_dall_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            </div>
+            <div class="detail-total" id="dt_dall">合計: 0%</div>
           </div>
-          <div class="stat-row">
-            <span class="sname" style="color:#3b82f6">凝縮バフ（手動）</span>
-            <input type="number" step="any" id="inp_dice" placeholder="例: 0" oninput="S.dmg_ice=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span>
-          </div>
-          <div class="auto-stat-row" id="auto_row_dice" style="display:none">
-            <span class="sname" style="color:var(--green)">凝縮バフ（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dice">+0%</div><div class="auto-breakdown" id="auto_bd_dice"></div></div>
-            <span class="unit">%</span>
-          </div>
-          <div class="stat-row">
-            <span class="sname" style="color:#a855f7">電導バフ（手動）</span>
-            <input type="number" step="any" id="inp_dthunder" placeholder="例: 0" oninput="S.dmg_thunder=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span>
-          </div>
-          <div class="auto-stat-row" id="auto_row_dthunder" style="display:none">
-            <span class="sname" style="color:var(--green)">電導バフ（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dthunder">+0%</div><div class="auto-breakdown" id="auto_bd_dthunder"></div></div>
-            <span class="unit">%</span>
-          </div>
-          <div class="stat-row">
-            <span class="sname" style="color:#22c55e">気動バフ（手動）</span>
-            <input type="number" step="any" id="inp_dwind" placeholder="例: 0" oninput="S.dmg_wind=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span>
-          </div>
-          <div class="auto-stat-row" id="auto_row_dwind" style="display:none">
-            <span class="sname" style="color:var(--green)">気動バフ（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dwind">+0%</div><div class="auto-breakdown" id="auto_bd_dwind"></div></div>
-            <span class="unit">%</span>
-          </div>
-          <div class="stat-row">
-            <span class="sname" style="color:#eab308">回折バフ（手動）</span>
-            <input type="number" step="any" id="inp_dlight" placeholder="例: 0" oninput="S.dmg_light=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span>
-          </div>
-          <div class="auto-stat-row" id="auto_row_dlight" style="display:none">
-            <span class="sname" style="color:var(--green)">回折バフ（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dlight">+0%</div><div class="auto-breakdown" id="auto_bd_dlight"></div></div>
-            <span class="unit">%</span>
-          </div>
-          <div class="stat-row">
-            <span class="sname" style="color:#ec4899">消滅バフ（手動）</span>
-            <input type="number" step="any" id="inp_ddark" placeholder="例: 0" oninput="S.dmg_dark=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span>
-          </div>
-          <div class="auto-stat-row" id="auto_row_ddark" style="display:none">
-            <span class="sname" style="color:var(--green)">消滅バフ（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_ddark">+0%</div><div class="auto-breakdown" id="auto_bd_ddark"></div></div>
-            <span class="unit">%</span>
-          </div>
+
           <div class="sub-note" id="note_da"></div>
           <div class="divider"></div>
-          <div class="sec-title">スキル種別ダメバフ（武器・パッシブ等）</div>
-          <div class="stat-row"><span class="sname">通常攻撃（手動）</span>
-            <input type="number" step="any" id="inp_dn" value="0" oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span></div>
-          <div class="auto-stat-row" id="auto_row_dn" style="display:none">
-            <span class="sname" style="color:var(--green)">通常攻撃（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dn">+0%</div><div class="auto-breakdown" id="auto_bd_dn"></div></div>
-            <span class="unit">%</span>
+          <div class="sec-title">スキル種別ダメバフ</div>
+
+          <!-- 合計値モード -->
+          <div id="skillbuf_total">
+            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" step="any" id="inp_dn" value="0" oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname">重撃</span><input type="number" step="any" id="inp_dh" value="0" oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" step="any" id="inp_ds" value="0" oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" step="any" id="inp_dl" value="0" oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
+            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" step="any" id="inp_de" value="0" oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)"><span class="unit">%</span></div>
           </div>
-          <div class="stat-row"><span class="sname">重撃（手動）</span>
-            <input type="number" step="any" id="inp_dh" value="0" oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span></div>
-          <div class="auto-stat-row" id="auto_row_dh" style="display:none">
-            <span class="sname" style="color:var(--green)">重撃（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dh">+0%</div><div class="auto-breakdown" id="auto_bd_dh"></div></div>
-            <span class="unit">%</span>
+
+          <!-- 項目別モード -->
+          <div id="skillbuf_detail" style="display:none;">
+            <div id="di_skill_rows"></div>
           </div>
-          <div class="stat-row"><span class="sname">共鳴スキル（手動）</span>
-            <input type="number" step="any" id="inp_ds" value="0" oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span></div>
-          <div class="auto-stat-row" id="auto_row_ds" style="display:none">
-            <span class="sname" style="color:var(--green)">共鳴スキル（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_ds">+0%</div><div class="auto-breakdown" id="auto_bd_ds"></div></div>
-            <span class="unit">%</span>
-          </div>
-          <div class="stat-row"><span class="sname">共鳴解放（手動）</span>
-            <input type="number" step="any" id="inp_dl" value="0" oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span></div>
-          <div class="auto-stat-row" id="auto_row_dl" style="display:none">
-            <span class="sname" style="color:var(--green)">共鳴解放（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dl">+0%</div><div class="auto-breakdown" id="auto_bd_dl"></div></div>
-            <span class="unit">%</span>
-          </div>
-          <div class="stat-row"><span class="sname">音骸スキル（手動）</span>
-            <input type="number" step="any" id="inp_de" value="0" oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)">
-            <span class="unit">%</span></div>
-          <div class="auto-stat-row" id="auto_row_de" style="display:none">
-            <span class="sname" style="color:var(--green)">音骸スキル（自動）</span>
-            <div class="auto-stat-block"><div class="auto-val" id="auto_val_de">+0%</div><div class="auto-breakdown" id="auto_bd_de"></div></div>
-            <span class="unit">%</span>
-          </div>
+
           <div class="divider"></div>
           <div class="sec-title">使用属性</div>
           <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
@@ -820,6 +790,7 @@ details.stat-detail[open]>summary span:first-child{transform:rotate(90deg);displ
             <div class="cw-field"><label>共鳴スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill" placeholder="0"><span class="unit">%</span></div></div>
             <div class="cw-field"><label>共鳴解放</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib" placeholder="0"><span class="unit">%</span></div></div>
             <div class="cw-field"><label>音骸スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>全属性バフ</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_all" placeholder="0"><span class="unit">%</span></div></div>
           </div>
           <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
             <input type="text" id="ch_desc" placeholder="例：精錬5、パッシブ込み"></div>
@@ -867,6 +838,7 @@ details.stat-detail[open]>summary span:first-child{transform:rotate(90deg);displ
             <div class="cw-field"><label>共鳴スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill_c" placeholder="0"><span class="unit">%</span></div></div>
             <div class="cw-field"><label>共鳴解放</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib_c" placeholder="0"><span class="unit">%</span></div></div>
             <div class="cw-field"><label>音骸スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>全属性バフ</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_all_c" placeholder="0"><span class="unit">%</span></div></div>
           </div>
           <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
             <input type="text" id="ch_desc_c" placeholder="例：共鳴スキルLv10、パッシブ込み"></div>
@@ -1063,11 +1035,12 @@ const SUB_MAX=Object.fromEntries(SUB_STATS.map(s=>[s.key,s.vals[s.vals.length-1]
 // ================================================================
 let statMode='atk';
 let useAttr=''; // 使用属性: 'fire'|'ice'|'thunder'|'wind'|'light'|'dark'|'' (空=合算)
-let autoBuffEnabled=false; // 自動加算ON/OFF
+let inputMode='total'; // 'total' | 'detail'
+let autoBuffEnabled=true; // 後方互換（detail=true扱い、total=false扱い）
 let S={
   base_stat:'', total_stat:'',
   crit_rate:'', crit_dmg:'',
-  dmg_fire:'0', dmg_ice:'0', dmg_thunder:'0', dmg_wind:'0', dmg_light:'0', dmg_dark:'0',
+  dmg_fire:'0', dmg_ice:'0', dmg_thunder:'0', dmg_wind:'0', dmg_light:'0', dmg_dark:'0', dmg_all:'0',
   dmg_normal:'0', dmg_heavy:'0', dmg_skill:'0', dmg_lib:'0', dmg_echo:'0',
   ratio:{normal:0,heavy:0,skill:100,lib:0,echo:0},
   harmony:[
@@ -1136,6 +1109,7 @@ function mkBd(parts){
 }
 
 function updateAutoStatRows(){
+  if(inputMode==='total') return; // 合計値モードでは不要
   const H=getHarmonyTotalEff();
   const CW=getCharaWeaponBuffEff();
   const EM=getEchoMainBuffEff();
@@ -1185,6 +1159,10 @@ function updateAutoStatRows(){
       {label:'ハーモニー', val:H.dmg_dark},
       {label:'武器/キャラ', val:CW.dmg_dark},
       {label:'音骸メイン', val:EM.dmg_dark},
+    ]},
+    {rowId:'dall', valId:'auto_val_dall', bdId:'auto_bd_dall', parts:[
+      {label:'ハーモニー', val:H.dmg_all},
+      {label:'武器/キャラ', val:CW.dmg_all},
     ]},
     {rowId:'dn', valId:'auto_val_dn', bdId:'auto_bd_dn', parts:[
       {label:'ハーモニー', val:H.dmg_normal},
@@ -1236,7 +1214,7 @@ function getCharaWeaponBuff(){
   const t={base_atk:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
     crit_rate:0,crit_dmg:0,
     dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,
-    dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0};
+    dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0,dmg_all:0};
   ['chara','weapon'].forEach(type=>{
     const selId='sel_'+type;
     const sel=document.getElementById(selId);
@@ -1253,12 +1231,13 @@ function onCharaWeaponChange(){
   const labelMap={base_atk:'基礎攻撃力',atk_pct:'攻撃力%',flat_atk:'攻撃力実数',
     hp_pct:'HP%',flat_hp:'HP実数',def_pct:'防御%',crit_rate:'クリ率',crit_dmg:'クリダメ',
     dmg_fire:'焦熱',dmg_ice:'凝縮',dmg_thunder:'電導',dmg_wind:'気動',
-    dmg_light:'回折',dmg_dark:'消滅',dmg_normal:'通常',dmg_heavy:'重撃',
+    dmg_light:'回折',dmg_dark:'消滅',dmg_all:'全属性',dmg_normal:'通常',dmg_heavy:'重撃',
     dmg_skill:'スキル',dmg_lib:'解放',dmg_echo:'音骸'};
   const parts=Object.entries(CW).filter(([,v])=>v>0)
     .map(([k,v])=>`${labelMap[k]||k} +${v}`);
   const note=document.getElementById('note_charaweapon');
   if(note) note.textContent=parts.length?'加算: '+parts.join(' / '):'';
+  if(inputMode==='detail') fillDetailInputs();
 }
 
 function rebuildCharaWeaponSelects(){
@@ -1281,51 +1260,67 @@ function getPartials(){
   const CW=getCharaWeaponBuffEff();
   const EM=getEchoMainBuffEff();
   const ES=getEchoSubBuffEff();
-  const cw_base_atk=CW.base_atk||0;
-  const base=n(S.base_stat)+cw_base_atk, total=n(S.total_stat);
-  const cr=n(S.crit_rate),   cd=n(S.crit_dmg);
-  const cr_eff=cr+H.crit_rate+CW.crit_rate+EM.crit_rate+ES.crit_rate;
-  const cd_eff=cd+H.crit_dmg+CW.crit_dmg+EM.crit_dmg+ES.crit_dmg;
 
-  const hStatPct=(statMode==='atk'?H.atk_pct:statMode==='hp'?H.hp_pct:H.def_pct);
-  const cwStatPct=(statMode==='atk'?CW.atk_pct:statMode==='hp'?CW.hp_pct:CW.def_pct);
-  const emStatPct=(statMode==='atk'?EM.atk_pct:statMode==='hp'?EM.hp_pct:EM.def_pct);
-  const esStatPct=(statMode==='atk'?ES.atk_pct:statMode==='hp'?ES.hp_pct:ES.def_pct);
-  const emFlat=(statMode==='atk'?EM.flat_atk:statMode==='hp'?EM.flat_hp:EM.flat_def);
-  const esFlat=(statMode==='atk'?ES.flat_atk:statMode==='hp'?ES.flat_hp:ES.flat_def);
-  const stat_eff=total+base*(hStatPct+cwStatPct+emStatPct+esStatPct)/100+emFlat+esFlat;
+  let base, total, cr_eff, cd_eff, da, da_eff, dn, dh, ds, dl, de;
 
-  // 使用属性フィルタ: 選択属性のバフのみ使用、未選択は0
-  const ATTR_KEYS=['fire','ice','thunder','wind','light','dark'];
-  const attrBuff= useAttr
-    ? (H['dmg_'+useAttr]||0)+(CW['dmg_'+useAttr]||0)+(EM['dmg_'+useAttr]||0)
-    : ATTR_KEYS.reduce((s,k)=>s+(H['dmg_'+k]||0)+(CW['dmg_'+k]||0)+(EM['dmg_'+k]||0),0);
-  const da= useAttr
-    ? n(S['dmg_'+useAttr])
-    : ATTR_KEYS.reduce((s,k)=>s+n(S['dmg_'+k]),0);
-  const da_eff=da+attrBuff+H.dmg_all;
-  const dn=n(S.dmg_normal), dh=n(S.dmg_heavy);
-  const ds=n(S.dmg_skill), dl=n(S.dmg_lib), de=n(S.dmg_echo);
+  if(inputMode==='detail'){
+    // 項目別モード：内訳入力欄から合算
+    base = getDI('di_base_weapon')+getDI('di_base_chara')+getDI('di_base_other');
+    const statPct=getDI('di_stat_pct_h')+getDI('di_stat_pct_cw')+getDI('di_stat_pct_em')+getDI('di_stat_pct_es');
+    const statFlat=getDI('di_stat_flat_em')+getDI('di_stat_flat_es')+getDI('di_stat_other');
+    total = base*(1+statPct/100)+statFlat;
+
+    cr_eff = getDI('di_cr_h')+getDI('di_cr_cw')+getDI('di_cr_em')+getDI('di_cr_es')+getDI('di_cr_other');
+    cd_eff = getDI('di_cd_h')+getDI('di_cd_cw')+getDI('di_cd_em')+getDI('di_cd_es')+getDI('di_cd_other');
+
+    // 属性バフ：使用属性フィルタ
+    const ATTR_KEYS_D=['fire','ice','thunder','wind','light','dark'];
+    if(useAttr){
+      da = getDI(`di_d${useAttr}_h`)+getDI(`di_d${useAttr}_cw`)+getDI(`di_d${useAttr}_em`)+getDI(`di_d${useAttr}_other`);
+    } else {
+      da = ATTR_KEYS_D.reduce((s,k)=>s+getDI(`di_d${k}_h`)+getDI(`di_d${k}_cw`)+getDI(`di_d${k}_em`)+getDI(`di_d${k}_other`),0);
+    }
+    const dall=getDI('di_dall_h')+getDI('di_dall_cw')+getDI('di_dall_other');
+    da_eff = da + dall;
+
+    dn = getDI('di_snormal_h')+getDI('di_snormal_cw')+getDI('di_snormal_es')+getDI('di_snormal_other');
+    dh = getDI('di_sheavy_h')+getDI('di_sheavy_cw')+getDI('di_sheavy_es')+getDI('di_sheavy_other');
+    ds = getDI('di_sskill_h')+getDI('di_sskill_cw')+getDI('di_sskill_es')+getDI('di_sskill_other');
+    dl = getDI('di_slib_h')+getDI('di_slib_cw')+getDI('di_slib_es')+getDI('di_slib_other');
+    de = getDI('di_secho_h')+getDI('di_secho_cw')+getDI('di_secho_es')+getDI('di_secho_other');
+  } else {
+    // 合計値モード：従来通り
+    const cw_base_atk=0; // 合計値モードでは登録データ不使用
+    base=n(S.base_stat), total=n(S.total_stat);
+    cr_eff=n(S.crit_rate);
+    cd_eff=n(S.crit_dmg);
+    const ATTR_KEYS=['fire','ice','thunder','wind','light','dark'];
+    da = useAttr ? n(S['dmg_'+useAttr]) : ATTR_KEYS.reduce((s,k)=>s+n(S['dmg_'+k]),0);
+    da_eff = da + n(S.dmg_all);
+    dn=n(S.dmg_normal); dh=n(S.dmg_heavy);
+    ds=n(S.dmg_skill);  dl=n(S.dmg_lib); de=n(S.dmg_echo);
+  }
+
   const rn=S.ratio.normal/100, rh=S.ratio.heavy/100, rs=S.ratio.skill/100;
   const rl=S.ratio.lib/100,    re=S.ratio.echo/100;
-  const dskill_w=(dn+H.dmg_normal+CW.dmg_normal+ES.dmg_normal)*rn
-                +(dh+H.dmg_heavy+CW.dmg_heavy+ES.dmg_heavy)*rh
-                +(ds+H.dmg_skill+CW.dmg_skill+ES.dmg_skill)*rs
-                +(dl+H.dmg_lib+CW.dmg_lib+ES.dmg_lib)*rl
-                +(de+H.dmg_echo+CW.dmg_echo+ES.dmg_echo)*re;
+  const dskill_w=dn*rn + dh*rh + ds*rs + dl*rl + de*re;
   const DMG_eff=(da_eff+dskill_w)/100;
-  // CD=150%のとき1.5倍ダメ → 期待値係数 = 1 + CR*(CD/100 - 1)
+  const stat_eff = inputMode==='detail' ? total : (total + base*(
+    (H.atk_pct+CW.atk_pct+EM.atk_pct+ES.atk_pct) // unused in total mode but harmless
+  )/100); // 合計値モードでは total がそのまま stat_eff
+  const stat_eff_final = inputMode==='detail' ? total : n(S.total_stat) || n(S.base_stat);
+
   const crit_factor=1+cr_eff/100*(cd_eff/100-1);
-  const E=stat_eff*(1+DMG_eff)*crit_factor;
+  const E=stat_eff_final*(1+DMG_eff)*crit_factor;
 
   return {
-    E, stat_eff, DMG_eff, crit_factor, base, total, hStatPct,
+    E, stat_eff:stat_eff_final, DMG_eff, crit_factor, base, total:stat_eff_final,
     cr_eff, cd_eff, da_eff,
     pStat_pct: base/100*(1+DMG_eff)*crit_factor,
     pStat_flat: (1+DMG_eff)*crit_factor,
-    pDmg:       stat_eff/100*crit_factor,
-    pCR:        stat_eff*(1+DMG_eff)*(cd_eff/100-1)/100,
-    pCD:        stat_eff*(1+DMG_eff)*(cr_eff/100)/100,
+    pDmg:       stat_eff_final/100*crit_factor,
+    pCR:        stat_eff_final*(1+DMG_eff)*(cd_eff/100-1)/100,
+    pCD:        stat_eff_final*(1+DMG_eff)*(cr_eff/100)/100,
   };
 }
 
@@ -1348,7 +1343,12 @@ function mv(key,val){
   if(key==='crit_dmg')  return p.pCD*v;
   return 0;
 }
-function echoScore(echo){return echo.subs.reduce((s,sub)=>s+(sub.key&&sub.val!==''?mv(sub.key,sub.val):0),0);}
+function echoScore(echo){
+  const subScore=echo.subs.reduce((s,sub)=>s+(sub.key&&sub.val!==''?mv(sub.key,sub.val):0),0);
+  const {key1,val1,key2,val2}=echo.main;
+  const mainScore=(key1&&val1?mv(key1,val1):0)+(key2&&val2?mv(key2,val2):0);
+  return subScore+mainScore;
+}
 function mvColor(v,mx){const r=v/(mx||1);return r>.7?'#15803d':r>.4?'#2563eb':r>.2?'#d97706':'#dc2626';}
 function pctStr(v,E){return E>0?(v/E*100).toFixed(2)+'%':'';}
 
@@ -1369,8 +1369,13 @@ function setStatMode(m,btn){
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   const ml={atk:'攻撃力',hp:'HP',def:'防御力'}[m];
-  document.getElementById('lbl_base').textContent=`基礎${ml}`;
-  document.getElementById('lbl_total').textContent=`全体${ml}`;
+  // 合計値モードのラベル
+  const lb=document.getElementById('lbl_base'); if(lb) lb.textContent=`基礎${ml}`;
+  const lt=document.getElementById('lbl_total'); if(lt) lt.textContent=`全体${ml}`;
+  // 項目別モードのラベル
+  const lbd=document.getElementById('lbl_base_d'); if(lbd) lbd.textContent=`基礎${ml}`;
+  const ltd=document.getElementById('lbl_total_d'); if(ltd) ltd.textContent=`全体${ml}（内訳）`;
+  if(inputMode==='detail') fillDetailInputs();
   buildEchoGrid();
   buildNewSubs();
   recalcAll();
@@ -1405,64 +1410,25 @@ function setHn(id, val){
 function setText(id, txt){const el=document.getElementById(id);if(el)el.textContent=txt||'';}
 
 function updateStatNotes(){
-  const H=getHarmonyTotalEff();
-  const CW=getCharaWeaponBuffEff();
-  const EM=getEchoMainBuffEff();
-  const ES=getEchoSubBuffEff();
-  const cw_base_atk=(statMode==='atk'?CW.base_atk:0)||0;
-  const base=n(S.base_stat)+cw_base_atk, total=n(S.total_stat);
-  const ml={atk:'攻撃力',hp:'HP',def:'防御力'}[statMode];
-  const hStatPct =(statMode==='atk'?H.atk_pct :statMode==='hp'?H.hp_pct :H.def_pct);
-  const cwStatPct=(statMode==='atk'?CW.atk_pct:statMode==='hp'?CW.hp_pct:CW.def_pct);
-  const emStatPct=(statMode==='atk'?EM.atk_pct:statMode==='hp'?EM.hp_pct:EM.def_pct);
-  const esStatPct=(statMode==='atk'?ES.atk_pct:statMode==='hp'?ES.hp_pct:ES.def_pct);
-  const emFlat   =(statMode==='atk'?EM.flat_atk:statMode==='hp'?EM.flat_hp:EM.flat_def);
-  const esFlat   =(statMode==='atk'?ES.flat_atk:statMode==='hp'?ES.flat_hp:ES.flat_def);
-  const addend=total-base;
-  setText('note_addend', total>0&&base>0?`加算分 = ${addend>=0?'+':''}${addend.toFixed(0)}`:'');
-
-  // 基礎攻撃力 自動行
-  const rowBase=document.getElementById('auto_row_base');
-  const valBase=document.getElementById('auto_val_base');
-  const bdBase =document.getElementById('auto_bd_base');
-  if(rowBase&&valBase&&bdBase){
-    if(autoBuffEnabled && cw_base_atk>0){
-      rowBase.style.display='flex';
-      valBase.textContent=`+${cw_base_atk.toFixed(0)}`;
-      bdBase.innerHTML=mkBd([{label:'武器/キャラ', val:cw_base_atk}]);
-    } else { rowBase.style.display='none'; }
-  }
-
-  // 全体攻撃力 自動行（%バフを実数換算して表示）
-  const bonusList=[];
-  if(hStatPct>0)  bonusList.push({label:'H',         val:+(base*hStatPct/100).toFixed(0)});
-  if(cwStatPct>0) bonusList.push({label:'武器/キャラ', val:+(base*cwStatPct/100).toFixed(0)});
-  if(emStatPct>0) bonusList.push({label:'音骸M',      val:+(base*emStatPct/100).toFixed(0)});
-  if(esStatPct>0) bonusList.push({label:'音骸S',      val:+(base*esStatPct/100).toFixed(0)});
-  if(emFlat>0)    bonusList.push({label:'音骸M実数',  val:emFlat});
-  if(esFlat>0)    bonusList.push({label:'音骸S実数',  val:esFlat});
-  const totalBonus=bonusList.reduce((s,b)=>s+b.val,0);
-  const rowTot=document.getElementById('auto_row_total');
-  const valTot=document.getElementById('auto_val_total');
-  const bdTot =document.getElementById('auto_bd_total');
-  if(rowTot&&valTot&&bdTot){
-    if(autoBuffEnabled && bonusList.length>0){
-      rowTot.style.display='flex';
-      valTot.textContent=`+${totalBonus.toFixed(0)}`;
-      bdTot.innerHTML=mkBd(bonusList);
-    } else { rowTot.style.display='none'; }
-  }
-  const cr_auto=H.crit_rate+CW.crit_rate+EM.crit_rate+ES.crit_rate;
-  const cd_auto=H.crit_dmg +CW.crit_dmg +EM.crit_dmg +ES.crit_dmg;
-  const cr_all=n(S.crit_rate)+cr_auto;
-  const cd_all=n(S.crit_dmg) +cd_auto;
-  setText('note_cr', cr_all>0?`有効クリ率: ${cr_all.toFixed(1)}% (手動${n(S.crit_rate).toFixed(1)} / H+${H.crit_rate} / 武器+${CW.crit_rate} / 音骸メイン+${EM.crit_rate} / 音骸サブ+${ES.crit_rate.toFixed(1)})`:'');
-  setText('note_cd', cd_all>0?`有効クリダメ: ${cd_all.toFixed(1)}% (手動${n(S.crit_dmg).toFixed(1)} / H+${H.crit_dmg} / 武器+${CW.crit_dmg} / 音骸メイン+${EM.crit_dmg} / 音骸サブ+${ES.crit_dmg.toFixed(1)})`:'');
+  if(inputMode==='detail') return;
+  const base=n(S.base_stat), total=n(S.total_stat);
+  // 基礎未入力警告
+  const warn=document.getElementById('base_warn');
+  if(warn) warn.style.display=(total>0&&base<=0)?'block':'none';
+  const inp=document.getElementById('inp_base');
+  if(inp) inp.style.borderColor=(total>0&&base<=0)?'#dc2626':'var(--p)';
+  const cr=n(S.crit_rate), cd=n(S.crit_dmg);
+  setText('note_cr', cr>0?`クリ率: ${cr.toFixed(1)}%`:'');
+  setText('note_cd', cd>0?`クリダメ: ${cd.toFixed(1)}%`:'');
 }
 
 function updateDmgNotes(){
-  const H=getHarmonyTotalEff();
-  setText('note_da', H.dmg_all>0?`全属性バフ(ハーモニー): +${H.dmg_all}%`:'');
+  if(inputMode==='detail'){
+    const dall=getDI('di_dall_h')+getDI('di_dall_cw')+getDI('di_dall_other');
+    setText('note_da', dall>0?`全属性バフ合計: +${dall.toFixed(1)}%`:'');
+  } else {
+    setText('note_da', n(S.dmg_all)>0?`全属性バフ: +${n(S.dmg_all)}%`:'');
+  }
 }
 
 function updateRatioVis(){
@@ -1508,42 +1474,55 @@ function updateMVRanking(){
   const el=document.getElementById('mvRanking'); if(!el) return;
   if(E<=0){el.innerHTML='<div style="color:var(--text3);font-size:11px;">ステータスを入力すると表示されます</div>';return;}
 
-  const DELTA=5; // +5% で計算
+  // SUB_STATSから中間値を取得するヘルパー
+  function subMid(key){
+    const sd=SUB_STATS.find(s=>s.key===key);
+    if(!sd) return 5;
+    const v=sd.vals;
+    const mid=v[Math.floor((v.length-1)/2)];
+    return mid;
+  }
+
   const list=[];
 
-  // 攻撃力/HP/防御力 +5%
+  // 攻撃力/HP/防御力%：サブステ中間値
+  const statPctKey={atk:'atk_pct',hp:'hp_pct',def:'def_pct'}[statMode];
   const statLabel={atk:'攻撃力%',hp:'HP%',def:'防御力%'}[statMode];
-  const gainStat=p.pStat_pct*DELTA/E*100;
-  list.push({name:statLabel, gain:gainStat, note:'メインステ +5%'});
+  const dStat=subMid(statPctKey);
+  const gainStat=p.pStat_pct*dStat/E*100;
+  list.push({name:statLabel, gain:gainStat, note:`サブステ中間値 +${dStat}%`});
 
-  // クリ率 +5%
-  const gainCR=p.pCR*DELTA/E*100;
-  list.push({name:'クリ率', gain:gainCR, note:'+5% (現在: '+(p.cr_eff.toFixed(1))+'%)'});
+  // クリ率
+  const dCR=subMid('crit_rate');
+  const gainCR=p.pCR*dCR/E*100;
+  list.push({name:'クリ率', gain:gainCR, note:`サブステ中間値 +${dCR}% (現在: ${p.cr_eff.toFixed(1)}%)`});
 
-  // クリダメ +5%
-  const gainCD=p.pCD*DELTA/E*100;
-  list.push({name:'クリダメ', gain:gainCD, note:'+5% (現在: '+(p.cd_eff.toFixed(1))+'%)'});
+  // クリダメ
+  const dCD=subMid('crit_dmg');
+  const gainCD=p.pCD*dCD/E*100;
+  list.push({name:'クリダメ', gain:gainCD, note:`サブステ中間値 +${dCD}% (現在: ${p.cd_eff.toFixed(1)}%)`});
 
-  // 属性バフ +5% (全属性共通)
-  const gainDA=p.pDmg*DELTA/E*100;
-  list.push({name:'属性バフ', gain:gainDA, note:'+5%', isAttr:true});
+  // 属性バフ：サブステに属性バフはないので代表として攻撃力%中間値を流用
+  const dDA=subMid('atk_pct');
+  const gainDA=p.pDmg*dDA/E*100;
+  list.push({name:'属性バフ', gain:gainDA, note:`参考値 +${dDA}%`, isAttr:true});
 
-  // スキル種別ダメバフ +5% (比率加重)
+  // スキル種別ダメバフ：各スキルサブステ中間値
   const rn=S.ratio.normal/100, rh=S.ratio.heavy/100, rs=S.ratio.skill/100;
   const rl=S.ratio.lib/100, re=S.ratio.echo/100;
   const SKILL_TYPES=[
-    {name:'通常攻撃ダメバフ', r:rn},
-    {name:'重撃ダメバフ',     r:rh},
-    {name:'共鳴スキルダメバフ',r:rs},
-    {name:'共鳴解放ダメバフ', r:rl},
-    {name:'音骸スキルダメバフ',r:re},
+    {name:'通常攻撃ダメバフ', r:rn, key:'dmg_normal'},
+    {name:'重撃ダメバフ',     r:rh, key:'dmg_heavy'},
+    {name:'共鳴スキルダメバフ',r:rs, key:'dmg_skill'},
+    {name:'共鳴解放ダメバフ', r:rl, key:'dmg_lib'},
+    {name:'音骸スキルダメバフ',r:re, key:'dmg_echo'},
   ];
   SKILL_TYPES.forEach(sk=>{
     if(sk.r<=0) return;
-    // ∂E/∂(skill_dmg%) = stat_eff * ratio * crit_factor / 100
+    const dSk=subMid(sk.key);
     const pSkill=p.stat_eff*sk.r*p.crit_factor/100;
-    const g=pSkill*DELTA/E*100;
-    list.push({name:sk.name, gain:g, note:`+5% (比率${(sk.r*100).toFixed(0)}%)`});
+    const g=pSkill*dSk/E*100;
+    list.push({name:sk.name, gain:g, note:`サブステ中間値 +${dSk}% (比率${(sk.r*100).toFixed(0)}%)`});
   });
 
   list.sort((a,b)=>b.gain-a.gain);
@@ -1736,6 +1715,7 @@ function onHarmonySelect(i,hId){
   if(h) S.harmony[i].setLevel=h.setType==='3'?3:5;
   S.harmony[i].custom={...getPresetBuff(hId,S.harmony[i].setLevel)};
   buildHarmonyPicker();
+  if(inputMode==='detail') fillDetailInputs();
   recalcAll();
 }
 
@@ -1743,6 +1723,7 @@ function onSetLevel(i,lv){
   S.harmony[i].setLevel=lv;
   S.harmony[i].custom={...getPresetBuff(S.harmony[i].id,lv)};
   buildHarmonyPicker();
+  if(inputMode==='detail') fillDetailInputs();
   recalcAll();
 }
 
@@ -1757,30 +1738,189 @@ function clearHarmony(i){
 // ================================================================
 // AUTO BUFF TOGGLE
 // ================================================================
-function toggleAutoBuff(){
-  autoBuffEnabled=!autoBuffEnabled;
-  const btn=document.getElementById('autoBuffBtn');
-  if(btn){
-    btn.textContent=autoBuffEnabled?'自動加算 ON':'自動加算 OFF';
-    btn.className=autoBuffEnabled?'btn btn-p':'btn btn-d';
-  }
-  recalcAll();
-}
-
 function B0(){return {atk_pct:0,hp_pct:0,def_pct:0,
   dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,dmg_all:0,
   crit_rate:0,crit_dmg:0,
   dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0,
   base_atk:0,flat_atk:0,flat_hp:0,flat_def:0,res_eff:0,heal:0};}
 
-// 自動加算無効時は全0を返すラッパー
-function getHarmonyTotalEff(){return autoBuffEnabled?getHarmonyTotal():B0();}
-function getCharaWeaponBuffEff(){return autoBuffEnabled?getCharaWeaponBuff():B0();}
-function getEchoMainBuffEff(){return autoBuffEnabled?getEchoMainBuff():B0();}
-function getEchoSubBuffEff(){return autoBuffEnabled?getEchoSubBuff():B0();}
+// inputMode連動ラッパー（detail=全バフ有効、total=全バフ無効）
+function getHarmonyTotalEff(){return inputMode==='detail'?getHarmonyTotal():B0();}
+function getCharaWeaponBuffEff(){return inputMode==='detail'?getCharaWeaponBuff():B0();}
+function getEchoMainBuffEff(){return inputMode==='detail'?getEchoMainBuff():B0();}
+function getEchoSubBuffEff(){return inputMode==='detail'?getEchoSubBuff():B0();}
+
+// ================================================================
+// 入力モード切り替え
+// ================================================================
+function setInputMode(mode, btn){
+  inputMode=mode;
+  autoBuffEnabled=(mode==='detail');
+  // ボタンスタイル
+  ['total','detail'].forEach(m=>{
+    const b=document.getElementById('inputModeBtn_'+m);
+    if(b) b.className=m===mode?'mode-btn active':'mode-btn';
+  });
+  // ブロック表示切り替え
+  const showTotal=(mode==='total');
+  setDisplay('block_total', showTotal);
+  setDisplay('block_detail', !showTotal);
+  setDisplay('dmgbuf_total', showTotal);
+  setDisplay('dmgbuf_detail', !showTotal);
+  setDisplay('skillbuf_total', showTotal);
+  setDisplay('skillbuf_detail', !showTotal);
+  setDisplay('cw_select_block', !showTotal);
+  if(!showTotal){
+    buildDetailRows();
+    fillDetailInputs();
+  }
+  recalcAll();
+}
+
+function setDisplay(id, show){
+  const el=document.getElementById(id);
+  if(el) el.style.display=show?'':'none';
+}
+
+// 項目別：属性バフ・スキルバフの内訳行をJS生成
+const ATTR_DETAIL=[
+  {key:'fire', label:'焦熱', color:'#ef4444'},
+  {key:'ice',  label:'凝縮', color:'#3b82f6'},
+  {key:'thunder',label:'電導',color:'#a855f7'},
+  {key:'wind', label:'気動', color:'#22c55e'},
+  {key:'light',label:'回折', color:'#eab308'},
+  {key:'dark', label:'消滅', color:'#ec4899'},
+];
+const SKILL_DETAIL=[
+  {key:'normal',label:'通常攻撃'},
+  {key:'heavy', label:'重撃'},
+  {key:'skill', label:'共鳴スキル'},
+  {key:'lib',   label:'共鳴解放'},
+  {key:'echo',  label:'音骸スキル'},
+];
+
+function buildDetailRows(){
+  // 属性バフ行
+  const attrCont=document.getElementById('di_attr_rows');
+  if(attrCont && !attrCont.dataset.built){
+    attrCont.innerHTML=ATTR_DETAIL.map(a=>`
+      <div class="detail-attr-section">
+        <div class="detail-attr-label" style="color:${a.color}">${a.label}バフ</div>
+        <div class="detail-grid">
+          <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_d${a.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器/キャラ</label><input type="number" step="any" id="di_d${a.key}_cw" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸メイン</label><input type="number" step="any" id="di_d${a.key}_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_d${a.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+        </div>
+        <div class="detail-total" id="dt_d${a.key}">合計: 0%</div>
+      </div>`).join('');
+    attrCont.dataset.built='1';
+  }
+  // スキルバフ行
+  const skillCont=document.getElementById('di_skill_rows');
+  if(skillCont && !skillCont.dataset.built){
+    skillCont.innerHTML=SKILL_DETAIL.map(s=>`
+      <div class="detail-attr-section">
+        <div class="detail-attr-label">${s.label}バフ</div>
+        <div class="detail-grid">
+          <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_s${s.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器/キャラ</label><input type="number" step="any" id="di_s${s.key}_cw" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸サブ</label><input type="number" step="any" id="di_s${s.key}_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_s${s.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+        </div>
+        <div class="detail-total" id="dt_s${s.key}">合計: 0%</div>
+      </div>`).join('');
+    skillCont.dataset.built='1';
+  }
+}
+
+// 登録データから項目別入力欄を自動入力
+function fillDetailInputs(){
+  const H=getHarmonyTotal();
+  const CW=getCharaWeaponBuff();
+  const EM=getEchoMainBuff();
+  const ES=getEchoSubBuff();
+  const ml=statMode;
+
+  function fill(id, val){ const el=document.getElementById(id); if(el&&val) el.value=val||''; }
+
+  // 基礎攻撃力
+  fill('di_base_weapon', CW.base_atk||'');
+  // 全体攻撃力 %バフ
+  const statPctKey=ml==='atk'?'atk_pct':ml==='hp'?'hp_pct':'def_pct';
+  fill('di_stat_pct_h',  H[statPctKey]||'');
+  fill('di_stat_pct_cw', CW[statPctKey]||'');
+  fill('di_stat_pct_em', EM[statPctKey]||'');
+  fill('di_stat_pct_es', ES[statPctKey]||'');
+  // 全体攻撃力 実数
+  const flatKey=ml==='atk'?'flat_atk':ml==='hp'?'flat_hp':'flat_def';
+  fill('di_stat_flat_em', EM[flatKey]||'');
+  fill('di_stat_flat_es', ES[flatKey]||'');
+  // クリ率
+  fill('di_cr_h',  H.crit_rate||'');
+  fill('di_cr_cw', CW.crit_rate||'');
+  fill('di_cr_em', EM.crit_rate||'');
+  fill('di_cr_es', ES.crit_rate||'');
+  // クリダメ
+  fill('di_cd_h',  H.crit_dmg||'');
+  fill('di_cd_cw', CW.crit_dmg||'');
+  fill('di_cd_em', EM.crit_dmg||'');
+  fill('di_cd_es', ES.crit_dmg||'');
+  // 属性バフ
+  ATTR_DETAIL.forEach(a=>{
+    fill(`di_d${a.key}_h`,     H['dmg_'+a.key]||'');
+    fill(`di_d${a.key}_cw`,    CW['dmg_'+a.key]||'');
+    fill(`di_d${a.key}_em`,    EM['dmg_'+a.key]||'');
+  });
+  // 全属性バフ
+  fill('di_dall_h',  H.dmg_all||'');
+  fill('di_dall_cw', CW.dmg_all||'');
+  // スキルバフ
+  SKILL_DETAIL.forEach(s=>{
+    fill(`di_s${s.key}_h`,  H['dmg_'+s.key]||'');
+    fill(`di_s${s.key}_cw`, CW['dmg_'+s.key]||'');
+    fill(`di_s${s.key}_es`, ES['dmg_'+s.key]||'');
+  });
+}
+
+// 項目別入力欄から値を読み取るヘルパー
+function getDI(id){ return parseFloat(document.getElementById(id)?.value)||0; }
+
+// 項目別：合計表示を更新
+function updateDetailTotals(){
+  if(inputMode!=='detail') return;
+  const ml=statMode;
+
+  const base=getDI('di_base_weapon')+getDI('di_base_chara')+getDI('di_base_other');
+  setDT('dt_base', `合計: ${base.toFixed(0)}`);
+
+  const statPct=getDI('di_stat_pct_h')+getDI('di_stat_pct_cw')+getDI('di_stat_pct_em')+getDI('di_stat_pct_es');
+  const statFlat=getDI('di_stat_flat_em')+getDI('di_stat_flat_es')+getDI('di_stat_other');
+  const total=base*(1+statPct/100)+statFlat;
+  setDT('dt_total', `全体: ${total.toFixed(0)}`);
+
+  const cr=getDI('di_cr_h')+getDI('di_cr_cw')+getDI('di_cr_em')+getDI('di_cr_es')+getDI('di_cr_other');
+  setDT('dt_cr', `合計: ${cr.toFixed(1)}%`);
+  const cd=getDI('di_cd_h')+getDI('di_cd_cw')+getDI('di_cd_em')+getDI('di_cd_es')+getDI('di_cd_other');
+  setDT('dt_cd', `合計: ${cd.toFixed(1)}%`);
+
+  ATTR_DETAIL.forEach(a=>{
+    const v=getDI(`di_d${a.key}_h`)+getDI(`di_d${a.key}_cw`)+getDI(`di_d${a.key}_em`)+getDI(`di_d${a.key}_other`);
+    setDT(`dt_d${a.key}`, `合計: ${v.toFixed(1)}%`);
+  });
+  const dall=getDI('di_dall_h')+getDI('di_dall_cw')+getDI('di_dall_other');
+  setDT('dt_dall', `合計: ${dall.toFixed(1)}%`);
+
+  SKILL_DETAIL.forEach(s=>{
+    const v=getDI(`di_s${s.key}_h`)+getDI(`di_s${s.key}_cw`)+getDI(`di_s${s.key}_es`)+getDI(`di_s${s.key}_other`);
+    setDT(`dt_s${s.key}`, `合計: ${v.toFixed(1)}%`);
+  });
+}
+function setDT(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
 
 // ================================================================
 function recalcAll(){
+  updateDetailTotals();
   updateStatNotes();
   updateDmgNotes();
   updateEdDisplay();
@@ -1800,9 +1940,11 @@ function buildEchoGrid(){
   S.echoes.forEach((_,i)=>g.appendChild(buildEchoCardEl(i)));
 }
 
-function makeStatSelectHTML(id,sel,onch,cls=''){
-  const opts='<option value=""></option>'+SUB_STATS.map(s=>
-    `<option value="${s.key}"${s.key===sel?' selected':''}>${s.name}${s.unit?'':''}</option>`).join('');
+function makeStatSelectHTML(id, sel, onch, cls='', usedKeys=[]){
+  const opts='<option value=""></option>'+SUB_STATS.map(s=>{
+    const disabled=usedKeys.includes(s.key)&&s.key!==sel;
+    return `<option value="${s.key}"${s.key===sel?' selected':''}${disabled?' disabled style="color:#ccc"':''}>${s.name}${disabled?' ✕':''}</option>`;
+  }).join('');
   return `<select id="${id}" onchange="${onch}" class="${cls}">${opts}</select>`;
 }
 
@@ -1957,9 +2099,10 @@ function buildEchoSubRows(idx){
   // サブステータス行
   for(let s=0;s<5;s++){
     const sub=echo.subs[s];
+    const usedKeys=echo.subs.map((x,i)=>i!==s&&x.key?x.key:'').filter(Boolean);
     const row=document.createElement('div'); row.className='sub-row';
     row.innerHTML=`
-      ${makeStatSelectHTML(`ess_${idx}_${s}`,sub.key,`onEchoKey(${idx},${s},this.value)`,'stat-sel')}
+      ${makeStatSelectHTML(`ess_${idx}_${s}`,sub.key,`onEchoKey(${idx},${s},this.value)`,'stat-sel',usedKeys)}
       ${makeValSelectHTML(`esv_${idx}_${s}`,sub.key,sub.val,`onEchoVal(${idx},${s},this.value)`)}
       <span class="sub-mv" id="emv_${idx}_${s}" style="color:var(--text3)"></span>
     `;
@@ -2012,7 +2155,7 @@ function onEchoMain1Key(idx, key){
 function onEchoMain2Key(idx,key){}
 
 // 後方互換
-function onEchoMain(idx, field, val){ recalcAll(); }
+function onEchoMain(idx, field, val){ if(inputMode==='detail')fillDetailInputs(); recalcAll(); }
 function onEchoMainKey(idx, key){ recalcAll(); }
 
 function getEchoMainBuff(){
@@ -2037,9 +2180,17 @@ function onEchoKey(ei,si,key){
   S.echoes[ei].subs[si].val='';
   const el=document.getElementById(`esv_${ei}_${si}`);
   if(el) el.outerHTML=makeValSelectHTML(`esv_${ei}_${si}`,key,'',`onEchoVal(${ei},${si},this.value)`);
+  // 同音骸の他スロットのキー選択を更新（使用済み反映）
+  for(let s=0;s<5;s++){
+    if(s===si) continue;
+    const sel=document.getElementById(`ess_${ei}_${s}`); if(!sel) continue;
+    const curKey=S.echoes[ei].subs[s].key;
+    const usedKeys=S.echoes[ei].subs.map((x,i)=>i!==s&&x.key?x.key:'').filter(Boolean);
+    sel.outerHTML=makeStatSelectHTML(`ess_${ei}_${s}`,curKey,`onEchoKey(${ei},${s},this.value)`,'stat-sel',usedKeys);
+  }
   recalcAll();
 }
-function onEchoVal(ei,si,val){S.echoes[ei].subs[si].val=val;recalcAll();}
+function onEchoVal(ei,si,val){S.echoes[ei].subs[si].val=val;if(inputMode==='detail')fillDetailInputs();recalcAll();}
 
 function updateEchoScores(){
   const E=getPartials().E;
@@ -2105,9 +2256,10 @@ function buildNewSubs(){
   const d=document.getElementById('newSubRows'); if(!d) return;
   d.innerHTML='';
   for(let s=0;s<slots;s++){
+    const usedKeys=_getNewUsedKeys(s, slots);
     const row=document.createElement('div'); row.className='sub-row';
     row.innerHTML=`
-      ${makeStatSelectHTML(`ns_${s}_k`,'',`onNewKey(${s})`,'stat-sel')}
+      ${makeStatSelectHTML(`ns_${s}_k`,'',`onNewKey(${s})`,'stat-sel',usedKeys)}
       <select class="val-sel" id="ns_${s}_v" disabled><option value=""></option></select>
       <span class="sub-mv" id="ns_${s}_m" style="color:var(--text3)"></span>
     `;
@@ -2115,10 +2267,30 @@ function buildNewSubs(){
   }
 }
 
+function _getNewUsedKeys(excludeSlot, totalSlots){
+  const keys=[];
+  for(let i=0;i<totalSlots;i++){
+    if(i===excludeSlot) continue;
+    const k=document.getElementById(`ns_${i}_k`)?.value||'';
+    if(k) keys.push(k);
+  }
+  return keys;
+}
+
 function onNewKey(s){
   const key=document.getElementById(`ns_${s}_k`)?.value||'';
   const el=document.getElementById(`ns_${s}_v`);
   if(el) el.outerHTML=makeValSelectHTML(`ns_${s}_v`,key,'',`onNewVal(${s})`);
+  // 他スロットの選択肢も更新
+  const lvl=parseInt(document.getElementById('newLevel')?.value)||0;
+  const slots={0:0,5:1,10:2,15:3,20:4,25:5}[lvl]||0;
+  for(let i=0;i<slots;i++){
+    if(i===s) continue;
+    const sel=document.getElementById(`ns_${i}_k`); if(!sel) continue;
+    const curKey=sel.value;
+    const usedKeys=_getNewUsedKeys(i, slots);
+    sel.outerHTML=makeStatSelectHTML(`ns_${i}_k`,curKey,`onNewKey(${i})`,'stat-sel',usedKeys);
+  }
 }
 
 function onNewVal(s){
@@ -2138,7 +2310,24 @@ function runJudge(){
     key:document.getElementById(`ns_${s}_k`)?.value||'',
     val:document.getElementById(`ns_${s}_v`)?.value||'',
   }));
-  const currentScore=subs.reduce((t,s)=>t+(s.key&&s.val?mv(s.key,s.val):0),0);
+  const subScore=subs.reduce((t,s)=>t+(s.key&&s.val?mv(s.key,s.val):0),0);
+
+  // メインステスコア
+  const newMainKey=document.getElementById('newMainKey')?.value||'';
+  const newCostRaw=document.getElementById('newCost')?.value||'';
+  const newCost=newCostRaw?parseInt(newCostRaw):null;
+  let mainScore=0;
+  if(newCost&&newMainKey){
+    const cd=COST_DATA[newCost];
+    const st=cd?cd.stats.find(s=>s.key===newMainKey):null;
+    if(st) mainScore+=mv(newMainKey, st.val);
+    // メインステ2（固定枠）
+    if(cd){
+      if(cd.fixedAtk!=null) mainScore+=mv('flat_atk', cd.fixedAtk);
+      else if(cd.fixedHp!=null) mainScore+=mv('flat_hp', cd.fixedHp);
+    }
+  }
+  const currentScore=subScore+mainScore;
 
   const cmpIdx=parseInt(document.getElementById('compareSlot')?.value??'-1');
   const scores=S.echoes.map((e,i)=>({idx:i,score:echoScore(e)}));
@@ -2202,8 +2391,15 @@ function runJudge(){
 
   document.getElementById('judgeResult').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-      <div class="ed-box"><div class="ed-val" style="color:${curCol}">${fmt(currentScore)}</div><div class="ed-label">新規音骸 現スコア</div></div>
-      <div class="ed-box"><div class="ed-val" style="font-size:17px;color:var(--text2)">${fmt(compareScore)}</div><div class="ed-label">スロット${slotNo}（比較先）</div></div>
+      <div class="ed-box">
+        <div class="ed-val" style="color:${curCol}">${fmt(currentScore)}</div>
+        <div class="ed-label">新規音骸 現スコア</div>
+        ${mainScore>0?`<div style="font-size:10px;color:var(--text3);margin-top:2px;">メイン ${fmt(mainScore)} ＋ サブ ${fmt(subScore)}</div>`:''}
+      </div>
+      <div class="ed-box">
+        <div class="ed-val" style="font-size:17px;color:var(--text2)">${fmt(compareScore)}</div>
+        <div class="ed-label">スロット${slotNo}（比較先）</div>
+      </div>
     </div>
     <div class="${currentScore>=compareScore?'info-box':'warn-box'}">
       ${currentScore>=compareScore
@@ -2223,10 +2419,10 @@ function runJudge(){
       </button>
     </div>`;
 
-  updateProbability(remainSlots,needed);
+  updateProbability(remainSlots, needed, subs.map(s=>s.key).filter(Boolean));
 }
 
-function updateProbability(remainSlots,needed){
+function updateProbability(remainSlots, needed, existingKeys=[]){
   const d=document.getElementById('probResult'); if(!d) return;
   if(remainSlots<=0){
     d.innerHTML=needed<=0?
@@ -2236,30 +2432,42 @@ function updateProbability(remainSlots,needed){
   }
   if(needed<=0){d.innerHTML='<div class="info-box">既に交換ラインを超えています。</div>';return;}
 
-  const allOptions=[];
-  SUB_STATS.forEach(sd=>sd.vals.forEach(v=>allOptions.push(mv(sd.key,v))));
-  const mu=allOptions.reduce((s,v)=>s+v,0)/allOptions.length;
-  const sigma2=allOptions.reduce((s,v)=>s+(v-mu)**2,0)/allOptions.length;
   const E=getPartials().E;
 
-  // 現在の音骸：残スロットで必要スコアを超える確率
-  const sigma=Math.sqrt(sigma2*remainSlots);
-  const meanTotal=mu*remainSlots;
-  const z=(needed-meanTotal)/Math.max(sigma,.0001);
-  const prob=Math.min(100,Math.max(0,(1-normalCDF(z))*100));
+  // サブステ全選択肢をkey別に用意
+  const subPool=SUB_STATS.map(sd=>({key:sd.key, scores:sd.vals.map(v=>mv(sd.key,v))}));
 
-  // 新規音骸（+0、5枠すべて未開放）：全5枠でライン超え確率
-  const sigma5=Math.sqrt(sigma2*5);
-  const mean5=mu*5;
-  const z5=(needed-mean5)/Math.max(sigma5,.0001);
-  const prob5=Math.min(100,Math.max(0,(1-normalCDF(z5))*100));
+  // モンテカルロ：重複なしでn枠引いた合計スコアの分布を推定
+  const TRIALS=20000;
+  function simulate(slots, lockedKeys){
+    let success=0;
+    for(let t=0;t<TRIALS;t++){
+      const used=new Set(lockedKeys);
+      let total=0;
+      for(let i=0;i<slots;i++){
+        const avail=subPool.filter(s=>!used.has(s.key));
+        if(!avail.length) break;
+        const sd=avail[Math.floor(Math.random()*avail.length)];
+        used.add(sd.key);
+        total+=sd.scores[Math.floor(Math.random()*sd.scores.length)];
+      }
+      if(total>=needed) success++;
+    }
+    return success/TRIALS*100;
+  }
+
+  // 1枠平均（重複なし全組み合わせの平均）
+  const allScores=subPool.flatMap(s=>s.scores);
+  const mu=allScores.reduce((a,b)=>a+b,0)/allScores.length;
+
+  const prob =simulate(remainSlots, existingKeys);
+  const prob5=simulate(5, []);
 
   const col =prob >60?'#15803d':prob >30?'#d97706':'#dc2626';
   const col5=prob5>60?'#15803d':prob5>30?'#d97706':'#dc2626';
 
-  // 推奨判定
   const diff=prob-prob5;
-  let rec,recCls;
+  let rec, recCls;
   if(diff>=5){
     rec='✅ 強化継続を推奨 — 現在の音骸の方が期待値が高い';
     recCls='info-box';
@@ -2290,7 +2498,7 @@ function updateProbability(remainSlots,needed){
       1枠平均期待スコア：<b>${fmtPct(mu)}</b><br>
       必要1枠平均（現在）：<b>${fmtPct(needed/remainSlots)}</b><br>
       必要1枠平均（新規）：<b>${fmtPct(needed/5)}</b><br>
-      <span style="font-size:9px;color:var(--text3)">※ 全サブステ均等出現を仮定した概算</span>
+      <span style="font-size:9px;color:var(--text3)">※ 重複なしモンテカルロ法（${TRIALS.toLocaleString()}試行）による推定</span>
     </div>`;
 }
 
@@ -2552,7 +2760,7 @@ function setCharaType(type,btn){ setRegType(type,btn); }
 
 const CH_FIELDS=['base_atk','atk_pct','flat_atk','hp_pct','flat_hp','def_pct',
   'crit_rate','crit_dmg','dmg_fire','dmg_ice','dmg_thunder',
-  'dmg_wind','dmg_light','dmg_dark','dmg_normal','dmg_heavy',
+  'dmg_wind','dmg_light','dmg_dark','dmg_all','dmg_normal','dmg_heavy',
   'dmg_skill','dmg_lib','dmg_echo'];
 
 function getCharaEntries(type){
