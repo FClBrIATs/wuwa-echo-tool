@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音骸最適化ツール | 鳴潮</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f4f8;--card:#fff;--border:#dde3ec;--border2:#c4cdd9;
+  --p:#2563eb;--p2:#1d4ed8;--p-light:#eff6ff;
+  --gold:#b45309;--green:#15803d;--red:#dc2626;--orange:#c2410c;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --shadow:0 1px 3px rgba(15,23,42,.07),0 1px 2px rgba(15,23,42,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP','IBM Plex Sans',sans-serif;font-weight:300;font-size:11px;min-height:100vh;}
+
+/* NAV */
+.nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;display:flex;align-items:stretch;overflow:hidden;}
+.nav-logo{padding:12px 18px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;}
+.nav-logo b{font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--p);}
+.nav-logo small{font-size:9px;color:var(--text3);margin-top:1px;}
+.nav-tabs{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.tab-btn{padding:0 16px;font-size:11px;letter-spacing:1px;color:var(--text2);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent;transition:all .2s;font-family:'IBM Plex Sans',sans-serif;font-weight:600;text-transform:uppercase;white-space:nowrap;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--p);border-bottom-color:var(--p);}
+
+/* LAYOUT */
+.page{display:none;padding:20px;max-width:1440px;margin:0 auto;overflow-x:hidden;}
+.page.active{display:block;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+@media(max-width:1100px){.grid5{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.grid2,.grid5{grid-template-columns:1fr}}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);margin-bottom:14px;}
+.card-head{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:#fafbfd;border-radius:10px 10px 0 0;}
+.card-head h2{font-size:10px;font-weight:700;letter-spacing:1.8px;color:var(--p);text-transform:uppercase;font-family:'IBM Plex Sans',sans-serif;}
+.card-body{padding:14px;}
+
+/* FORMS */
+.field{margin-bottom:9px;}
+.field label{display:block;font-size:10px;letter-spacing:1px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;font-weight:500;}
+input[type=number],input[type=text],select,textarea{
+  width:100%;background:#f8fafc;border:1px solid var(--border2);border-radius:5px;
+  padding:6px 9px;color:var(--text);font-family:inherit;font-size:11px;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+select{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 7px center;
+  padding-right:22px;
+  text-align:left;
+}
+input:focus,select:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.inline2{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+
+/* STAT ROW */
+.stat-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+.sname{font-size:11px;color:var(--text2);width:auto;min-width:9em;flex-shrink:0;white-space:nowrap;}
+.stat-row input{flex:1;min-width:48px;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;}
+.unit{font-size:10px;color:var(--text3);width:14px;flex-shrink:0;}
+.hn{display:none;font-size:10px;padding:2px 7px;background:var(--p-light);color:var(--p);border-radius:4px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+.hn.show{display:inline-flex;}
+.hint{font-size:10px;color:var(--text3);margin:2px 0 6px;line-height:1.6;}
+.sub-note{font-size:10px;color:var(--text3);margin:-4px 0 7px 0;padding-left:6px;font-family:'IBM Plex Mono',monospace;}
+
+/* ATTR ICONS */
+/* AUTO STAT ROWS */
+.auto-stat-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:7px;min-width:0;}
+.auto-stat-block{flex:1;}
+.auto-val{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);padding:5px 8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;min-width:48px;text-align:right;white-space:nowrap;}
+.auto-breakdown{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.7;font-family:'IBM Plex Mono',monospace;}
+.auto-breakdown span{color:var(--text2);}
+.stat-section-label{font-size:10px;letter-spacing:1.2px;color:var(--text3);text-transform:uppercase;font-weight:700;margin:6px 0 3px 0;font-family:'IBM Plex Sans',sans-serif;}
+
+.attr-icon{width:16px;height:16px;flex-shrink:0;display:inline-block;vertical-align:middle;}
+.si-fire{background:#ef4444;clip-path:polygon(50% 0%,0% 100%,100% 100%);}
+.si-ice{background:#3b82f6;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);}
+.si-thunder{background:#a855f7;clip-path:polygon(60% 0%,38% 48%,68% 48%,28% 100%,54% 52%,22% 52%);}
+/* 気動: 渦巻き */
+.si-wind{background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 13 C4 13 2 10.5 2 8 C2 5.2 4.5 3 7.5 3 C10 3 11.5 4.5 11.5 6.5 C11.5 8.2 10.2 9.5 8.5 9.5 C7.2 9.5 6.5 8.7 6.5 7.8 C6.5 7 7.1 6.5 7.8 6.5" fill="none" stroke="%2322c55e" stroke-width="1.7" stroke-linecap="round"/></svg>') center/contain no-repeat;}
+.si-light{background:#eab308;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.si-dark{background:#ec4899;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
+.si-other{background:#94a3b8;border-radius:50%;}
+
+/* HARMONY PANEL */
+.harmony-picker{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.h-slot{border:1px solid var(--border);border-radius:8px;overflow:visible;transition:border-color .2s;position:relative;}
+.h-slot.filled{border-color:var(--p);}
+.h-slot-head{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#fafbfd;border-bottom:1px solid var(--border);border-radius:8px 8px 0 0;}
+.h-slot-name{font-size:11px;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.h-slot-clear{cursor:pointer;color:var(--text3);font-size:15px;line-height:1;border:none;background:transparent;padding:0 2px;}
+.h-slot-body{padding:8px 10px;}
+/* コンパクト行：ドロップダウン + セット + 効果サマリー */
+.h-compact-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.h-compact-row .custom-sel-wrap{flex:1;min-width:140px;margin-bottom:0;}
+.h-effect-summary{font-size:11px;color:var(--p);flex:1;min-width:0;line-height:1.5;}
+.h-effect-summary:empty::before{content:'効果なし';color:var(--text3);}
+.h-desc{font-size:9px;color:var(--text3);margin-top:6px;line-height:1.55;border-top:1px solid var(--border);padding-top:6px;}
+.h-unknown{font-size:9px;color:var(--orange);margin-top:4px;}
+.set-toggle{display:flex;gap:4px;flex-shrink:0;}
+.set-btn{padding:2px 9px;font-size:11px;border:1px solid var(--border2);border-radius:3px;cursor:pointer;background:white;color:var(--text2);font-family:'IBM Plex Sans',sans-serif;font-weight:600;transition:all .15s;}
+.set-btn.active{background:var(--p);border-color:var(--p);color:#fff;}
+/* 手動バフ アコーディオン */
+.h-manual-details{border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.h-manual-details summary{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#fafbfd;border-bottom:1px solid transparent;cursor:pointer;font-size:11px;font-weight:500;list-style:none;user-select:none;}
+.h-manual-details[open] summary{border-bottom-color:var(--border);}
+.h-manual-details summary::-webkit-details-marker{display:none;}
+.h-manual-caret{margin-left:auto;font-size:10px;color:var(--text3);transition:transform .2s;}
+.h-manual-details[open] .h-manual-caret{transform:rotate(90deg);}
+.h-manual-body{padding:8px 10px;}
+
+/* 武器・キャラ登録フォーム 2列グリッド */
+.cw-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-bottom:8px;}
+.cw-field{display:flex;flex-direction:column;gap:2px;}
+.cw-field label{font-size:11px;letter-spacing:.5px;color:var(--text2);font-weight:500;text-transform:uppercase;}
+.cw-field input{padding:5px 7px;font-size:11px;}
+.cw-inp-row{display:flex;align-items:center;gap:4px;}
+.cw-inp-row input{flex:1;min-width:0;}
+.cw-inp-row .unit{font-size:11px;color:var(--text3);flex-shrink:0;}
+
+.custom-sel-wrap{position:relative;margin-bottom:8px;}
+.custom-sel-btn{width:100%;background:#f8fafc;border:1px solid var(--border2);border-radius:5px;padding:5px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;text-align:left;transition:border-color .15s;}
+.custom-sel-btn:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.custom-sel-btn .caret{margin-left:auto;color:var(--text3);font-size:10px;}
+.custom-sel-list{display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid var(--border2);border-radius:6px;box-shadow:0 4px 16px rgba(15,23,42,.12);z-index:200;max-height:220px;overflow-y:auto;}
+.custom-sel-list.open{display:block;}
+.custom-sel-option{display:flex;align-items:center;gap:6px;padding:6px 9px;font-size:11px;cursor:pointer;transition:background .1s;}
+.custom-sel-option:hover{background:var(--p-light);}
+.custom-sel-option.selected{background:#eff6ff;font-weight:500;}
+.sel-separator{padding:2px 9px;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;background:#f8fafc;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+
+/* ED DISPLAY */
+.ed-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.ed-box{background:#fafbfd;border:1px solid var(--border);border-radius:7px;padding:10px;text-align:center;}
+.ed-val{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:var(--gold);}
+.ed-label{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.3px;}
+
+/* MV RANKING */
+.mv-item{padding:9px 11px;background:#fafbfd;border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
+.mv-item-top{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.mv-rank{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;width:20px;flex-shrink:0;}
+.mv-name{flex:1;font-size:11px;}
+.mv-pct{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;}
+.mv-bar-bg{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:3px;}
+.mv-bar{height:100%;border-radius:2px;transition:width .4s;}
+.mv-note{font-size:10px;color:var(--text3);}
+
+/* ECHO SLOTS */
+.echo-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .25s,box-shadow .25s;}
+.echo-card.worst{border-color:#f87171;box-shadow:0 0 10px rgba(248,113,113,.15);}
+.echo-card.best{border-color:#4ade80;box-shadow:0 0 10px rgba(74,222,128,.12);}
+.echo-head{padding:7px 11px;background:#fafbfd;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+.slot-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--text3);width:46px;flex-shrink:0;}
+.echo-head input{flex:1;padding:3px 6px;font-size:11px;background:#f1f5f9;border-color:transparent;}
+.echo-score-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:auto;flex-shrink:0;}
+.echo-body{padding:9px 11px;}
+.sub-row{display:flex;align-items:center;gap:3px;margin-bottom:4px;}
+.sub-row .stat-sel{flex:3;min-width:0;padding:3px 4px;font-size:11px;}
+.sub-row .val-sel{flex:2;min-width:0;padding:3px 4px;font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:600;}
+.sub-mv{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;width:54px;min-width:38px;text-align:right;flex-shrink:1;}
+
+/* RANKING */
+.rank-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;margin-bottom:5px;background:#fafbfd;border:1px solid var(--border);}
+.rank-num{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;width:26px;flex-shrink:0;}
+.rank-info{flex:1;min-width:0;}
+.rank-name{font-size:11px;font-weight:500;}
+.rank-detail{font-size:10px;color:var(--text2);margin-top:2px;}
+.prio-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
+.prio-fill{height:100%;border-radius:2px;transition:width .4s;}
+
+/* MODE SWITCH */
+.mode-sw{display:flex;gap:6px;margin-bottom:12px;}
+.mode-btn{flex:1;padding:7px 4px;font-size:11px;font-weight:600;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:#fff;color:var(--text2);transition:all .2s;font-family:'IBM Plex Sans',sans-serif;text-align:center;}
+.mode-btn.active{background:var(--p);border-color:var(--p);color:#fff;}
+
+/* RATIO VIS */
+.ratio-vis{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:5px;}
+.ratio-seg{height:100%;transition:width .3s;}
+
+/* MISC */
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:9px 11px;font-size:10px;color:#1e40af;line-height:1.6;margin-bottom:10px;}
+.warn-box{background:#fffbeb;border:1px solid #fed7aa;border-radius:6px;padding:8px 11px;font-size:10px;color:#92400e;line-height:1.6;}
+.divider{height:1px;background:var(--border);margin:11px 0;}
+.sec-title{font-size:9px;letter-spacing:1.8px;color:var(--text3);text-transform:uppercase;font-weight:700;margin-bottom:8px;font-family:'IBM Plex Sans',sans-serif;}
+.btn{padding:7px 14px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'IBM Plex Sans',sans-serif;}
+.btn-p{background:var(--p);color:#fff;}
+.btn-p:hover{background:var(--p2);}
+.btn-s{background:#fff;color:var(--text2);border:1px solid var(--border2);}
+.btn-d{background:#fee2e2;color:var(--red);border:1px solid #fca5a5;}
+.prob-display{text-align:center;padding:12px 0;}
+.prob-val{font-family:'IBM Plex Mono',monospace;font-size:36px;font-weight:700;}
+.custom-item{display:flex;align-items:center;gap:8px;padding:9px 11px;background:#fafbfd;border:1px solid var(--border);border-radius:7px;margin-bottom:5px;}
+.attr-sel-btn{padding:3px 10px;font-size:11px;font-weight:600;border:1px solid;border-radius:4px;cursor:pointer;background:#fff;transition:all .15s;font-family:'IBM Plex Sans',sans-serif;}
+.attr-sel-btn.active{color:#fff !important;}
+.credit{text-align:center;padding:20px;color:var(--text3);font-size:9px;line-height:2.2;border-top:1px solid var(--border);margin-top:24px;}
+
+/* HOW-TO */
+.how-to{background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;margin-bottom:10px;font-size:10px;}
+.how-to-page{margin:0 0 14px;}
+details.how-to summary{padding:7px 11px;cursor:pointer;color:#0369a1;font-weight:600;user-select:none;list-style:none;display:flex;align-items:center;gap:5px;}
+details.how-to summary::-webkit-details-marker{display:none;}
+details.how-to[open] summary::after{content:'▲';font-size:8px;margin-left:auto;}
+details.how-to:not([open]) summary::after{content:'▼';font-size:8px;margin-left:auto;}
+.how-to-body{padding:8px 12px 10px;color:#0c4a6e;line-height:1.85;border-top:1px solid #bae6fd;}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+/* --- 入力欄 iOS自動ズーム抑止 (font-size >= 16px on focus) --- */
+@media(max-width:767px){
+  input[type=number],input[type=text],select,textarea{font-size:16px;}
+}
+}
+
+/* --- 桁数連動：number inputは内容に合わせてmin-widthをJSで調整
+       CSSでは最低保証として ch 単位を使用 --- */
+.stat-row input{min-width:5ch;}
+.h-buff-input{min-width:4ch;}
+
+/* --- NAV: スマホはロゴ非表示 + タブをスクロール --- */
+@media(max-width:600px){
+  .nav-logo{display:none;}
+  .nav-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .nav-tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{padding:0 11px;font-size:10px;letter-spacing:.5px;white-space:nowrap;height:44px;}
+  .page{padding:12px 10px;}
+  .card-body{padding:10px;}
+}
+
+/* --- STAT ROW: 狭い画面でsnameを縮小 --- */
+@media(max-width:500px){
+  .sname{font-size:11px;}
+
+
+  .auto-stat-row{flex-wrap:wrap;}
+  .auto-val{min-width:50px;font-size:11px;}
+}
+@media(max-width:380px){
+  .sname{font-size:10px;}
+
+
+  .stat-row input{font-size:14px;padding:4px 5px;}
+}
+
+/* --- ECHO CARDS --- */
+@media(max-width:500px){
+  .sub-row .stat-sel{font-size:10px;}
+  .sub-row .val-sel{font-size:10px;}
+  .sub-mv{width:42px;font-size:10px;}
+  .echo-head input{font-size:10px;}
+  .echo-score-badge{font-size:10px;padding:2px 5px;}
+  .slot-lbl{width:36px;font-size:10px;}
+}
+
+/* --- HARMONY BUFF GRID --- */
+@media(max-width:500px){
+  .h-buff-grid{grid-template-columns:1fr;}
+  .h-buff-label{width:90px;}
+  .h-buff-input{flex:1;width:auto;}
+  .h-buff-row{gap:6px;}
+}
+
+/* --- HARMONY PICKER 2列→1列 --- */
+@media(max-width:480px){
+  .harmony-picker{grid-template-columns:1fr;}
+}
+
+/* --- ED GRID (ダメージ表示) --- */
+@media(max-width:480px){
+  .ed-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:360px){
+  .ed-grid{grid-template-columns:1fr;}
+}
+
+/* --- RATIO INPUT ROW (ratio vis) --- */
+@media(max-width:500px){
+  .mode-sw{gap:4px;}
+  .mode-btn{padding:6px 2px;font-size:10px;}
+}
+
+/* --- MODE-SW ラップ許可 (属性ボタン) --- */
+#cAttrBtns,#cAttrBtns2{flex-wrap:wrap;}
+
+/* --- AUTO-STAT 自動加算行 --- */
+@media(max-width:500px){
+  .auto-stat-row{margin-bottom:5px;}
+  .auto-breakdown{font-size:8px;}
+}
+
+/* --- 装備音骸 grid5: 400px未満は2列 --- */
+@media(max-width:400px){
+  .grid5{grid-template-columns:1fr 1fr;}
+}
+
+/* --- inline2: 300px未満は1列 --- */
+@media(max-width:320px){
+  .inline2{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo"><b>ECHO OPTIMIZER</b><small>鳴潮 音骸厳選支援ツール</small></div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('tab-stats',this)">① ステータス</button>
+    <button class="tab-btn" onclick="showTab('tab-equip',this)">② 装備音骸</button>
+    <button class="tab-btn" onclick="showTab('tab-new',this)">③ 新規判定</button>
+    <button class="tab-btn" onclick="showTab('tab-custom',this)">⚙ 登録</button>
+  </div>
+</nav>
+
+<!-- TAB 1 -->
+<div id="tab-stats" class="page active">
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>参照ステータス</h2></div>
+        <div class="card-body">
+          <details class="how-to"><summary>📖 使い方</summary>
+          <div class="how-to-body">
+            <b>手動入力</b>：自動加算されないバフ（キャラスキル等）を直接入力します。<br>
+            <b>自動加算</b>：ハーモニー・武器キャラ登録・音骸メインステのバフを自動で計算に反映します。ONの場合、各欄に「自動」行で内訳が表示されます。<br>
+            <b>使用属性</b>：選択した属性のバフのみ計算に使用します。複数属性を合算したい場合は「合算」を選択。<br>
+            <b>ダメージ比率</b>：各スキルの比率に応じてスコアの重み付けが変わります。合計100を推奨。
+          </div>
+        </details>
+        <div class="sec-title" style="margin-top:8px;">キャラ / 武器 選択</div>
+          <div class="stat-row">
+            <span class="sname">キャラ</span>
+            <select id="sel_chara" onchange="onCharaWeaponChange();recalcAll()" style="flex:1;font-size:11px;">
+              <option value="">なし</option>
+            </select>
+          </div>
+          <div class="stat-row" style="margin-bottom:10px;">
+            <span class="sname">武器</span>
+            <select id="sel_weapon" onchange="onCharaWeaponChange();recalcAll()" style="flex:1;font-size:11px;">
+              <option value="">なし</option>
+            </select>
+          </div>
+          <div class="sub-note" id="note_charaweapon"></div>
+          <div class="divider"></div>
+          <!-- 自動加算トグル -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 10px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;">
+            <button id="autoBuffBtn" class="btn btn-d" style="padding:4px 12px;font-size:11px;min-width:80px;" onclick="toggleAutoBuff()">自動加算 OFF</button>
+            <span style="font-size:10px;color:var(--text2);">ハーモニー・武器・キャラ・音骸/サブのバフを計算に反映。<br>OFFにすると手動入力値のみで計算します。</span>
+          </div>
+          <div class="mode-sw">
+            <button class="mode-btn active" onclick="setStatMode('atk',this)">攻撃力基準</button>
+            <button class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
+            <button class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
+          </div>
+          <!-- 基礎/全体 -->
+          <div class="stat-row">
+            <span class="sname" id="lbl_base">基礎攻撃力</span>
+            <input type="number" step="any" id="inp_base" placeholder="例：1000" oninput="S.base_stat=this.value;recalcAll();autoSize(this)">
+          </div>
+          <div class="stat-row">
+            <span class="sname" id="lbl_total">全体攻撃力</span>
+            <input type="number" step="any" id="inp_total" placeholder="例：2000" oninput="S.total_stat=this.value;recalcAll();autoSize(this)">
+          </div>
+          <div class="sub-note" id="note_addend"></div><div class="hint">手動入力値。自動加算ONの場合、武器・キャラ・音骸の分がここに加算されます。</div>
+          <div class="divider"></div>
+          <!-- クリ：手動 -->
+          <div class="stat-row">
+            <span class="sname">クリ率（手動）</span>
+            <input type="number" step="any" id="inp_cr" placeholder="例: 60" oninput="S.crit_rate=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <!-- クリ率：自動加算 -->
+          <div class="auto-stat-row" id="auto_row_cr" style="display:none">
+            <span class="sname" style="color:var(--green)">クリ率（自動）</span>
+            <div class="auto-stat-block">
+              <div class="auto-val" id="auto_val_cr">+0%</div>
+              <div class="auto-breakdown" id="auto_bd_cr"></div>
+            </div>
+            <span class="unit">%</span>
+          </div>
+          <div class="sub-note" id="note_cr"></div><div class="hint">自動加算ONなら「自動」行に内訳（ハーモニー・武器・キャラ・音骸）が表示されます。</div>
+          <!-- クリダメ：手動 -->
+          <div class="stat-row">
+            <span class="sname">クリダメ（手動）</span>
+            <input type="number" step="any" id="inp_cd" placeholder="例: 150" oninput="S.crit_dmg=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <!-- クリダメ：自動加算 -->
+          <div class="auto-stat-row" id="auto_row_cd" style="display:none">
+            <span class="sname" style="color:var(--green)">クリダメ（自動）</span>
+            <div class="auto-stat-block">
+              <div class="auto-val" id="auto_val_cd">+0%</div>
+              <div class="auto-breakdown" id="auto_bd_cd"></div>
+            </div>
+            <span class="unit">%</span>
+          </div>
+          <div class="sub-note" id="note_cd"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>ダメバフ</h2></div>
+        <div class="card-body">
+          <div class="sec-title">属性バフ（キャラが使う属性のみ入力）</div>
+          <div class="stat-row">
+            <span class="sname" style="color:#ef4444">焦熱バフ（手動）</span>
+            <input type="number" step="any" id="inp_dfire" placeholder="例: 0" oninput="S.dmg_fire=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <div class="auto-stat-row" id="auto_row_dfire" style="display:none">
+            <span class="sname" style="color:var(--green)">焦熱バフ（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dfire">+0%</div><div class="auto-breakdown" id="auto_bd_dfire"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row">
+            <span class="sname" style="color:#3b82f6">凝縮バフ（手動）</span>
+            <input type="number" step="any" id="inp_dice" placeholder="例: 0" oninput="S.dmg_ice=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <div class="auto-stat-row" id="auto_row_dice" style="display:none">
+            <span class="sname" style="color:var(--green)">凝縮バフ（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dice">+0%</div><div class="auto-breakdown" id="auto_bd_dice"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row">
+            <span class="sname" style="color:#a855f7">電導バフ（手動）</span>
+            <input type="number" step="any" id="inp_dthunder" placeholder="例: 0" oninput="S.dmg_thunder=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <div class="auto-stat-row" id="auto_row_dthunder" style="display:none">
+            <span class="sname" style="color:var(--green)">電導バフ（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dthunder">+0%</div><div class="auto-breakdown" id="auto_bd_dthunder"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row">
+            <span class="sname" style="color:#22c55e">気動バフ（手動）</span>
+            <input type="number" step="any" id="inp_dwind" placeholder="例: 0" oninput="S.dmg_wind=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <div class="auto-stat-row" id="auto_row_dwind" style="display:none">
+            <span class="sname" style="color:var(--green)">気動バフ（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dwind">+0%</div><div class="auto-breakdown" id="auto_bd_dwind"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row">
+            <span class="sname" style="color:#eab308">回折バフ（手動）</span>
+            <input type="number" step="any" id="inp_dlight" placeholder="例: 0" oninput="S.dmg_light=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <div class="auto-stat-row" id="auto_row_dlight" style="display:none">
+            <span class="sname" style="color:var(--green)">回折バフ（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dlight">+0%</div><div class="auto-breakdown" id="auto_bd_dlight"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row">
+            <span class="sname" style="color:#ec4899">消滅バフ（手動）</span>
+            <input type="number" step="any" id="inp_ddark" placeholder="例: 0" oninput="S.dmg_dark=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span>
+          </div>
+          <div class="auto-stat-row" id="auto_row_ddark" style="display:none">
+            <span class="sname" style="color:var(--green)">消滅バフ（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_ddark">+0%</div><div class="auto-breakdown" id="auto_bd_ddark"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="sub-note" id="note_da"></div>
+          <div class="divider"></div>
+          <div class="sec-title">スキル種別ダメバフ（武器・パッシブ等）</div>
+          <div class="stat-row"><span class="sname">通常攻撃（手動）</span>
+            <input type="number" step="any" id="inp_dn" value="0" oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span></div>
+          <div class="auto-stat-row" id="auto_row_dn" style="display:none">
+            <span class="sname" style="color:var(--green)">通常攻撃（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dn">+0%</div><div class="auto-breakdown" id="auto_bd_dn"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row"><span class="sname">重撃（手動）</span>
+            <input type="number" step="any" id="inp_dh" value="0" oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span></div>
+          <div class="auto-stat-row" id="auto_row_dh" style="display:none">
+            <span class="sname" style="color:var(--green)">重撃（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dh">+0%</div><div class="auto-breakdown" id="auto_bd_dh"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row"><span class="sname">共鳴スキル（手動）</span>
+            <input type="number" step="any" id="inp_ds" value="0" oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span></div>
+          <div class="auto-stat-row" id="auto_row_ds" style="display:none">
+            <span class="sname" style="color:var(--green)">共鳴スキル（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_ds">+0%</div><div class="auto-breakdown" id="auto_bd_ds"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row"><span class="sname">共鳴解放（手動）</span>
+            <input type="number" step="any" id="inp_dl" value="0" oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span></div>
+          <div class="auto-stat-row" id="auto_row_dl" style="display:none">
+            <span class="sname" style="color:var(--green)">共鳴解放（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_dl">+0%</div><div class="auto-breakdown" id="auto_bd_dl"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="stat-row"><span class="sname">音骸スキル（手動）</span>
+            <input type="number" step="any" id="inp_de" value="0" oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)">
+            <span class="unit">%</span></div>
+          <div class="auto-stat-row" id="auto_row_de" style="display:none">
+            <span class="sname" style="color:var(--green)">音骸スキル（自動）</span>
+            <div class="auto-stat-block"><div class="auto-val" id="auto_val_de">+0%</div><div class="auto-breakdown" id="auto_bd_de"></div></div>
+            <span class="unit">%</span>
+          </div>
+          <div class="divider"></div>
+          <div class="sec-title">使用属性</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
+            <button class="attr-sel-btn" data-attr="fire"   onclick="setUseAttr('fire',this)"  style="border-color:#ef4444;color:#ef4444">焦熱</button>
+            <button class="attr-sel-btn" data-attr="ice"    onclick="setUseAttr('ice',this)"   style="border-color:#3b82f6;color:#3b82f6">凝縮</button>
+            <button class="attr-sel-btn" data-attr="thunder"onclick="setUseAttr('thunder',this)"style="border-color:#a855f7;color:#a855f7">電導</button>
+            <button class="attr-sel-btn" data-attr="wind"   onclick="setUseAttr('wind',this)"  style="border-color:#22c55e;color:#22c55e">気動</button>
+            <button class="attr-sel-btn" data-attr="light"  onclick="setUseAttr('light',this)" style="border-color:#eab308;color:#eab308">回折</button>
+            <button class="attr-sel-btn" data-attr="dark"   onclick="setUseAttr('dark',this)"  style="border-color:#ec4899;color:#ec4899">消滅</button>
+            <button class="attr-sel-btn active-none" data-attr="" onclick="setUseAttr('',this)" style="border-color:#94a3b8;color:#94a3b8">合算</button>
+          </div>
+          <div class="sub-note" id="note_useattr"></div><div class="hint">選択した属性バフのみ計算に使用。「合算」は全属性バフを加算します。</div>
+          <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> = 100%</span></div>
+          <div class="inline2">
+            <div class="field"><label>通常攻撃</label>
+              <input type="number" min="0" max="100" id="r_n" value="0" oninput="S.ratio.normal=+this.value||0;updateRatioVis();recalcAll();autoSize(this)"></div>
+            <div class="field"><label>重撃</label>
+              <input type="number" min="0" max="100" id="r_h" value="0" oninput="S.ratio.heavy=+this.value||0;updateRatioVis();recalcAll();autoSize(this)"></div>
+            <div class="field"><label>共鳴スキル</label>
+              <input type="number" min="0" max="100" id="r_s" value="100" oninput="S.ratio.skill=+this.value||0;updateRatioVis();recalcAll();autoSize(this)"></div>
+            <div class="field"><label>共鳴解放</label>
+              <input type="number" min="0" max="100" id="r_l" value="0" oninput="S.ratio.lib=+this.value||0;updateRatioVis();recalcAll();autoSize(this)"></div>
+            <div class="field"><label>音骸スキル</label>
+              <input type="number" min="0" max="100" id="r_e" value="0" oninput="S.ratio.echo=+this.value||0;updateRatioVis();recalcAll();autoSize(this)"></div>
+          </div>
+          <div class="ratio-vis" id="ratioVis"></div><div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>ハーモニー効果</h2></div>
+        <div class="card-body">
+          <div class="harmony-picker" id="harmonyPicker"></div>
+          <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>期待ダメージ指数</h2></div>
+        <div class="card-body">
+          <div class="ed-grid" id="edDisplay"></div>
+          <div id="balanceNote"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>各サブステ優先度</h2></div>
+        <div class="card-body">
+          <div class="info-box">各ステータスが<strong>+5%上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。</div>
+          <div id="mvRanking"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2 -->
+<div id="tab-equip" class="page">
+  <details class="how-to how-to-page"><summary>📖 使い方</summary>
+    <div class="how-to-body">
+      <b>装備中の音骸5スロットのステータスを入力してスコアを比較します。</b><br>
+      <b>メインステ</b>：コストを選択すると対応する値の選択肢が表示されます。①タブのバフ計算に自動反映されます。<br>
+      <b>サブステ</b>：種類→値の順に選択します（最大5枠）。<br>
+      <b>スコア</b>：①タブのステータスを基準にした期待ダメージへの貢献度。<span style="color:#dc2626">赤枠が最弱</span>、<span style="color:#22c55e">緑枠が最強</span>スロットです。
+    </div>
+  </details>
+  <div class="card">
+    <div class="card-head"><h2>装備中音骸 — 厳選優先度</h2></div>
+    <div class="card-body" id="rankBody"><div style="color:var(--text3);font-size:11px;">音骸のサブステを入力すると優先度が表示されます</div></div>
+  </div>
+  <div class="grid5" id="echoGrid"></div>
+</div>
+
+<!-- TAB 3 -->
+<div id="tab-new" class="page">
+  <div class="grid2">
+    <div class="card">
+      <div class="card-head"><h2>新規入手音骸</h2></div>
+      <div class="card-body">
+        <details class="how-to"><summary>📖 使い方</summary>
+          <div class="how-to-body">
+            <b>新規音骸のスコアが装備中スロットの合格ラインを超えるか判定します。</b><br>
+            <b>レベル</b>：選択した強化段階までのサブ枠数が入力可能になります。<br>
+            <b>比較スロット</b>：「自動」は②タブの最弱スロットを参照します。<br>
+            <b>期待確率</b>：残サブ枠でランダムに付与された場合に合格ラインを超える確率（正規分布近似）です。
+          </div>
+        </details>
+        <div class="inline2" style="margin-bottom:10px;">
+          <div class="field"><label>音骸名（メモ）</label><input type="text" id="newName" placeholder="例：無冠者"></div>
+          <div class="field"><label>現在レベル</label>
+            <select id="newLevel" onchange="buildNewSubs()">
+              <option value="0">+0（0枠）</option><option value="5">+5（1枠）</option>
+              <option value="10">+10（2枠）</option><option value="15">+15（3枠）</option>
+              <option value="20">+20（4枠）</option><option value="25">+25（5枠）</option>
+            </select></div>
+        </div>
+        <div class="inline2" style="margin-bottom:6px;">
+          <div class="field"><label>コスト</label>
+            <select id="newCost" onchange="onNewCost()">
+              <option value="">-</option>
+              <option value="4">コスト4</option>
+              <option value="3">コスト3</option>
+              <option value="1">コスト1</option>
+            </select></div>
+          <div class="field"><label>メインステ</label>
+            <select id="newMainKey" disabled>
+              <option value="">-</option>
+            </select></div>
+        </div>
+        <div class="hint">選択した強化段階のサブ枠数まで入力できます。</div>
+        <div class="sec-title">現在のサブステ</div>
+        <div id="newSubRows"></div>
+        <div class="divider"></div>
+        <div class="field"><label>比較スロット</label><div class="hint">「自動」は②タブの最弱スロット（赤枠）と比較します。</div>
+          <select id="compareSlot">
+            <option value="-1">自動（最弱スロット）</option>
+            <option value="0">スロット 1</option><option value="1">スロット 2</option>
+            <option value="2">スロット 3</option><option value="3">スロット 4</option>
+            <option value="4">スロット 5</option>
+          </select></div>
+        <button class="btn btn-p" onclick="runJudge()" style="width:100%;margin-top:6px;">判定する</button>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-head"><h2>判定結果</h2></div>
+        <div class="card-body" id="judgeResult"><div class="info-box">新規音骸のサブステを入力して「判定する」を押してください。</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>残スロット 期待確率</h2></div>
+        <div class="card-body" id="probResult"><div style="color:var(--text3);font-size:11px;">判定実行後に表示されます</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-box" style="font-size:10px;margin-top:0;">
+    ※ 確率計算は「全サブステが均等な確率で出現する」という仮定のもとに算出しています。実際の出現確率とは異なる場合があります。
+  </div>
+</div>
+
+<!-- TAB 4: 登録 -->
+<div id="tab-custom" class="page">
+  <div class="grid2">
+
+    <!-- 左：切り替えフォーム -->
+    <div class="card">
+      <div class="card-head" style="gap:10px;">
+        <h2>登録</h2>
+        <div class="mode-sw" style="margin:0;flex:1;">
+          <button class="mode-btn active" id="regtype_harmony" onclick="setRegType('harmony',this)">ハーモニー</button>
+          <button class="mode-btn" id="regtype_weapon"  onclick="setRegType('weapon',this)">武器</button>
+          <button class="mode-btn" id="regtype_chara"   onclick="setRegType('chara',this)">キャラ</button>
+        </div>
+      </div>
+      <div class="card-body">
+
+        <!-- ハーモニーフォーム -->
+        <div id="form_harmony">
+          <details class="how-to"><summary>📖 使い方</summary>
+            <div class="how-to-body">
+              <b>未収録ハーモニーを手動登録して①タブの選択肢に追加できます。</b><br>
+              <b>セットタイプ</b>：「2+5セット」は2セット/5セット効果を分けて入力。3セットは1種類のみ。<br>
+              <b>属性ダメバフ</b>：直下の属性ボタンで対象属性を選択。片方を押すと両方に連動します。<br>
+              <b>登録データ</b>：localStorageに保存。ブラウザデータ消去で削除されます。
+            </div>
+          </details>
+          <div class="cw-grid" style="margin-bottom:8px;">
+            <div class="cw-field"><label>名称</label><input type="text" id="cName" placeholder="例：喧騒に隠す回光"></div>
+            <div class="cw-field"><label>セットタイプ</label>
+              <select id="cSetType" onchange="onCustomSetType(this.value)"><option value="2+5">2+5セット</option><option value="3">3セット</option></select>
+            </div>
+          </div>
+          <input type="hidden" id="cAttr" value="fire">
+          <div class="divider"></div>
+          <div id="cSet2Block">
+            <div class="sec-title" style="color:var(--p);">2セット効果</div>
+            <div class="cw-grid">
+              <div class="cw-field"><label>属性ダメバフ</label><div class="cw-inp-row"><input type="number" id="c2Dmg" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            </div>
+              <div id="cAttrBtns" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;margin-bottom:6px;">
+                <button type="button" class="attr-sel-btn active" data-attr="fire" data-color="#ef4444"
+                  style="border-color:#ef4444;background:#ef4444;color:#fff;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('fire',this,'cAttrBtns')"><span class="attr-icon si-fire" style="width:10px;height:10px;margin-right:2px;"></span>焦熱</button>
+                <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#3b82f6"
+                  style="border-color:#3b82f6;color:#3b82f6;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('ice',this,'cAttrBtns')"><span class="attr-icon si-ice" style="width:10px;height:10px;margin-right:2px;"></span>凝縮</button>
+                <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#a855f7"
+                  style="border-color:#a855f7;color:#a855f7;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('thunder',this,'cAttrBtns')"><span class="attr-icon si-thunder" style="width:10px;height:10px;margin-right:2px;"></span>電導</button>
+                <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#22c55e"
+                  style="border-color:#22c55e;color:#22c55e;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('wind',this,'cAttrBtns')"><span class="attr-icon si-wind" style="width:10px;height:10px;margin-right:2px;"></span>気動</button>
+                <button type="button" class="attr-sel-btn" data-attr="light" data-color="#eab308"
+                  style="border-color:#eab308;color:#eab308;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('light',this,'cAttrBtns')"><span class="attr-icon si-light" style="width:10px;height:10px;margin-right:2px;"></span>回折</button>
+                <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#ec4899"
+                  style="border-color:#ec4899;color:#ec4899;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('dark',this,'cAttrBtns')"><span class="attr-icon si-dark" style="width:10px;height:10px;margin-right:2px;"></span>消滅</button>
+                <button type="button" class="attr-sel-btn" data-attr="other" data-color="#94a3b8"
+                  style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('other',this,'cAttrBtns')"><span class="attr-icon si-other" style="width:10px;height:10px;margin-right:2px;"></span>その他</button>
+              </div>
+            <div class="cw-grid">
+              <div class="cw-field"><label>攻撃力%</label><div class="cw-inp-row"><input type="number" id="c2Atk" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>HP%</label><div class="cw-inp-row"><input type="number" id="c2HP" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>防御力%</label><div class="cw-inp-row"><input type="number" id="c2DEF" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>クリ率</label><div class="cw-inp-row"><input type="number" id="c2CR" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>クリダメ</label><div class="cw-inp-row"><input type="number" id="c2CD" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>通常攻撃バフ</label><div class="cw-inp-row"><input type="number" id="c2DN" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>重撃バフ</label><div class="cw-inp-row"><input type="number" id="c2DH" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>共鳴スキルバフ</label><div class="cw-inp-row"><input type="number" id="c2DS" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>共鳴解放バフ</label><div class="cw-inp-row"><input type="number" id="c2DL" step="any" placeholder="0"><span class="unit">%</span></div></div>
+              <div class="cw-field"><label>音骸スキルバフ</label><div class="cw-inp-row"><input type="number" id="c2DE" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            </div>
+            <div class="sec-title" style="color:#7c3aed;margin-top:4px;">5セット効果（2セット込み累計）</div>
+          </div>
+          <div class="sec-title" id="cSet5Title" style="color:#7c3aed;display:none;">3セット効果</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>属性ダメバフ</label><div class="cw-inp-row"><input type="number" id="cDmg" step="any" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+              <div id="cAttrBtns2" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;margin-bottom:6px;">
+                <button type="button" class="attr-sel-btn active" data-attr="fire" data-color="#ef4444"
+                  style="border-color:#ef4444;background:#ef4444;color:#fff;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('fire',this,'cAttrBtns2')"><span class="attr-icon si-fire" style="width:10px;height:10px;margin-right:2px;"></span>焦熱</button>
+                <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#3b82f6"
+                  style="border-color:#3b82f6;color:#3b82f6;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('ice',this,'cAttrBtns2')"><span class="attr-icon si-ice" style="width:10px;height:10px;margin-right:2px;"></span>凝縮</button>
+                <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#a855f7"
+                  style="border-color:#a855f7;color:#a855f7;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('thunder',this,'cAttrBtns2')"><span class="attr-icon si-thunder" style="width:10px;height:10px;margin-right:2px;"></span>電導</button>
+                <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#22c55e"
+                  style="border-color:#22c55e;color:#22c55e;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('wind',this,'cAttrBtns2')"><span class="attr-icon si-wind" style="width:10px;height:10px;margin-right:2px;"></span>気動</button>
+                <button type="button" class="attr-sel-btn" data-attr="light" data-color="#eab308"
+                  style="border-color:#eab308;color:#eab308;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('light',this,'cAttrBtns2')"><span class="attr-icon si-light" style="width:10px;height:10px;margin-right:2px;"></span>回折</button>
+                <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#ec4899"
+                  style="border-color:#ec4899;color:#ec4899;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('dark',this,'cAttrBtns2')"><span class="attr-icon si-dark" style="width:10px;height:10px;margin-right:2px;"></span>消滅</button>
+                <button type="button" class="attr-sel-btn" data-attr="other" data-color="#94a3b8"
+                  style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                  onclick="setCAttr('other',this,'cAttrBtns2')"><span class="attr-icon si-other" style="width:10px;height:10px;margin-right:2px;"></span>その他</button>
+              </div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>攻撃力%</label><div class="cw-inp-row"><input type="number" id="cAtk" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>HP%</label><div class="cw-inp-row"><input type="number" id="cHP" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>防御力%</label><div class="cw-inp-row"><input type="number" id="cDEF" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>クリ率</label><div class="cw-inp-row"><input type="number" id="cCR" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>クリダメ</label><div class="cw-inp-row"><input type="number" id="cCD" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>通常攻撃バフ</label><div class="cw-inp-row"><input type="number" id="cDN" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>重撃バフ</label><div class="cw-inp-row"><input type="number" id="cDH" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>共鳴スキルバフ</label><div class="cw-inp-row"><input type="number" id="cDS" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>共鳴解放バフ</label><div class="cw-inp-row"><input type="number" id="cDL" step="any" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>音骸スキルバフ</label><div class="cw-inp-row"><input type="number" id="cDE" step="any" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="divider"></div>
+          <div class="cw-field" style="margin-bottom:8px;"><label>説明（任意）</label><input type="text" id="cDesc" placeholder="発動条件など"></div>
+          <button class="btn btn-p" onclick="addCustomHarmony()" style="width:100%;">ハーモニーを登録</button>
+        </div>
+
+        <!-- 武器フォーム -->
+        <div id="form_weapon" style="display:none;">
+          <details class="how-to"><summary>📖 使い方</summary>
+            <div class="how-to-body">
+              <b>登録した武器は①タブのドロップダウンから選択すると自動反映されます。</b><br>
+              <b>基礎攻撃力</b>：①タブの基礎攻撃力に加算されます。<br>
+              <b>各バフ値</b>：①タブの「自動」行に内訳として表示されます。<br>
+              <b>登録データ</b>：localStorageに保存。ブラウザデータ消去で削除されます。
+            </div>
+          </details>
+          <div class="cw-field" style="margin-bottom:8px;"><label>名称</label><input type="text" id="ch_name" placeholder="例：千古の湖水"></div>
+          <div class="sec-title">メインステータス</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk" placeholder="0"></div>
+            <div class="cw-field"><label>攻撃力%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_atk_pct" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>攻撃力実数</label><input type="number" step="any" id="ch_flat_atk" placeholder="0"></div>
+            <div class="cw-field"><label>HP%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_hp_pct" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>HP実数</label><input type="number" step="any" id="ch_flat_hp" placeholder="0"></div>
+            <div class="cw-field"><label>防御%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_def_pct" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="sec-title">クリティカル</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>クリ率</label><div class="cw-inp-row"><input type="number" step="any" id="ch_crit_rate" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>クリダメ</label><div class="cw-inp-row"><input type="number" step="any" id="ch_crit_dmg" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="sec-title">スキル種別ダメバフ</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>通常攻撃</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_normal" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>重撃</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_heavy" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>共鳴スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>共鳴解放</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>音骸スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
+            <input type="text" id="ch_desc" placeholder="例：精錬5、パッシブ込み"></div>
+          <button class="btn btn-p" onclick="addCharaEntry()" style="width:100%;">武器を登録</button>
+        </div>
+
+        <!-- キャラフォーム -->
+        <div id="form_chara" style="display:none;">
+          <details class="how-to"><summary>📖 使い方</summary>
+            <div class="how-to-body">
+              <b>登録したキャラは①タブのドロップダウンから選択すると自動反映されます。</b><br>
+              <b>各バフ値</b>：①タブの「自動」行に内訳として表示されます。<br>
+              <b>属性バフ</b>：共鳴スキル等による恒常的な属性バフを入力します。<br>
+              <b>登録データ</b>：localStorageに保存。ブラウザデータ消去で削除されます。
+            </div>
+          </details>
+          <div class="cw-field" style="margin-bottom:8px;"><label>名称</label><input type="text" id="ch_name_c" placeholder="例：今汐"></div>
+          <div class="sec-title">メインステータス</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk_c" placeholder="0"></div>
+            <div class="cw-field"><label>攻撃力%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_atk_pct_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>攻撃力実数</label><input type="number" step="any" id="ch_flat_atk_c" placeholder="0"></div>
+            <div class="cw-field"><label>HP%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_hp_pct_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>HP実数</label><input type="number" step="any" id="ch_flat_hp_c" placeholder="0"></div>
+            <div class="cw-field"><label>防御%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_def_pct_c" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="sec-title">クリティカル</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>クリ率</label><div class="cw-inp-row"><input type="number" step="any" id="ch_crit_rate_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>クリダメ</label><div class="cw-inp-row"><input type="number" step="any" id="ch_crit_dmg_c" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="sec-title">属性バフ</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label style="color:#ef4444">焦熱</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_fire_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label style="color:#3b82f6">凝縮</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_ice_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label style="color:#a855f7">電導</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_thunder_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label style="color:#22c55e">気動</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_wind_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label style="color:#eab308">回折</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_light_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label style="color:#ec4899">消滅</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_dark_c" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="sec-title">スキル種別ダメバフ</div>
+          <div class="cw-grid">
+            <div class="cw-field"><label>通常攻撃</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_normal_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>重撃</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_heavy_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>共鳴スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>共鳴解放</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib_c" placeholder="0"><span class="unit">%</span></div></div>
+            <div class="cw-field"><label>音骸スキル</label><div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo_c" placeholder="0"><span class="unit">%</span></div></div>
+          </div>
+          <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
+            <input type="text" id="ch_desc_c" placeholder="例：共鳴スキルLv10、パッシブ込み"></div>
+          <button class="btn btn-p" onclick="addCharaEntry()" style="width:100%;">キャラを登録</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 右：登録済みリスト -->
+    <div class="card">
+      <div class="card-head"><h2 id="reg_list_head">登録済みハーモニー</h2></div>
+      <div id="customList"      class="card-body">                           <div style="color:var(--text3);font-size:11px;">登録データなし</div></div>
+      <div id="charaList"       class="card-body" style="display:none;">    <div style="color:var(--text3);font-size:11px;">登録データなし</div></div>
+    </div>
+
+  </div>
+
+    <div class="credit">
+    このツールはClaude（Anthropic）を用いて作成された私的ツールです。<br>
+    鳴潮（Wuthering Waves）は Kuro Games の著作物です。ゲームデータの利用は個人的な参照目的のみです。<br>
+    本ツールは非公式であり、Kuro Games とは一切関係ありません。
+  </div>
+</div>
+
+<script>
+// ================================================================
+// RESPONSIVE: 桁数連動 input サイズ調整
+// ================================================================
+function autoSize(el){
+  if(!el) return;
+  // stat-row内のinputはflex:1なので幅指定不要
+  // h-buff-input（ハーモニーバフグリッド）は固定幅なので桁連動させる
+  if(el.classList.contains('h-buff-input')){
+    const len=Math.max((el.value||'').replace('-','').length, 1);
+    el.style.width=Math.max(len+1.5, 4)+'ch';
+  }
+  // stat-row input（ステータスタブ）：デスクトップのみ最小幅確保
+  // flex:1があるのでwidth上書きは不要、minWidthのみ調整
+  if(el.closest('.stat-row')){
+    const len=Math.max((el.value||'').replace('-','').length, 1);
+    el.style.minWidth=Math.max(len+1.5, 4)+'ch';
+  }
+}
+function autoSizeAll(){
+  document.querySelectorAll('input[type=number]').forEach(autoSize);
+}
+
+// ================================================================
+// ATTR
+// ================================================================
+const ATTR={
+  fire:  {cls:'si-fire',   color:'#ef4444', label:'焦熱', emoji:'🔴'},
+  ice:   {cls:'si-ice',    color:'#3b82f6', label:'凝縮', emoji:'🔵'},
+  thunder:{cls:'si-thunder',color:'#a855f7',label:'電導', emoji:'🟣'},
+  wind:  {cls:'si-wind',   color:'#22c55e', label:'気動', emoji:'🟢'},
+  light: {cls:'si-light',  color:'#eab308', label:'回折', emoji:'🟡'},
+  dark:  {cls:'si-dark',   color:'#ec4899', label:'消滅', emoji:'🩷'},
+  other: {cls:'si-other',  color:'#94a3b8', label:'その他',emoji:'⬜'},
+};
+
+// ================================================================
+// HARMONY DATA (スクリーンショット準拠)
+// ================================================================
+function B(o={}){
+  return {atk_pct:0,hp_pct:0,def_pct:0,
+          dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,dmg_all:0,
+          crit_rate:0,crit_dmg:0,
+          dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0,...o};
+}
+
+// set2/set5 は累積値（5セット選択時は2セット効果も込み）
+// 条件付き効果は最大値想定
+const HARMONIES=[
+  //  3.1 
+  {id:'アストロ',  name:'アストロ・ロード',      attr:'fire',   setType:'2+5',
+   set2:B({dmg_fire:10}), set5:B({dmg_fire:30, crit_rate:20}),
+   desc:'敵に【斉爆効果】or【震撃協和・オフセット】付与時、クリ率+20%、焦熱ダメ+20%（8s）'},
+  {id:'パティナ',  name:'パティナ・フォーム',     attr:'fire',   setType:'2+5',
+   set2:B({dmg_fire:10}), set5:B({dmg_fire:20}),
+   desc:'敵に【斉爆効果】付与時 焦熱ダメ+10%（15s）; 持続中に終奏→次キャラ焦熱ダメ+25%（15s）'},
+  {id:'セマンティック',name:'セマンティック・ウィッシュ',attr:'wind',setType:'2+5',
+   set2:B({dmg_wind:10}), set5:B({dmg_wind:25, crit_rate:20}),
+   desc:'音骸スキルダメ付与時 音骸スキルクリ率+20%、気動ダメ+15%（5s）'},
+  //  3.0 
+  {id:'リフレクト', name:'リフレクト・ブレイズ',  attr:'light',  setType:'2+5',
+   set2:B({dmg_light:10}), set5:B({dmg_light:10, atk_pct:30}),
+   desc:'終奏後、変奏入場キャラの攻撃力+15%、協和破壊増強1Ptにつき+0.3%（最大+15%）（15s）'},
+  {id:'スターブライト',name:'スターブライト・リング',attr:'other', setType:'2+5',
+   set2:B(), set5:B({atk_pct:25}),
+   desc:'回復時、不協和値蓄積効率1%につきチーム攻撃力+0.2%（最大+25%）（4s）'},
+  {id:'ゴールデン', name:'ゴールデン・ヴァリアント', attr:'light', setType:'2+5',
+   set2:B({dmg_light:10}), set5:B({dmg_light:40, dmg_normal:40}),
+   desc:'通常攻撃後 回折ダメ+10%（最大3スタック, 5s）; 3スタック時 共鳴解放で通常攻撃ダメ+40%'},
+  //  2.8 
+  {id:'命理',      name:'命理崩壊の弦',          attr:'other',  setType:'3',
+   set3:B({atk_pct:20, dmg_lib:30}),
+   desc:'敵に【虚滅効果】付与時、攻撃力+20%、共鳴解放ダメ+30%（5s）'},
+  //  2.7 
+  {id:'インフェルノ',name:'インフェルノ・シャドウ', attr:'fire',  setType:'3',
+   set3:B({crit_rate:20, dmg_fire:16}),
+   desc:'音骸スキル↔重撃 相互クリ率+20%（6s）; 両効果持続中 焦熱ダメ+16%'},
+  //  2.6 
+  {id:'グローリーフォージ',name:'グローリーフォージ・クラウン',attr:'other',setType:'3',
+   set3:B({atk_pct:30, crit_dmg:20}),
+   desc:'シールド獲得時 攻撃力+6%・クリダメ+4%（最大5スタック, 4s, 0.5s毎）'},
+  {id:'エーテル',  name:'エーテル・レゾナンス',   attr:'other',  setType:'3',
+   set3:B({dmg_heavy:30, dmg_echo:16}),
+   desc:'音骸スキル後 重撃ダメ+30%（4s）; チーム音骸スキルダメ+4%×4スタック（30s）'},
+  //  2.5 
+  {id:'ロスト',    name:'ロスト・ドリーム',        attr:'dark',   setType:'3',
+   set3:B({crit_rate:20, dmg_echo:35}),
+   desc:'共鳴E=0時、クリ率+20%、音骸スキルダメ+35%'},
+  //  2.4 
+  {id:'グロリアス', name:'グロリアス・ウィンド',   attr:'wind',   setType:'2+5',
+   set2:B({dmg_wind:10}), set5:B({dmg_wind:40, crit_rate:10}),
+   desc:'【風蝕効果】の敵命中時、クリ率+10%、気動ダメ+30%（10s）'},
+  {id:'ハウリング', name:'ハウリング・フレイム',   attr:'fire',   setType:'2+5',
+   set2:B({dmg_fire:10}), set5:B({dmg_fire:25, dmg_lib:20}),
+   desc:'共鳴解放時、チーム全員 焦熱ダメ+15%、自身 共鳴解放ダメ+20%（35s）'},
+  //  2.2 
+  {id:'バウンドレス',name:'バウンドレス・スカイ',  attr:'wind',   setType:'2+5',
+   set2:B({dmg_wind:10}), set5:B({dmg_wind:40}),
+   desc:'【風蝕効果】付与時、チーム気動ダメ+15%、自身 気動ダメ追加+15%（20s）'},
+  //  2.0 
+  {id:'フロステッド',name:'フロステッド・ハート',  attr:'ice',    setType:'2+5',
+   set2:B({dmg_skill:12}), set5:B({dmg_ice:22.5, dmg_skill:48}),
+   desc:'共鳴スキル後 凝縮ダメ+22.5%（15s）; 共鳴解放後 共鳴スキルダメ+18%×2スタック（5s）'},
+  {id:'エターナル', name:'エターナル・ライト',     attr:'light',  setType:'2+5',
+   set2:B({dmg_light:10}), set5:B({dmg_light:25, crit_rate:20}),
+   desc:'【軽光効果】付与時 クリ率+20%（15s）; 10スタック敵攻撃時 回折ダメ+15%（15s）'},
+  {id:'ミッドナイト',name:'ミッドナイト・ベール',  attr:'dark',   setType:'2+5',
+   set2:B({dmg_dark:10}), set5:B({dmg_dark:25}),
+   desc:'終奏退場時 敵に消滅ダメ480%追加; 次登場キャラに消滅ダメ+15%（15s）'},
+  {id:'セレッシャル',name:'セレッシャル・アンサム', attr:'other',  setType:'2+5',
+   set2:B(), set5:B({atk_pct:20}),
+   desc:'協同攻撃ダメ+80%; 協同攻撃クリ時 チーム攻撃力+20%（4s）'},
+  {id:'タイズ',    name:'タイズターニング・ヴァラ',attr:'other',  setType:'2+5',
+   set2:B(), set5:B({atk_pct:15, dmg_all:30}),
+   desc:'攻撃力+15%; 共鳴効率250%以上時 全属性ダメ+30%'},
+  //  1.0 
+  {id:'白霜',      name:'夜にこびりつく白霜',      attr:'ice',    setType:'2+5',
+   set2:B({dmg_ice:10}), set5:B({dmg_ice:40}),
+   desc:'通常/重撃後、凝縮ダメ+10%（最大3スタック, 15s）'},
+  {id:'崩火',      name:'山を轟かせる崩火',         attr:'fire',   setType:'2+5',
+   set2:B({dmg_fire:10}), set5:B({dmg_fire:40}),
+   desc:'共鳴スキル後、焦熱ダメ+30%（15s）'},
+  {id:'冥雷',      name:'空を切り裂く冥雷',         attr:'thunder',setType:'2+5',
+   set2:B({dmg_thunder:10}), set5:B({dmg_thunder:40}),
+   desc:'重撃/共鳴スキル後、電導ダメ+15%（最大2スタック, 15s）'},
+  {id:'長風',      name:'谷を突き抜ける長風',       attr:'wind',   setType:'2+5',
+   set2:B({dmg_wind:10}), set5:B({dmg_wind:40}),
+   desc:'変奏スキル入場時、気動ダメ+30%（15s）'},
+  {id:'浮星',      name:'闇を取り払う浮星',         attr:'light',  setType:'2+5',
+   set2:B({dmg_light:10}), set5:B({dmg_light:40}),
+   desc:'変奏スキル入場時、回折ダメ+30%（15s）'},
+  {id:'沈日',      name:'二度と輝かない沈日',       attr:'dark',   setType:'2+5',
+   set2:B({dmg_dark:10}), set5:B({dmg_dark:40}),
+   desc:'通常/重撃後、消滅ダメ+7.5%（最大4スタック, 15s）'},
+  {id:'回光',      name:'喧騒に隠す回光',           attr:'other',  setType:'2+5',
+   set2:B(), set5:B({atk_pct:15}),
+   desc:'回復時、チーム全員 攻撃力+15%（30s）'},
+  {id:'軽雲',      name:'月を窺う軽雲',             attr:'other',  setType:'2+5',
+   set2:B(), set5:B({atk_pct:22.5}),
+   desc:'終奏後、次入場キャラ 攻撃力+22.5%（15s）'},
+  {id:'余韻',      name:'絶えない余韻',             attr:'other',  setType:'2+5',
+   set2:B({atk_pct:10}), set5:B({atk_pct:30}),
+   desc:'場にいる時 攻撃力+5%/1.5s（最大4スタック）; 終奏スキルダメ+60%'},
+];
+
+// ================================================================
+// SUB-STATS
+// ================================================================
+const SUB_STATS=[
+  {key:'crit_rate',name:'クリ率',       unit:'%',vals:[6.3,6.9,7.5,8.1,8.7,9.3,9.9,10.5]},
+  {key:'crit_dmg', name:'クリダメ',     unit:'%',vals:[12.6,13.8,15.0,16.2,17.4,18.6,19.8,21.0]},
+  {key:'atk_pct',  name:'攻撃力%',      unit:'%',vals:[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6]},
+  {key:'flat_atk', name:'攻撃力実数',   unit:'', vals:[30,35,40,45,50,55,60]},
+  {key:'hp_pct',   name:'HP%',          unit:'%',vals:[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6]},
+  {key:'flat_hp',  name:'HP実数',       unit:'', vals:[320,360,400,430,470,510,540,580],approx:true},
+  {key:'def_pct',  name:'防御%',        unit:'%',vals:[8.1,9.0,9.9,10.8,11.7,12.6,13.5,14.7]},
+  {key:'flat_def', name:'防御実数',     unit:'', vals:[30,35,40,45,50,55,60],approx:true},
+  {key:'dmg_bonus',name:'ダメバフ%',    unit:'%',vals:[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6]},
+  {key:'res_eff',  name:'共鳴効率',     unit:'%',vals:[6.8,7.6,8.4,9.2,10.0,10.8,11.6,12.4]},
+];
+const SUB_MAX=Object.fromEntries(SUB_STATS.map(s=>[s.key,s.vals[s.vals.length-1]]));
+
+// ================================================================
+// STATE
+// ================================================================
+let statMode='atk';
+let useAttr=''; // 使用属性: 'fire'|'ice'|'thunder'|'wind'|'light'|'dark'|'' (空=合算)
+let autoBuffEnabled=false; // 自動加算ON/OFF
+let S={
+  base_stat:'', total_stat:'',
+  crit_rate:'', crit_dmg:'',
+  dmg_fire:'0', dmg_ice:'0', dmg_thunder:'0', dmg_wind:'0', dmg_light:'0', dmg_dark:'0',
+  dmg_normal:'0', dmg_heavy:'0', dmg_skill:'0', dmg_lib:'0', dmg_echo:'0',
+  ratio:{normal:0,heavy:0,skill:100,lib:0,echo:0},
+  harmony:[
+    {id:'',setLevel:5,custom:B()},
+    {id:'',setLevel:5,custom:B()},
+  ],
+  harmonyManual: B(), // 手動ハーモニーバフ
+  echoes:Array.from({length:5},(_,i)=>({
+    name:`スロット${i+1}`,
+    main:{cost:null,key1:'',val1:0,key2:'',val2:0},
+    subs:Array.from({length:5},()=>({key:'',val:''}))
+  })),
+};
+
+// ================================================================
+// HELPERS
+// ================================================================
+function n(v){return parseFloat(v)||0;}
+function customHarmonies(){try{return JSON.parse(localStorage.getItem('echo_custom_h')||'[]');}catch{return[];}}
+function allHarmonies(){return [...HARMONIES,...customHarmonies()];}
+
+function getPresetBuff(hId,setLevel){
+  const h=allHarmonies().find(x=>x.id===hId);
+  if(!h) return B();
+  if(h.setType==='3') return {...(h.set3||B())};
+  return setLevel===5?{...(h.set5||B())}:{...(h.set2||B())};
+}
+
+function getHarmonyTotal(){
+  const t=B();
+  for(let i=0;i<2;i++){
+    const c=S.harmony[i].custom;
+    Object.keys(t).forEach(k=>{t[k]+=n(c[k]);});
+  }
+  // 手動ハーモニー加算
+  Object.keys(t).forEach(k=>{t[k]+=n(S.harmonyManual[k]);});
+  return t;
+}
+
+// ================================================================
+// ECHO SUB-STAT BUFF (装備音骸サブステ → ステータス自動加算)
+// ================================================================
+function getEchoSubBuff(){
+  const t={
+    crit_rate:0, crit_dmg:0, atk_pct:0, flat_atk:0,
+    hp_pct:0, flat_hp:0, def_pct:0, flat_def:0,
+    dmg_bonus:0, res_eff:0,
+    dmg_fire:0, dmg_ice:0, dmg_thunder:0, dmg_wind:0, dmg_light:0, dmg_dark:0,
+    dmg_normal:0, dmg_heavy:0, dmg_skill:0, dmg_lib:0, dmg_echo:0,
+  };
+  S.echoes.forEach(e=>{
+    e.subs.forEach(sub=>{
+      if(!sub.key||sub.val==='') return;
+      const v=parseFloat(sub.val)||0;
+      if(t[sub.key]!==undefined) t[sub.key]+=v;
+    });
+  });
+  return t;
+}
+
+// 自動加算行の表示を更新
+function updateAutoStatRows(){
+  const H=getHarmonyTotalEff();
+  const CW=getCharaWeaponBuffEff();
+  const EM=getEchoMainBuffEff();
+  const ES=getEchoSubBuffEff();
+
+  // ハーモニー・武器・キャラ・音骸・音骸サブ の内訳ラベル
+  function mkBd(parts){ // parts: [{label, val}]
+    const nonzero=parts.filter(p=>p.val!==0);
+    if(!nonzero.length) return '';
+    return nonzero.map(p=>`<span>${p.label}</span> +${p.val.toFixed(p.val%1===0?0:1)}%`).join('<br>');
+  }
+
+  const ROWS=[
+    {rowId:'cr', valId:'auto_val_cr', bdId:'auto_bd_cr', parts:[
+      {label:'ハーモニー', val:H.crit_rate},
+      {label:'武器/キャラ', val:CW.crit_rate},
+      {label:'音骸メイン', val:EM.crit_rate},
+      {label:'音骸サブ',  val:ES.crit_rate},
+    ]},
+    {rowId:'cd', valId:'auto_val_cd', bdId:'auto_bd_cd', parts:[
+      {label:'ハーモニー', val:H.crit_dmg},
+      {label:'武器/キャラ', val:CW.crit_dmg},
+      {label:'音骸メイン', val:EM.crit_dmg},
+      {label:'音骸サブ',  val:ES.crit_dmg},
+    ]},
+    {rowId:'dfire', valId:'auto_val_dfire', bdId:'auto_bd_dfire', parts:[
+      {label:'ハーモニー', val:H.dmg_fire},
+      {label:'武器/キャラ', val:CW.dmg_fire},
+      {label:'音骸メイン', val:EM.dmg_fire},
+    ]},
+    {rowId:'dice', valId:'auto_val_dice', bdId:'auto_bd_dice', parts:[
+      {label:'ハーモニー', val:H.dmg_ice},
+      {label:'武器/キャラ', val:CW.dmg_ice},
+      {label:'音骸メイン', val:EM.dmg_ice},
+    ]},
+    {rowId:'dthunder', valId:'auto_val_dthunder', bdId:'auto_bd_dthunder', parts:[
+      {label:'ハーモニー', val:H.dmg_thunder},
+      {label:'武器/キャラ', val:CW.dmg_thunder},
+      {label:'音骸メイン', val:EM.dmg_thunder},
+    ]},
+    {rowId:'dwind', valId:'auto_val_dwind', bdId:'auto_bd_dwind', parts:[
+      {label:'ハーモニー', val:H.dmg_wind},
+      {label:'武器/キャラ', val:CW.dmg_wind},
+      {label:'音骸メイン', val:EM.dmg_wind},
+    ]},
+    {rowId:'dlight', valId:'auto_val_dlight', bdId:'auto_bd_dlight', parts:[
+      {label:'ハーモニー', val:H.dmg_light},
+      {label:'武器/キャラ', val:CW.dmg_light},
+      {label:'音骸メイン', val:EM.dmg_light},
+    ]},
+    {rowId:'ddark', valId:'auto_val_ddark', bdId:'auto_bd_ddark', parts:[
+      {label:'ハーモニー', val:H.dmg_dark},
+      {label:'武器/キャラ', val:CW.dmg_dark},
+      {label:'音骸メイン', val:EM.dmg_dark},
+    ]},
+    {rowId:'dn', valId:'auto_val_dn', bdId:'auto_bd_dn', parts:[
+      {label:'ハーモニー', val:H.dmg_normal},
+      {label:'武器/キャラ', val:CW.dmg_normal},
+      {label:'音骸サブ',  val:ES.dmg_normal},
+    ]},
+    {rowId:'dh', valId:'auto_val_dh', bdId:'auto_bd_dh', parts:[
+      {label:'ハーモニー', val:H.dmg_heavy},
+      {label:'武器/キャラ', val:CW.dmg_heavy},
+      {label:'音骸サブ',  val:ES.dmg_heavy},
+    ]},
+    {rowId:'ds', valId:'auto_val_ds', bdId:'auto_bd_ds', parts:[
+      {label:'ハーモニー', val:H.dmg_skill},
+      {label:'武器/キャラ', val:CW.dmg_skill},
+      {label:'音骸サブ',  val:ES.dmg_skill},
+    ]},
+    {rowId:'dl', valId:'auto_val_dl', bdId:'auto_bd_dl', parts:[
+      {label:'ハーモニー', val:H.dmg_lib},
+      {label:'武器/キャラ', val:CW.dmg_lib},
+      {label:'音骸サブ',  val:ES.dmg_lib},
+    ]},
+    {rowId:'de', valId:'auto_val_de', bdId:'auto_bd_de', parts:[
+      {label:'ハーモニー', val:H.dmg_echo},
+      {label:'武器/キャラ', val:CW.dmg_echo},
+      {label:'音骸サブ',  val:ES.dmg_echo},
+    ]},
+  ];
+
+  ROWS.forEach(({rowId,valId,bdId,parts})=>{
+    const total=parts.reduce((s,p)=>s+p.val,0);
+    const row=document.getElementById(`auto_row_${rowId}`);
+    const valEl=document.getElementById(valId);
+    const bdEl=document.getElementById(bdId);
+    if(!row||!valEl||!bdEl) return;
+    if(autoBuffEnabled && total>0){
+      row.style.display='flex';
+      valEl.textContent=`+${total.toFixed(total%1===0?0:1)}%`;
+      bdEl.innerHTML=mkBd(parts);
+    } else {
+      row.style.display='none';
+    }
+  });
+}
+
+// ================================================================
+// ENGINE
+// ================================================================
+function getCharaWeaponBuff(){
+  const t={base_atk:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
+    crit_rate:0,crit_dmg:0,
+    dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,
+    dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0};
+  ['chara','weapon'].forEach(type=>{
+    const selId='sel_'+type;
+    const sel=document.getElementById(selId);
+    if(!sel||!sel.value) return;
+    const entry=getCharaEntries(type).find(e=>e.id===sel.value);
+    if(!entry) return;
+    Object.keys(t).forEach(k=>{t[k]+=(entry[k]||0);});
+  });
+  return t;
+}
+
+function onCharaWeaponChange(){
+  const CW=getCharaWeaponBuff();
+  const labelMap={base_atk:'基礎攻撃力',atk_pct:'攻撃力%',flat_atk:'攻撃力実数',
+    hp_pct:'HP%',flat_hp:'HP実数',def_pct:'防御%',crit_rate:'クリ率',crit_dmg:'クリダメ',
+    dmg_fire:'焦熱',dmg_ice:'凝縮',dmg_thunder:'電導',dmg_wind:'気動',
+    dmg_light:'回折',dmg_dark:'消滅',dmg_normal:'通常',dmg_heavy:'重撃',
+    dmg_skill:'スキル',dmg_lib:'解放',dmg_echo:'音骸'};
+  const parts=Object.entries(CW).filter(([,v])=>v>0)
+    .map(([k,v])=>`${labelMap[k]||k} +${v}`);
+  const note=document.getElementById('note_charaweapon');
+  if(note) note.textContent=parts.length?'加算: '+parts.join(' / '):'';
+}
+
+function rebuildCharaWeaponSelects(){
+  ['chara','weapon'].forEach(type=>{
+    const sel=document.getElementById('sel_'+type); if(!sel) return;
+    const prev=sel.value;
+    sel.innerHTML='<option value="">なし</option>';
+    getCharaEntries(type).forEach(e=>{
+      const opt=document.createElement('option');
+      opt.value=e.id; opt.textContent=e.name;
+      if(e.id===prev) opt.selected=true;
+      sel.appendChild(opt);
+    });
+  });
+  onCharaWeaponChange();
+}
+
+function getPartials(){
+  const H=getHarmonyTotalEff();
+  const CW=getCharaWeaponBuffEff();
+  const EM=getEchoMainBuffEff();
+  const ES=getEchoSubBuffEff();
+  const cw_base_atk=CW.base_atk||0;
+  const base=n(S.base_stat)+cw_base_atk, total=n(S.total_stat);
+  const cr=n(S.crit_rate),   cd=n(S.crit_dmg);
+  const cr_eff=cr+H.crit_rate+CW.crit_rate+EM.crit_rate+ES.crit_rate;
+  const cd_eff=cd+H.crit_dmg+CW.crit_dmg+EM.crit_dmg+ES.crit_dmg;
+
+  const hStatPct=(statMode==='atk'?H.atk_pct:statMode==='hp'?H.hp_pct:H.def_pct);
+  const cwStatPct=(statMode==='atk'?CW.atk_pct:statMode==='hp'?CW.hp_pct:CW.def_pct);
+  const emStatPct=(statMode==='atk'?EM.atk_pct:statMode==='hp'?EM.hp_pct:EM.def_pct);
+  const esStatPct=(statMode==='atk'?ES.atk_pct:statMode==='hp'?ES.hp_pct:ES.def_pct);
+  const emFlat=(statMode==='atk'?EM.flat_atk:statMode==='hp'?EM.flat_hp:EM.flat_def);
+  const esFlat=(statMode==='atk'?ES.flat_atk:statMode==='hp'?ES.flat_hp:ES.flat_def);
+  const stat_eff=total+base*(hStatPct+cwStatPct+emStatPct+esStatPct)/100+emFlat+esFlat;
+
+  // 使用属性フィルタ: 選択属性のバフのみ使用、未選択は0
+  const ATTR_KEYS=['fire','ice','thunder','wind','light','dark'];
+  const attrBuff= useAttr
+    ? (H['dmg_'+useAttr]||0)+(CW['dmg_'+useAttr]||0)+(EM['dmg_'+useAttr]||0)
+    : ATTR_KEYS.reduce((s,k)=>s+(H['dmg_'+k]||0)+(CW['dmg_'+k]||0)+(EM['dmg_'+k]||0),0);
+  const da= useAttr
+    ? n(S['dmg_'+useAttr])
+    : ATTR_KEYS.reduce((s,k)=>s+n(S['dmg_'+k]),0);
+  const da_eff=da+attrBuff+H.dmg_all;
+  const dn=n(S.dmg_normal), dh=n(S.dmg_heavy);
+  const ds=n(S.dmg_skill), dl=n(S.dmg_lib), de=n(S.dmg_echo);
+  const rn=S.ratio.normal/100, rh=S.ratio.heavy/100, rs=S.ratio.skill/100;
+  const rl=S.ratio.lib/100,    re=S.ratio.echo/100;
+  const dskill_w=(dn+H.dmg_normal+CW.dmg_normal+ES.dmg_normal)*rn
+                +(dh+H.dmg_heavy+CW.dmg_heavy+ES.dmg_heavy)*rh
+                +(ds+H.dmg_skill+CW.dmg_skill+ES.dmg_skill)*rs
+                +(dl+H.dmg_lib+CW.dmg_lib+ES.dmg_lib)*rl
+                +(de+H.dmg_echo+CW.dmg_echo+ES.dmg_echo)*re;
+  const DMG_eff=(da_eff+dskill_w)/100;
+  // CD=150%のとき1.5倍ダメ → 期待値係数 = 1 + CR*(CD/100 - 1)
+  const crit_factor=1+cr_eff/100*(cd_eff/100-1);
+  const E=stat_eff*(1+DMG_eff)*crit_factor;
+
+  return {
+    E, stat_eff, DMG_eff, crit_factor, base, total, hStatPct,
+    cr_eff, cd_eff, da_eff,
+    pStat_pct: base/100*(1+DMG_eff)*crit_factor,
+    pStat_flat: (1+DMG_eff)*crit_factor,
+    pDmg:       stat_eff/100*crit_factor,
+    pCR:        stat_eff*(1+DMG_eff)*(cd_eff/100-1)/100,
+    pCD:        stat_eff*(1+DMG_eff)*(cr_eff/100)/100,
+  };
+}
+
+const STAT_PCT_KEY={atk:'atk_pct', hp:'hp_pct', def:'def_pct'};
+const STAT_FLAT_KEY={atk:'flat_atk',hp:'flat_hp',def:'flat_def'};
+
+function mv(key,val){
+  const v=n(val); if(!v) return 0;
+  const p=getPartials();
+  if(key===STAT_PCT_KEY[statMode])  return p.pStat_pct*v;
+  if(key===STAT_FLAT_KEY[statMode]) return p.pStat_flat*v;
+  if(['atk_pct','hp_pct','def_pct','flat_atk','flat_hp','flat_def'].includes(key)) return 0;
+  if(key==='dmg_bonus') return p.pDmg*v;
+  if(key==='crit_rate') return p.pCR*v;
+  if(key==='crit_dmg')  return p.pCD*v;
+  return 0;
+}
+function echoScore(echo){return echo.subs.reduce((s,sub)=>s+(sub.key&&sub.val!==''?mv(sub.key,sub.val):0),0);}
+function mvColor(v,mx){const r=v/(mx||1);return r>.7?'#15803d':r>.4?'#2563eb':r>.2?'#d97706':'#dc2626';}
+function pctStr(v,E){return E>0?(v/E*100).toFixed(2)+'%':'';}
+
+// ================================================================
+// TAB SWITCH
+// ================================================================
+function showTab(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  // close any open dropdowns
+  document.querySelectorAll('.custom-sel-list.open').forEach(l=>l.classList.remove('open'));
+}
+
+function setStatMode(m,btn){
+  statMode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const ml={atk:'攻撃力',hp:'HP',def:'防御力'}[m];
+  document.getElementById('lbl_base').textContent=`基礎${ml}`;
+  document.getElementById('lbl_total').textContent=`全体${ml}`;
+  buildEchoGrid();
+  buildNewSubs();
+  recalcAll();
+}
+
+function setUseAttr(attr, btn){
+  useAttr=attr;
+  document.querySelectorAll('.attr-sel-btn').forEach(b=>{
+    b.classList.remove('active');
+    b.style.background='#fff';
+  });
+  if(btn){
+    btn.classList.add('active');
+    const col=btn.style.borderColor||'#94a3b8';
+    btn.style.background=col;
+  }
+  const note=document.getElementById('note_useattr');
+  if(note) note.textContent=attr
+    ?`${ATTR[attr].label}バフのみを属性バフとして計算します`
+    :'全属性バフを合算して計算します';
+  recalcAll();
+}
+
+// ================================================================
+// NOTES UPDATE (no DOM rebuild → no focus loss)
+// ================================================================
+function setHn(id, val){
+  const el=document.getElementById(id); if(!el) return;
+  if(val>0){el.textContent=`+${val}% ハーモニー`;el.className='hn show';}
+  else el.className='hn';
+}
+function setText(id, txt){const el=document.getElementById(id);if(el)el.textContent=txt||'';}
+
+function updateStatNotes(){
+  const H=getHarmonyTotalEff();
+  const CW=getCharaWeaponBuffEff();
+  const EM=getEchoMainBuffEff();
+  const ES=getEchoSubBuffEff();
+  const cw_base_atk=(statMode==='atk'?CW.base_atk:0)||0;
+  const base=n(S.base_stat)+cw_base_atk, total=n(S.total_stat);
+  const ml={atk:'攻撃力',hp:'HP',def:'防御力'}[statMode];
+  const hStatPct =(statMode==='atk'?H.atk_pct :statMode==='hp'?H.hp_pct :H.def_pct);
+  const cwStatPct=(statMode==='atk'?CW.atk_pct:statMode==='hp'?CW.hp_pct:CW.def_pct);
+  const emStatPct=(statMode==='atk'?EM.atk_pct:statMode==='hp'?EM.hp_pct:EM.def_pct);
+  const esStatPct=(statMode==='atk'?ES.atk_pct:statMode==='hp'?ES.hp_pct:ES.def_pct);
+  const emFlat   =(statMode==='atk'?EM.flat_atk:statMode==='hp'?EM.flat_hp:EM.flat_def);
+  const esFlat   =(statMode==='atk'?ES.flat_atk:statMode==='hp'?ES.flat_hp:ES.flat_def);
+  const addend=total-base;
+  const effStat=total+base*(hStatPct+cwStatPct+emStatPct+esStatPct)/100+emFlat+esFlat;
+  let txt=total>0&&base>0?`加算分 = ${addend>=0?'+':''}${addend.toFixed(0)}`:' ';
+  const bonuses=[];
+  if(cw_base_atk>0) bonuses.push(`武器/キャラ 基礎攻撃力 +${cw_base_atk}`);
+  if(hStatPct>0)  bonuses.push(`ハーモニー +${(base*hStatPct/100).toFixed(0)} (${hStatPct}%)`);
+  if(cwStatPct>0) bonuses.push(`武器/キャラ +${(base*cwStatPct/100).toFixed(0)} (${cwStatPct}%)`);
+  if(emStatPct>0) bonuses.push(`音骸メイン +${(base*emStatPct/100).toFixed(0)} (${emStatPct}%)`);
+  if(esStatPct>0) bonuses.push(`音骸サブ +${(base*esStatPct/100).toFixed(0)} (${esStatPct}%)`);
+  if(emFlat>0)    bonuses.push(`音骸メイン実数 +${emFlat}`);
+  if(esFlat>0)    bonuses.push(`音骸サブ実数 +${esFlat}`);
+  if(bonuses.length) txt+='　'+bonuses.join('　');
+  if(effStat>0)   txt+=`　→ 有効${ml}: ${effStat.toFixed(0)}`;
+  setText('note_addend', txt);
+  const cr_auto=H.crit_rate+CW.crit_rate+EM.crit_rate+ES.crit_rate;
+  const cd_auto=H.crit_dmg +CW.crit_dmg +EM.crit_dmg +ES.crit_dmg;
+  const cr_all=n(S.crit_rate)+cr_auto;
+  const cd_all=n(S.crit_dmg) +cd_auto;
+  setText('note_cr', cr_all>0?`有効クリ率: ${cr_all.toFixed(1)}% (手動${n(S.crit_rate).toFixed(1)} / H+${H.crit_rate} / 武器+${CW.crit_rate} / 音骸メイン+${EM.crit_rate} / 音骸サブ+${ES.crit_rate.toFixed(1)})`:'');
+  setText('note_cd', cd_all>0?`有効クリダメ: ${cd_all.toFixed(1)}% (手動${n(S.crit_dmg).toFixed(1)} / H+${H.crit_dmg} / 武器+${CW.crit_dmg} / 音骸メイン+${EM.crit_dmg} / 音骸サブ+${ES.crit_dmg.toFixed(1)})`:'');
+}
+
+function updateDmgNotes(){
+  const H=getHarmonyTotalEff();
+  setText('note_da', H.dmg_all>0?`全属性バフ(ハーモニー): +${H.dmg_all}%`:'');
+}
+
+function updateRatioVis(){
+  const v=document.getElementById('ratioVis'); if(!v) return;
+  const r=S.ratio, t=r.normal+r.heavy+r.skill+r.lib+r.echo||1;
+  v.innerHTML=`
+    <div class="ratio-seg" style="width:${r.normal/t*100}%;background:#2563eb" title="通常"></div>
+    <div class="ratio-seg" style="width:${r.heavy/t*100}%;background:#7c3aed" title="重撃"></div>
+    <div class="ratio-seg" style="width:${r.skill/t*100}%;background:#16a34a" title="スキル"></div>
+    <div class="ratio-seg" style="width:${r.lib/t*100}%;background:#d97706" title="解放"></div>
+    <div class="ratio-seg" style="width:${r.echo/t*100}%;background:#ec4899" title="音骸スキル"></div>
+  `;
+  const total=S.ratio.normal+S.ratio.heavy+S.ratio.skill+S.ratio.lib+S.ratio.echo;
+  const tn=document.getElementById('ratio_total_note');
+  if(tn){tn.textContent=` = ${total}%`;tn.style.color=total===100?'var(--green)':'var(--red)';}
+}
+
+// ================================================================
+// ED & MV UPDATE
+// ================================================================
+function updateEdDisplay(){
+  const p=getPartials();
+  const d=document.getElementById('edDisplay'); if(!d) return;
+  const ml={atk:'有効攻撃力',hp:'有効HP',def:'有効防御力'}[statMode];
+  d.innerHTML=`
+    <div class="ed-box"><div class="ed-val">${p.E>0?p.E.toFixed(0):''}</div><div class="ed-label">期待ダメージ指数 (E)</div></div>
+    <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#2563eb">${p.stat_eff>0?p.stat_eff.toFixed(0):''}</div><div class="ed-label">${ml}</div></div>
+    <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#15803d">${p.crit_factor>0?(p.crit_factor*100-100).toFixed(1)+'%':''}</div><div class="ed-label">クリ期待値ボーナス</div></div>
+  `;
+  const bn=document.getElementById('balanceNote'); if(!bn) return;
+  const cr=p.cr_eff, cd=p.cd_eff;
+  if(cr>0&&cd>0){
+    const ratio=cr/cd;
+    const note=ratio>0.55?'⚠ クリ率過多 → クリダメ優先':ratio<0.45?'⚠ クリダメ過多 → クリ率優先':'✓ クリ率:クリダメ バランス良好';
+    const col=ratio>0.55||ratio<0.45?'var(--orange)':'var(--green)';
+    bn.innerHTML=`<div style="font-size:10px;color:${col};padding:6px 10px;background:#fafbfd;border:1px solid var(--border);border-radius:5px;margin-top:6px;">${note}（CR ${cr.toFixed(1)}% : CD ${cd.toFixed(1)}%）</div>`;
+  } else bn.innerHTML='';
+}
+
+function updateMVRanking(){
+  const p=getPartials(), E=p.E;
+  const el=document.getElementById('mvRanking'); if(!el) return;
+  if(E<=0){el.innerHTML='<div style="color:var(--text3);font-size:11px;">ステータスを入力すると表示されます</div>';return;}
+
+  const DELTA=5; // +5% で計算
+  const list=[];
+
+  // 攻撃力/HP/防御力 +5%
+  const statLabel={atk:'攻撃力%',hp:'HP%',def:'防御力%'}[statMode];
+  const gainStat=p.pStat_pct*DELTA/E*100;
+  list.push({name:statLabel, gain:gainStat, note:'メインステ +5%'});
+
+  // クリ率 +5%
+  const gainCR=p.pCR*DELTA/E*100;
+  list.push({name:'クリ率', gain:gainCR, note:'+5% (現在: '+(p.cr_eff.toFixed(1))+'%)'});
+
+  // クリダメ +5%
+  const gainCD=p.pCD*DELTA/E*100;
+  list.push({name:'クリダメ', gain:gainCD, note:'+5% (現在: '+(p.cd_eff.toFixed(1))+'%)'});
+
+  // 属性バフ +5% (全属性共通)
+  const gainDA=p.pDmg*DELTA/E*100;
+  list.push({name:'属性バフ', gain:gainDA, note:'+5%', isAttr:true});
+
+  // スキル種別ダメバフ +5% (比率加重)
+  const rn=S.ratio.normal/100, rh=S.ratio.heavy/100, rs=S.ratio.skill/100;
+  const rl=S.ratio.lib/100, re=S.ratio.echo/100;
+  const SKILL_TYPES=[
+    {name:'通常攻撃ダメバフ', r:rn},
+    {name:'重撃ダメバフ',     r:rh},
+    {name:'共鳴スキルダメバフ',r:rs},
+    {name:'共鳴解放ダメバフ', r:rl},
+    {name:'音骸スキルダメバフ',r:re},
+  ];
+  SKILL_TYPES.forEach(sk=>{
+    if(sk.r<=0) return;
+    // ∂E/∂(skill_dmg%) = stat_eff * ratio * crit_factor / 100
+    const pSkill=p.stat_eff*sk.r*p.crit_factor/100;
+    const g=pSkill*DELTA/E*100;
+    list.push({name:sk.name, gain:g, note:`+5% (比率${(sk.r*100).toFixed(0)}%)`});
+  });
+
+  list.sort((a,b)=>b.gain-a.gain);
+  const maxGain=list[0]?.gain||1;
+
+  el.innerHTML=list.map((s,i)=>{
+    const col=mvColor(s.gain,maxGain);
+    return `<div class="mv-item">
+      <div class="mv-item-top">
+        <span class="mv-rank" style="color:${col}">${i+1}</span>
+        <span class="mv-name">${s.name}</span>
+        <span class="mv-pct" style="color:${col}">+${s.gain.toFixed(2)}%</span>
+      </div>
+      <div class="mv-bar-bg"><div class="mv-bar" style="width:${s.gain/maxGain*100}%;background:${col}"></div></div>
+      <div class="mv-note">${s.note}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateHarmonyEffectBox(){
+  const H=getHarmonyTotalEff();
+  const box=document.getElementById('harmonyEffectBox'); if(!box) return;
+  const MAP=[['atk_pct','ATK/HP/DEF%'],
+    ['dmg_fire','焦熱バフ%'],['dmg_ice','凝縮バフ%'],['dmg_thunder','電導バフ%'],
+    ['dmg_wind','気動バフ%'],['dmg_light','回折バフ%'],['dmg_dark','消滅バフ%'],['dmg_all','全属性バフ%'],
+    ['crit_rate','クリ率'],['crit_dmg','クリダメ'],
+    ['dmg_normal','通常攻撃%'],['dmg_heavy','重撃%'],
+    ['dmg_skill','共鳴スキル%'],['dmg_lib','共鳴解放%'],['dmg_echo','音骸スキル%']];
+  const lines=MAP.filter(([k])=>H[k]>0).map(([k,lbl])=>`<strong>${lbl} +${H[k]}%</strong>`);
+  if(lines.length>0){box.style.display='block';box.innerHTML='ハーモニー合計バフ（手動含む）：'+lines.join('　');}
+  else box.style.display='none';
+}
+
+// ================================================================
+// HARMONY PICKER
+// ================================================================
+function buildHarmonyPicker(){
+  const d=document.getElementById('harmonyPicker'); if(!d) return;
+  d.innerHTML='';
+  for(let i=0;i<2;i++) d.appendChild(buildHSlotEl(i));
+  d.appendChild(buildManualHSlotEl());
+  // close dropdown on outside click
+  document.addEventListener('click', closeDropdowns, {once:false});
+}
+
+function closeDropdowns(e){
+  if(!e.target.closest('.custom-sel-wrap')){
+    document.querySelectorAll('.custom-sel-list.open').forEach(l=>l.classList.remove('open'));
+  }
+}
+
+function buildHSlotEl(i){
+  const slot=S.harmony[i];
+  const h=allHarmonies().find(x=>x.id===slot.id);
+  const filled=!!slot.id;
+  const div=document.createElement('div');
+  div.className=`h-slot${filled?' filled':''}`;
+  div.id=`hslot_${i}`;
+
+  const a=filled&&h?ATTR[h.attr||'other']:ATTR.other;
+  const iconHTML=`<span class="attr-icon ${a.cls}" style="${filled?'':'opacity:.3'}"></span>`;
+
+  // カスタムドロップダウン
+  const allH=allHarmonies();
+  const g25=allH.filter(x=>x.setType==='2+5');
+  const g3 =allH.filter(x=>x.setType==='3');
+  const makeOpts=arr=>arr.map(x=>
+    `<div class="custom-sel-option${x.id===slot.id?' selected':''}" onclick="onHarmonySelect(${i},'${x.id}')" data-id="${x.id}">
+      <span class="attr-icon ${ATTR[x.attr||'other'].cls}"></span>
+      <span>${x.name}${x.unknown?'*':''}</span>
+    </div>`).join('');
+  const noneOpt=`<div class="custom-sel-option${!slot.id?' selected':''}" onclick="clearHarmony(${i})" data-id="">
+    <span style="color:var(--text3);font-size:11px;">なし</span>
+  </div>`;
+
+  const dropHTML=`
+    <div class="custom-sel-wrap" id="hsel_wrap_${i}">
+      <button class="custom-sel-btn" onclick="toggleHDrop(${i},event)" type="button">
+        ${filled&&h?`<span class="attr-icon ${a.cls}"></span><span>${h.name}</span>`:'<span style="color:var(--text3)">選択</span>'}
+        <span class="caret">▾</span>
+      </button>
+      <div class="custom-sel-list" id="hsel_list_${i}">
+        ${noneOpt}
+        <div class="sel-separator">2+5セット</div>${makeOpts(g25)}
+        <div class="sel-separator">3セット</div>${makeOpts(g3)}
+      </div>
+    </div>`;
+
+  // セット選択
+  let setToggle='';
+  if(filled&&h){
+    if(h.setType==='2+5'){
+      setToggle=`<div class="set-toggle">
+        <button class="set-btn${slot.setLevel===2?' active':''}" onclick="onSetLevel(${i},2)">2</button>
+        <button class="set-btn${slot.setLevel===5?' active':''}" onclick="onSetLevel(${i},5)">5</button>
+      </div>`;
+    } else {
+      setToggle=`<div class="set-toggle"><button class="set-btn active">3</button></div>`;
+    }
+  }
+
+  // 効果サマリー
+  let summaryText='';
+  if(filled&&h){
+    const buff=getPresetBuff(slot.id,slot.setLevel);
+    const LABEL={atk_pct:'ATK%',hp_pct:'HP%',def_pct:'DEF%',
+      dmg_fire:'焦熱',dmg_ice:'凝縮',dmg_thunder:'電導',
+      dmg_wind:'気動',dmg_light:'回折',dmg_dark:'消滅',dmg_all:'全属性',
+      crit_rate:'クリ率',crit_dmg:'クリダメ',
+      dmg_normal:'通常',dmg_heavy:'重撃',dmg_skill:'共鳴スキル',
+      dmg_lib:'共鳴解放',dmg_echo:'音骸スキル'};
+    summaryText=Object.entries(buff)
+      .filter(([,v])=>v>0)
+      .map(([k,v])=>`${LABEL[k]??k} +${v}%`)
+      .join('　');
+  }
+
+  const desc=h?`<div class="h-desc">${h.desc}</div>`:'';
+  const unknown=h&&h.unknown?`<div class="h-unknown">⚠ 数値未公表。実測値を手動入力してください。</div>`:'';
+
+  div.innerHTML=`
+    <div class="h-slot-head">
+      ${iconHTML}
+      <span class="h-slot-name">${h?h.name:`ハーモニー ${i+1}`}</span>
+      ${filled?`<button class="h-slot-clear" onclick="clearHarmony(${i})" type="button">✕</button>`:''}
+    </div>
+    <div class="h-slot-body">
+      <div class="h-compact-row">
+        ${dropHTML}${setToggle}
+      </div>
+      ${filled?`<div class="h-effect-summary" id="heff_${i}">${summaryText}</div>`:''}
+      ${desc}${unknown}
+    </div>`;
+  return div;
+}
+
+function buildManualHSlotEl(){
+  const m=S.harmonyManual;
+  const BUFF_LABELS=[
+    ['atk_pct','ATK/HP/DEF%'],
+    ['dmg_fire','焦熱バフ%'],['dmg_ice','凝縮バフ%'],
+    ['dmg_thunder','電導バフ%'],['dmg_wind','気動バフ%'],
+    ['dmg_light','回折バフ%'],['dmg_dark','消滅バフ%'],
+    ['dmg_all','全属性バフ%'],
+    ['crit_rate','クリ率%'],['crit_dmg','クリダメ%'],
+    ['dmg_normal','通常攻撃%'],['dmg_heavy','重撃%'],
+    ['dmg_skill','共鳴スキル%'],['dmg_lib','共鳴解放%'],['dmg_echo','音骸スキル%'],
+  ];
+  const hasVal=BUFF_LABELS.some(([k])=>m[k]>0);
+  const div=document.createElement('div');
+  const buffGrid=`<div class="h-buff-grid">${BUFF_LABELS.map(([k,lbl])=>`
+    <div class="h-buff-row">
+      <span class="h-buff-label">${lbl}</span>
+      <input class="h-buff-input" type="number" step="any" value="${n(m[k])||''}" placeholder="0"
+        oninput="S.harmonyManual['${k}']=parseFloat(this.value)||0;recalcAll();autoSize(this)" id="hm_${k}">
+      <span class="h-buff-unit">%</span>
+    </div>`).join('')}</div>`;
+  div.innerHTML=`
+    <details class="h-manual-details"${hasVal?' open':''}>
+      <summary>
+        <span class="attr-icon si-other" style="opacity:.5"></span>
+        <span>手動バフ追加</span>
+        ${hasVal?`<span style="font-size:9px;color:var(--p);margin-left:4px;">（入力あり）</span>`:''}
+        <button class="h-slot-clear" onclick="clearManualHarmony();event.stopPropagation()" type="button" title="リセット">↺</button>
+        <span class="h-manual-caret">▶</span>
+      </summary>
+      <div class="h-manual-body">${buffGrid}</div>
+    </details>`;
+  return div;
+}
+
+function clearManualHarmony(){
+  S.harmonyManual=B();
+  buildHarmonyPicker();
+  recalcAll();
+}
+
+function toggleHDrop(i,e){
+  e.stopPropagation();
+  const list=document.getElementById(`hsel_list_${i}`);
+  if(!list) return;
+  const wasOpen=list.classList.contains('open');
+  document.querySelectorAll('.custom-sel-list.open').forEach(l=>l.classList.remove('open'));
+  if(!wasOpen) list.classList.add('open');
+}
+
+function onHarmonySelect(i,hId){
+  S.harmony[i].id=hId;
+  const h=allHarmonies().find(x=>x.id===hId);
+  if(h) S.harmony[i].setLevel=h.setType==='3'?3:5;
+  S.harmony[i].custom={...getPresetBuff(hId,S.harmony[i].setLevel)};
+  buildHarmonyPicker();
+  recalcAll();
+}
+
+function onSetLevel(i,lv){
+  S.harmony[i].setLevel=lv;
+  S.harmony[i].custom={...getPresetBuff(S.harmony[i].id,lv)};
+  buildHarmonyPicker();
+  recalcAll();
+}
+
+function clearHarmony(i){
+  S.harmony[i]={id:'',setLevel:5,custom:B()};
+  buildHarmonyPicker();
+  recalcAll();
+}
+
+// ================================================================
+// MASTER RECALC (no DOM rebuild for inputs!)
+// ================================================================
+// AUTO BUFF TOGGLE
+// ================================================================
+function toggleAutoBuff(){
+  autoBuffEnabled=!autoBuffEnabled;
+  const btn=document.getElementById('autoBuffBtn');
+  if(btn){
+    btn.textContent=autoBuffEnabled?'自動加算 ON':'自動加算 OFF';
+    btn.className=autoBuffEnabled?'btn btn-p':'btn btn-d';
+  }
+  recalcAll();
+}
+
+function B0(){return {atk_pct:0,hp_pct:0,def_pct:0,
+  dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,dmg_all:0,
+  crit_rate:0,crit_dmg:0,
+  dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0,
+  base_atk:0,flat_atk:0,flat_hp:0,flat_def:0,res_eff:0,heal:0};}
+
+// 自動加算無効時は全0を返すラッパー
+function getHarmonyTotalEff(){return autoBuffEnabled?getHarmonyTotal():B0();}
+function getCharaWeaponBuffEff(){return autoBuffEnabled?getCharaWeaponBuff():B0();}
+function getEchoMainBuffEff(){return autoBuffEnabled?getEchoMainBuff():B0();}
+function getEchoSubBuffEff(){return autoBuffEnabled?getEchoSubBuff():B0();}
+
+// ================================================================
+function recalcAll(){
+  updateStatNotes();
+  updateDmgNotes();
+  updateEdDisplay();
+  updateMVRanking();
+  updateHarmonyEffectBox();
+  updateEchoScores();
+  updateAutoStatRows();
+  requestAnimationFrame(autoSizeAll);
+}
+
+// ================================================================
+// TAB 2 – ECHO GRID
+// ================================================================
+function buildEchoGrid(){
+  const g=document.getElementById('echoGrid'); if(!g) return;
+  g.innerHTML='';
+  S.echoes.forEach((_,i)=>g.appendChild(buildEchoCardEl(i)));
+}
+
+function makeStatSelectHTML(id,sel,onch,cls=''){
+  const opts='<option value=""></option>'+SUB_STATS.map(s=>
+    `<option value="${s.key}"${s.key===sel?' selected':''}>${s.name}${s.unit?'':''}</option>`).join('');
+  return `<select id="${id}" onchange="${onch}" class="${cls}">${opts}</select>`;
+}
+
+function makeValSelectHTML(id,key,selVal,onch){
+  const sd=SUB_STATS.find(s=>s.key===key);
+  if(!sd) return `<select id="${id}" class="val-sel" disabled><option></option></select>`;
+  const opts='<option value=""></option>'+sd.vals.map(v=>
+    `<option value="${v}"${String(v)===String(selVal)?' selected':''}>${v}${sd.unit}</option>`).join('');
+  return `<select id="${id}" class="val-sel" onchange="${onch}">${opts}</select>`;
+}
+
+function buildEchoCardEl(idx){
+  const echo=S.echoes[idx];
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`<div class="echo-card" id="ec_${idx}">
+    <div class="echo-head">
+      <span class="slot-lbl">SLOT ${idx+1}</span>
+      <input type="text" value="${echo.name}" placeholder="音骸名" oninput="S.echoes[${idx}].name=this.value">
+      <span class="echo-score-badge" id="esb_${idx}" style="background:#f1f5f9;color:var(--text3)"></span>
+    </div>
+    <div class="echo-body" id="ebd_${idx}"></div>
+  </div>`;
+  setTimeout(()=>buildEchoSubRows(idx),0);
+  return wrap;
+}
+
+// ============================================================
+// 音骸メインステ定義（スクショwikiデータ準拠、ランク5固定値）
+// cost4: HP%, ATK%, DEF%, クリ率, クリダメ, HP回復, ATK実数(固定)=150
+// cost3: HP%, ATK%, DEF%, 共鳴効率, 属性ダメ×6色, ATK実数(固定)=100
+// cost1: HP%, ATK%, DEF%, HP実数(固定)=2280
+// ============================================================
+const COST_DATA={
+  4:{
+    label:'コスト4（怒涛・津波級）',
+    stats:[
+      {key:'hp_pct',   name:'HP%',          unit:'%', val:33.0},
+      {key:'atk_pct',  name:'攻撃力%',      unit:'%', val:33.0},
+      {key:'def_pct',  name:'防御力%',       unit:'%', val:41.5},
+      {key:'crit_rate',name:'クリティカル',  unit:'%', val:22.0},
+      {key:'crit_dmg', name:'クリティカルダメージ', unit:'%', val:44.0},
+      {key:'heal',     name:'HP回復効果アップ', unit:'%', val:26.4},
+    ],
+    fixedAtk:150, fixedHp:null,
+  },
+  3:{
+    label:'コスト3（巨浪級）',
+    stats:[
+      {key:'hp_pct',    name:'HP%',        unit:'%', val:30.0},
+      {key:'atk_pct',   name:'攻撃力%',    unit:'%', val:30.0},
+      {key:'def_pct',   name:'防御力%',     unit:'%', val:38.0},
+      {key:'res_eff',   name:'共鳴効率',   unit:'%', val:32.0},
+      {key:'dmg_ice',   name:'凝縮ダメージアップ', unit:'%', val:30.0},
+      {key:'dmg_fire',  name:'焦熱ダメージアップ', unit:'%', val:30.0},
+      {key:'dmg_thunder',name:'電導ダメージアップ',unit:'%', val:30.0},
+      {key:'dmg_wind',  name:'気動ダメージアップ', unit:'%', val:30.0},
+      {key:'dmg_light', name:'回折ダメージアップ', unit:'%', val:30.0},
+      {key:'dmg_dark',  name:'消滅ダメージアップ', unit:'%', val:30.0},
+    ],
+    fixedAtk:100, fixedHp:null,
+  },
+  1:{
+    label:'コスト1（水風級）',
+    stats:[
+      {key:'hp_pct',  name:'HP%',    unit:'%', val:22.8},
+      {key:'atk_pct', name:'攻撃力%',unit:'%', val:18.0},
+      {key:'def_pct', name:'防御力%', unit:'%', val:18.0},
+    ],
+    fixedAtk:null, fixedHp:2280,
+  },
+};
+// MAIN_STATS（後方互換：getEchoMainBuff用のkey→unitマップとして使用）
+const MAIN_STATS_UNIT={
+  atk_pct:'%', flat_atk:'', hp_pct:'%', flat_hp:'', def_pct:'%', flat_def:'',
+  crit_rate:'%', crit_dmg:'%', res_eff:'%',
+  dmg_fire:'%', dmg_ice:'%', dmg_thunder:'%', dmg_wind:'%', dmg_light:'%', dmg_dark:'%',
+  heal:'%',
+};
+
+function buildEchoSubRows(idx){
+  const c=document.getElementById(`ebd_${idx}`); if(!c) return;
+  const echo=S.echoes[idx];
+  c.innerHTML='';
+
+  // ---- メインステータス1（ランダム選択：固定枠除く全種類） ----
+  const savedKey1=echo.main.key1||'';
+  const savedVal1=echo.main.val1||0;
+  // コスト4のstats＋コスト3独自stats＋コスト1のstats から固定枠を除いてユニーク化
+  const MAIN1_STATS=[
+    {key:'hp_pct',    name:'HP%',              unit:'%'},
+    {key:'atk_pct',   name:'攻撃力%',          unit:'%'},
+    {key:'def_pct',   name:'防御力%',           unit:'%'},
+    {key:'crit_rate', name:'クリティカル',      unit:'%'},
+    {key:'crit_dmg',  name:'クリティカルダメージ', unit:'%'},
+    {key:'heal',      name:'HP回復効果アップ',  unit:'%'},
+    {key:'res_eff',   name:'共鳴効率',          unit:'%'},
+    {key:'dmg_fire',  name:'焦熱ダメージアップ', unit:'%'},
+    {key:'dmg_ice',   name:'凝縮ダメージアップ', unit:'%'},
+    {key:'dmg_thunder',name:'電導ダメージアップ',unit:'%'},
+    {key:'dmg_wind',  name:'気動ダメージアップ', unit:'%'},
+    {key:'dmg_light', name:'回折ダメージアップ', unit:'%'},
+    {key:'dmg_dark',  name:'消滅ダメージアップ', unit:'%'},
+  ];
+  const m1Opts='<option value="">メインステ</option>'+MAIN1_STATS.map(s=>
+    `<option value="${s.key}"${s.key===savedKey1?' selected':''}>${s.name}</option>`).join('');
+  // 値はコストに依存するが、ここでは参考値として現在のコストの値を表示
+  const savedCost1=echo.main.cost||'';
+  let m1ValStr='';
+  if(savedKey1&&savedCost1){
+    const cd1=COST_DATA[savedCost1];
+    const st1=cd1?cd1.stats.find(s=>s.key===savedKey1):null;
+    if(st1) m1ValStr=st1.val+st1.unit;
+  }
+
+  // ---- メインステ（旧メインステ1） ----
+  const savedCost=echo.main.cost||'';
+  const cd2=savedCost?COST_DATA[savedCost]:null;
+
+  const costOpts='<option value="">コスト</option>'+[4,3,1].map(c=>
+    `<option value="${c}"${String(c)===String(savedCost)?` selected`:''}>${COST_DATA[c].label}</option>`).join('');
+
+  // メインステ2：コストから自動決定（fixedAtk or fixedHp）
+  const fixedAtk=cd2?cd2.fixedAtk:null;
+  const fixedHp =cd2?cd2.fixedHp:null;
+  let m2AutoLabel='', m2AutoVal=0;
+  if(fixedAtk!=null){ m2AutoLabel=`攻撃力  ${fixedAtk}`; m2AutoVal=fixedAtk; }
+  else if(fixedHp!=null){ m2AutoLabel=`HP  ${fixedHp}`; m2AutoVal=fixedHp; }
+  // stateにも反映
+  if(m2AutoVal){ S.echoes[idx].main.key2=fixedAtk!=null?'flat_atk':'flat_hp'; S.echoes[idx].main.val2=m2AutoVal; }
+  else { S.echoes[idx].main.key2=''; S.echoes[idx].main.val2=0; }
+
+  // コスト行（先）
+  const mrow2=document.createElement('div');
+  mrow2.style.cssText='display:flex;align-items:center;gap:3px;margin-bottom:3px;';
+  mrow2.innerHTML=`
+    <select style="width:auto;padding:2px 4px;font-size:10px;"
+      onchange="onEchoMainCost(${idx},this.value)">${costOpts}</select>
+    <span id="emv_val2_${idx}" style="font-size:10px;color:var(--text2);white-space:nowrap;background:#f1f5f9;padding:2px 6px;border-radius:3px;min-width:60px;display:inline-block;margin-left:16px;">${m2AutoLabel}</span>
+  `;
+  c.appendChild(mrow2);
+
+  // メインステ行（後）
+  const mrow1=document.createElement('div');
+  mrow1.style.cssText='display:flex;align-items:center;gap:3px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--border);';
+  mrow1.innerHTML=`
+    <select style="width:auto;padding:2px 4px;font-size:10px;"
+      onchange="onEchoMain1Key(${idx},this.value)">${m1Opts}</select>
+    <span id="emv_val1_${idx}" style="font-size:10px;font-weight:700;color:var(--p);white-space:nowrap;margin-left:16px;">${m1ValStr}</span>
+  `;
+  c.appendChild(mrow1);
+
+  // サブステータス行
+  for(let s=0;s<5;s++){
+    const sub=echo.subs[s];
+    const row=document.createElement('div'); row.className='sub-row';
+    row.innerHTML=`
+      ${makeStatSelectHTML(`ess_${idx}_${s}`,sub.key,`onEchoKey(${idx},${s},this.value)`,'stat-sel')}
+      ${makeValSelectHTML(`esv_${idx}_${s}`,sub.key,sub.val,`onEchoVal(${idx},${s},this.value)`)}
+      <span class="sub-mv" id="emv_${idx}_${s}" style="color:var(--text3)"></span>
+    `;
+    c.appendChild(row);
+  }
+}
+
+// コスト変更：main2 を自動セット
+function onEchoMainCost(idx, cost){
+  S.echoes[idx].main.cost=cost?parseInt(cost):null;
+  const cd=cost?COST_DATA[parseInt(cost)]:null;
+  // main2 自動決定
+  let key2='', val2=0, label2='';
+  if(cd){
+    if(cd.fixedAtk!=null){ key2='flat_atk'; val2=cd.fixedAtk; label2=`攻撃力  ${cd.fixedAtk}`; }
+    else if(cd.fixedHp!=null){ key2='flat_hp';  val2=cd.fixedHp;  label2=`HP  ${cd.fixedHp}`; }
+  }
+  S.echoes[idx].main.key2=key2;
+  S.echoes[idx].main.val2=val2;
+  const v2el=document.getElementById('emv_val2_'+idx);
+  if(v2el){ v2el.textContent=label2; }
+  // main1 の値も更新
+  const key1=S.echoes[idx].main.key1||'';
+  if(key1&&cd){
+    const st=cd.stats.find(s=>s.key===key1);
+    const v1el=document.getElementById('emv_val1_'+idx);
+    if(v1el) v1el.textContent=st?st.val+st.unit:'';
+    S.echoes[idx].main.val1=st?st.val:0;
+  }
+  recalcAll();
+}
+
+// メインステ1（ランダム）キー変更
+function onEchoMain1Key(idx, key){
+  S.echoes[idx].main.key1=key;
+  const cost=S.echoes[idx].main.cost;
+  const cd=cost?COST_DATA[cost]:null;
+  let autoVal=0, dispStr='';
+  if(cd&&key){
+    const st=cd.stats.find(s=>s.key===key);
+    if(st){ autoVal=st.val; dispStr=st.val+st.unit; }
+  }
+  S.echoes[idx].main.val1=autoVal;
+  const valEl=document.getElementById('emv_val1_'+idx);
+  if(valEl) valEl.textContent=dispStr;
+  recalcAll();
+}
+
+// onEchoMain2Key: 廃止（コスト選択で自動決定）
+function onEchoMain2Key(idx,key){}
+
+// 後方互換
+function onEchoMain(idx, field, val){ recalcAll(); }
+function onEchoMainKey(idx, key){ recalcAll(); }
+
+function getEchoMainBuff(){
+  const t={
+    atk_pct:0, flat_atk:0, hp_pct:0, flat_hp:0, def_pct:0, flat_def:0,
+    crit_rate:0, crit_dmg:0, res_eff:0,
+    dmg_fire:0, dmg_ice:0, dmg_thunder:0, dmg_wind:0, dmg_light:0, dmg_dark:0,
+    heal:0
+  };
+  S.echoes.forEach(e=>{
+    // メインステ1
+    const {key1,val1,key2,val2}=e.main;
+    if(key1&&val1&&t[key1]!==undefined) t[key1]+=parseFloat(val1)||0;
+    // メインステ2（固定枠：攻撃力実数/HP実数）
+    if(key2&&val2&&t[key2]!==undefined) t[key2]+=parseFloat(val2)||0;
+  });
+  return t;
+}
+
+function onEchoKey(ei,si,key){
+  S.echoes[ei].subs[si].key=key;
+  S.echoes[ei].subs[si].val='';
+  const el=document.getElementById(`esv_${ei}_${si}`);
+  if(el) el.outerHTML=makeValSelectHTML(`esv_${ei}_${si}`,key,'',`onEchoVal(${ei},${si},this.value)`);
+  recalcAll();
+}
+function onEchoVal(ei,si,val){S.echoes[ei].subs[si].val=val;recalcAll();}
+
+function updateEchoScores(){
+  const E=getPartials().E;
+  const scores=S.echoes.map((e,i)=>({idx:i,score:echoScore(e)}));
+  const maxScore=Math.max(...scores.map(s=>s.score),.0001);
+  const sorted=[...scores].sort((a,b)=>a.score-b.score);
+
+  scores.forEach(({idx,score})=>{
+    const badge=document.getElementById(`esb_${idx}`);
+    const card=document.getElementById(`ec_${idx}`);
+    const pctR=score/maxScore;
+    const col=pctR>.75?'#15803d':pctR>.5?'#2563eb':pctR>.25?'#d97706':'#dc2626';
+    const disp=E>0?(score/E*100).toFixed(2)+'%':(score*10000).toFixed(0);
+    if(badge){badge.textContent=disp;badge.style.background=col+'18';badge.style.color=col;badge.style.border=`1px solid ${col}40`;}
+    if(card) card.classList.remove('worst','best');
+  });
+  if(sorted[0]) document.getElementById(`ec_${sorted[0].idx}`)?.classList.add('worst');
+  if(sorted[4]) document.getElementById(`ec_${sorted[4].idx}`)?.classList.add('best');
+
+  // Sub MV labels
+  for(let i=0;i<5;i++){
+    const subMVs=S.echoes[i].subs.map(s=>s.key&&s.val!==''?mv(s.key,s.val):0);
+    const mx=Math.max(...subMVs,.0001);
+    for(let s=0;s<5;s++){
+      const el=document.getElementById(`emv_${i}_${s}`); if(!el) continue;
+      const v=subMVs[s];
+      if(!v){el.textContent='';el.style.color='var(--text3)';continue;}
+      const col=mvColor(v,mx);
+      el.textContent=E>0?`+${(v/E*100).toFixed(2)}%`:(v*10000).toFixed(0);
+      el.style.color=col;
+    }
+  }
+  updateRanking(scores,sorted,E);
+}
+
+function updateRanking(scores,sorted,E){
+  const body=document.getElementById('rankBody'); if(!body) return;
+  const hasData=S.echoes.some(e=>e.subs.some(s=>s.key&&s.val!==''));
+  if(!hasData){body.innerHTML='<div style="color:var(--text3);font-size:11px;">音骸のサブステを入力すると表示されます</div>';return;}
+  const maxScore=Math.max(...sorted.map(s=>s.score),.0001);
+  body.innerHTML=sorted.map((s,rank)=>{
+    const pctR=s.score/maxScore;
+    const col=rank===0?'var(--red)':rank===1?'var(--orange)':rank===2?'var(--gold)':'var(--text3)';
+    const disp=E>0?(s.score/E*100).toFixed(2)+'%':(s.score*10000).toFixed(0);
+    const echo=S.echoes[s.idx];
+    return `<div class="rank-row">
+      <span class="rank-num" style="color:${col}">${rank+1}</span>
+      <div class="rank-info">
+        <div class="rank-name">${echo.name}</div>
+        <div class="rank-detail">スコア ${disp}　（最強比 ${(pctR*100).toFixed(0)}%）${rank===0?'　← 最優先で更新':''}</div>
+        <div class="prio-bar"><div class="prio-fill" style="width:${pctR*100}%;background:${col}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// TAB 3 – NEW ECHO
+// ================================================================
+function buildNewSubs(){
+  const lvl=parseInt(document.getElementById('newLevel')?.value)||0;
+  const slots={0:0,5:1,10:2,15:3,20:4,25:5}[lvl]||0;
+  const d=document.getElementById('newSubRows'); if(!d) return;
+  d.innerHTML='';
+  for(let s=0;s<slots;s++){
+    const row=document.createElement('div'); row.className='sub-row';
+    row.innerHTML=`
+      ${makeStatSelectHTML(`ns_${s}_k`,'',`onNewKey(${s})`,'stat-sel')}
+      <select class="val-sel" id="ns_${s}_v" disabled><option value=""></option></select>
+      <span class="sub-mv" id="ns_${s}_m" style="color:var(--text3)"></span>
+    `;
+    d.appendChild(row);
+  }
+}
+
+function onNewKey(s){
+  const key=document.getElementById(`ns_${s}_k`)?.value||'';
+  const el=document.getElementById(`ns_${s}_v`);
+  if(el) el.outerHTML=makeValSelectHTML(`ns_${s}_v`,key,'',`onNewVal(${s})`);
+}
+
+function onNewVal(s){
+  const key=document.getElementById(`ns_${s}_k`)?.value||'';
+  const val=document.getElementById(`ns_${s}_v`)?.value||'';
+  const mvEl=document.getElementById(`ns_${s}_m`); if(!mvEl) return;
+  const E=getPartials().E;
+  if(key&&val){const v=mv(key,val);mvEl.textContent=E>0?`+${(v/E*100).toFixed(2)}%`:'';mvEl.style.color=v>0?'var(--p)':'var(--text3)';}
+  else{mvEl.textContent='';mvEl.style.color='var(--text3)';}
+}
+
+function runJudge(){
+  const lvl=parseInt(document.getElementById('newLevel')?.value)||0;
+  const usedSlots={0:0,5:1,10:2,15:3,20:4,25:5}[lvl]||0;
+  const remainSlots=5-usedSlots;
+  const subs=Array.from({length:usedSlots},(_,s)=>({
+    key:document.getElementById(`ns_${s}_k`)?.value||'',
+    val:document.getElementById(`ns_${s}_v`)?.value||'',
+  }));
+  const currentScore=subs.reduce((t,s)=>t+(s.key&&s.val?mv(s.key,s.val):0),0);
+
+  const cmpIdx=parseInt(document.getElementById('compareSlot')?.value??'-1');
+  const scores=S.echoes.map((e,i)=>({idx:i,score:echoScore(e)}));
+  const sorted=[...scores].sort((a,b)=>a.score-b.score);
+  const targetIdx=cmpIdx>=0?cmpIdx:sorted[0].idx;
+  const compareScore=scores[targetIdx].score;
+  const targetName=S.echoes[targetIdx].name;
+
+  const E=getPartials().E;
+  const fmt=v=>E>0?`+${(v/E*100).toFixed(2)}%`:(v*10000).toFixed(0);
+  const needed=compareScore-currentScore;
+  const curCol=currentScore>=compareScore?'var(--green)':'var(--p)';
+
+  document.getElementById('judgeResult').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div class="ed-box"><div class="ed-val" style="color:${curCol}">${fmt(currentScore)}</div><div class="ed-label">新規音骸 現スコア</div></div>
+      <div class="ed-box"><div class="ed-val" style="font-size:17px;color:var(--text2)">${fmt(compareScore)}</div><div class="ed-label">比較先：${targetName}</div></div>
+    </div>
+    <div class="${currentScore>=compareScore?'info-box':'warn-box'}">
+      ${currentScore>=compareScore
+        ?'✅ 現時点で比較先を上回っています！交換推奨。'
+        :`残り${remainSlots}枠で <strong>${E>0?'+'+(needed/E*100).toFixed(2)+'%':fmt(needed)}</strong> 以上のスコアが必要。`}
+    </div>
+    <div style="margin-top:10px;display:flex;gap:6px;">
+      <button id="swapBtn" class="btn" onclick="swapToEquipped(${targetIdx},${usedSlots})"
+        data-label="🔄 比較先（${targetName}）を新規音骸で上書き"
+        style="flex:1;font-size:11px;padding:6px;background:var(--border);color:var(--text2);border:1px solid var(--border2);">
+        🔄 比較先（${targetName}）を新規音骸で上書き
+      </button>
+      <button id="swapCancelBtn" class="btn" onclick="cancelSwap()"
+        style="display:none;font-size:11px;padding:6px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">
+        キャンセル
+      </button>
+    </div>`;
+
+  updateProbability(remainSlots,needed);
+}
+
+function updateProbability(remainSlots,needed){
+  const d=document.getElementById('probResult'); if(!d) return;
+  if(remainSlots<=0){
+    d.innerHTML=needed<=0?
+      '<div class="info-box">全スロット開放済み。交換ライン超えています！</div>':
+      '<div class="warn-box">全スロット開放済み。交換ラインに届いていません。</div>';
+    return;
+  }
+  if(needed<=0){d.innerHTML='<div class="info-box">既に交換ラインを超えています。</div>';return;}
+
+  const allOptions=[];
+  SUB_STATS.forEach(sd=>sd.vals.forEach(v=>allOptions.push(mv(sd.key,v))));
+  const mu=allOptions.reduce((s,v)=>s+v,0)/allOptions.length;
+  const sigma2=allOptions.reduce((s,v)=>s+(v-mu)**2,0)/allOptions.length;
+  const sigma=Math.sqrt(sigma2*remainSlots);
+  const meanTotal=mu*remainSlots;
+  const z=(needed-meanTotal)/Math.max(sigma,.0001);
+  const prob=Math.min(100,Math.max(0,(1-normalCDF(z))*100));
+  const col=prob>60?'#15803d':prob>30?'#d97706':'#dc2626';
+  const E=getPartials().E;
+
+  d.innerHTML=`
+    <div class="prob-display">
+      <div class="prob-val" style="color:${col}">${prob.toFixed(1)}%</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px;">交換ライン超え確率（残${remainSlots}枠）</div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:10px;color:var(--text2);line-height:1.9;">
+      1枠平均期待スコア：<b>${E>0?(mu/E*100).toFixed(2)+'%':(mu*10000).toFixed(0)}</b><br>
+      必要1枠平均：<b>${E>0?((needed/remainSlots)/E*100).toFixed(2)+'%':((needed/remainSlots)*10000).toFixed(0)}</b><br>
+      <span style="font-size:9px;color:var(--text3)">※ 全サブステ均等出現を仮定した概算</span>
+    </div>`;
+}
+
+function onNewCost(){
+  const cost=document.getElementById('newCost')?.value;
+  const sel=document.getElementById('newMainKey'); if(!sel) return;
+  if(!cost){ sel.innerHTML='<option value="">-</option>'; sel.disabled=true; return; }
+  const cd=COST_DATA[parseInt(cost)];
+  if(!cd){ sel.disabled=true; return; }
+  sel.innerHTML='<option value="">-</option>'+cd.stats.map(s=>
+    `<option value="${s.key}">${s.name}</option>`).join('');
+  sel.disabled=false;
+}
+
+// ================================================================
+// 新規音骸 → 装備中スロット 上書き（2段階確認・キャンセルボタン付き）
+// ================================================================
+let _swapPending=false;
+let _swapTargetIdx=-1;
+
+function swapToEquipped(targetIdx, usedSlots){
+  const btn=document.getElementById('swapBtn');
+  const cancelBtn=document.getElementById('swapCancelBtn');
+  if(!btn) return;
+
+  if(!_swapPending || _swapTargetIdx!==targetIdx){
+    // 1回目：確認状態に変化
+    _swapPending=true;
+    _swapTargetIdx=targetIdx;
+    const slotName=S.echoes[targetIdx].name||`スロット${targetIdx+1}`;
+    btn.innerHTML=`⚠️ もう一度押すと「${slotName}」を上書き`;
+    btn.style.background='#fef3c7';
+    btn.style.color='#92400e';
+    btn.style.borderColor='#d97706';
+    if(cancelBtn){ cancelBtn.style.display=''; }
+    return;
+  }
+
+  // 2回目：実行
+  _swapPending=false;
+  _swapTargetIdx=-1;
+  if(cancelBtn) cancelBtn.style.display='none';
+
+  // サブステ
+  const newSubs=Array.from({length:usedSlots},(_,s)=>({
+    key:document.getElementById(`ns_${s}_k`)?.value||'',
+    val:document.getElementById(`ns_${s}_v`)?.value||'',
+  }));
+  while(newSubs.length<5) newSubs.push({key:'',val:''});
+
+  // 名前
+  const newName=document.getElementById('newName')?.value.trim()||S.echoes[targetIdx].name;
+
+  // コスト・メインステ
+  const newCostRaw=document.getElementById('newCost')?.value||'';
+  const newCost=newCostRaw?parseInt(newCostRaw):S.echoes[targetIdx].main.cost;
+  const newMainKey=document.getElementById('newMainKey')?.value||S.echoes[targetIdx].main.key1;
+  let newMainVal=0;
+  if(newCost&&newMainKey){
+    const cd=COST_DATA[newCost];
+    const st=cd?cd.stats.find(s=>s.key===newMainKey):null;
+    if(st) newMainVal=st.val;
+  }
+  // メインステ2（コストから自動決定）
+  let newKey2='', newVal2=0;
+  if(newCost){
+    const cd=COST_DATA[newCost];
+    if(cd){
+      if(cd.fixedAtk!=null){ newKey2='flat_atk'; newVal2=cd.fixedAtk; }
+      else if(cd.fixedHp!=null){ newKey2='flat_hp'; newVal2=cd.fixedHp; }
+    }
+  }
+
+  S.echoes[targetIdx].name=newName;
+  S.echoes[targetIdx].main={cost:newCost, key1:newMainKey, val1:newMainVal, key2:newKey2, val2:newVal2};
+  S.echoes[targetIdx].subs=newSubs;
+
+  buildEchoGrid();
+  recalcAll();
+
+  const slotName=S.echoes[targetIdx].name||`スロット${targetIdx+1}`;
+  btn.innerHTML='✅ 上書き完了！';
+  btn.style.background='#dcfce7';
+  btn.style.color='#15803d';
+  btn.style.borderColor='#86efac';
+  setTimeout(()=>{
+    if(btn){
+      btn.innerHTML=`🔄 比較先（${slotName}）を新規音骸で上書き`;
+      btn.style.background='var(--border)';
+      btn.style.color='var(--text2)';
+      btn.style.borderColor='var(--border2)';
+    }
+  },2000);
+}
+
+function cancelSwap(){
+  _swapPending=false;
+  _swapTargetIdx=-1;
+  const btn=document.getElementById('swapBtn');
+  const cancelBtn=document.getElementById('swapCancelBtn');
+  if(cancelBtn) cancelBtn.style.display='none';
+  if(btn){
+    btn.innerHTML=btn.dataset.label||'🔄 上書き';
+    btn.style.background='var(--border)';
+    btn.style.color='var(--text2)';
+    btn.style.borderColor='var(--border2)';
+  }
+}
+
+function normalCDF(z){
+  const t=1/(1+0.2316419*Math.abs(z));
+  const p=t*(0.319381530+t*(-0.356563782+t*(1.781477937+t*(-1.821255978+t*1.330274429))));
+  const v=1-0.3989422803*Math.exp(-z*z/2)*p;
+  return z>=0?v:1-v;
+}
+
+// ================================================================
+// TAB 4 – CUSTOM
+// ================================================================
+function onCustomSetType(val){
+  const b=document.getElementById('cSet2Block');
+  if(b) b.style.display=val==='2+5'?'block':'none';
+  const t=document.getElementById('cSet5Title');
+  if(t){
+    if(val==='2+5'){
+      t.style.display='none'; // 2+5時はcSet2Block内の5セットラベルを使う
+    } else {
+      t.textContent='3セット効果';
+      t.style.color='var(--p)';
+      t.style.display='';
+    }
+  }
+}
+
+function setCAttr(attr, btn, groupId){
+  document.getElementById('cAttr').value=attr;
+  const a=ATTR[attr]||ATTR.other;
+  // 両グループを同期
+  ['cAttrBtns','cAttrBtns2'].forEach(gid=>{
+    const grp=document.getElementById(gid); if(!grp) return;
+    grp.querySelectorAll('.attr-sel-btn').forEach(b=>{
+      const c=b.dataset.color||'#94a3b8';
+      b.classList.remove('active');
+      b.style.background='#fff';
+      b.style.color=c;
+      b.style.borderColor=c;
+      if(b.dataset.attr===attr){
+        b.classList.add('active');
+        b.style.background=a.color;
+        b.style.color='#fff';
+        b.style.borderColor=a.color;
+      }
+    });
+  });
+}
+
+function readBuff(prefix){
+  const g=id=>n((document.getElementById(id)||{}).value);
+  return B({
+    atk_pct: g(prefix+'Atk'),
+    hp_pct:  g(prefix+'HP'),
+    def_pct: g(prefix+'DEF'),
+    dmg_all: g(prefix+'Dmg'),
+    crit_rate:g(prefix+'CR'),
+    crit_dmg: g(prefix+'CD'),
+    dmg_normal:g(prefix+'DN'),
+    dmg_heavy: g(prefix+'DH'),
+    dmg_skill: g(prefix+'DS'),
+    dmg_lib:   g(prefix+'DL'),
+    dmg_echo:  g(prefix+'DE'),
+  });
+}
+
+function addCustomHarmony(){
+  const name=document.getElementById('cName').value.trim();
+  if(!name){alert('名称を入力してください');return;}
+  const setType=document.getElementById('cSetType').value;
+  const buff5=readBuff('c');   // 5セット（または3セット）
+  const buff2=setType==='2+5'?readBuff('c2'):B(); // 2セット（2+5のみ）
+  const custom=customHarmonies();
+  custom.push({
+    id:'custom_'+Date.now(),name,
+    attr:document.getElementById('cAttr').value,
+    setType,
+    set2:buff2,
+    set5:buff5,
+    set3:buff5,
+    desc:document.getElementById('cDesc').value||'',
+    custom:true,
+  });
+  try{localStorage.setItem('echo_custom_h',JSON.stringify(custom));}catch{}
+  // フィールドクリア
+  ['cName','cAtk','cHP','cDEF','cDmg','cCR','cCD','cDN','cDH','cDS','cDL','cDE',
+   'c2Atk','c2HP','c2DEF','c2Dmg','c2CR','c2CD','c2DN','c2DH','c2DS','c2DL','c2DE','cDesc'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  renderCustomList();
+  buildHarmonyPicker();
+}
+
+function deleteCustomHarmony(id){
+  const custom=customHarmonies().filter(h=>h.id!==id);
+  try{localStorage.setItem('echo_custom_h',JSON.stringify(custom));}catch{}
+  renderCustomList();
+  buildHarmonyPicker();
+}
+
+function renderCustomList(){
+  const d=document.getElementById('customList'); if(!d) return;
+  const custom=customHarmonies();
+  if(!custom.length){d.innerHTML='<div style="color:var(--text3);font-size:11px;">登録データなし</div>';return;}
+  const bLabel=k=>({atk_pct:'ATK%',hp_pct:'HP%',def_pct:'DEF%',dmg_all:'全属性',dmg_fire:'焦熱',dmg_ice:'凝縮',
+    dmg_thunder:'電導',dmg_wind:'気動',dmg_light:'回折',dmg_dark:'消滅',
+    crit_rate:'CR',crit_dmg:'CD',dmg_normal:'通常',dmg_heavy:'重撃',
+    dmg_skill:'スキル',dmg_lib:'解放',dmg_echo:'音骸'})[k]||k;
+  const fmtBuff=b=>Object.entries(b).filter(([,v])=>v>0).map(([k,v])=>`${bLabel(k)}+${v}%`).join(' ');
+  d.innerHTML=custom.map(h=>{
+    const a=ATTR[h.attr]||ATTR.other;
+    const s5str=fmtBuff(h.set5||h.set3||B());
+    const s2str=h.setType==='2+5'?fmtBuff(h.set2||B()):'';
+    return `<div class="custom-item">
+      <span class="attr-icon ${a.cls}"></span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;font-weight:500;">${h.name} <span style="font-size:9px;color:var(--text3);font-weight:400;">${h.setType}</span></div>
+        ${s2str?`<div style="font-size:9px;color:#2563eb;">2セット: ${s2str}</div>`:''}
+        <div style="font-size:9px;color:var(--text2);">${h.setType==='2+5'?'5セット: ':'3セット: '}${s5str||'未設定'}${h.desc?`<span style="color:var(--text3);margin-left:5px;">${h.desc}</span>`:''}</div>
+      </div>
+      <button class="btn btn-d" style="padding:3px 8px;font-size:10px;flex-shrink:0;" onclick="deleteCustomHarmony('${h.id}')">削除</button>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// INIT
+// ================================================================
+// ================================================================
+// TAB: 武器・キャラ登録
+// ================================================================
+let charaType='weapon';
+
+// 登録タイプ切り替え（ハーモニー / 武器 / キャラ）
+let regType='harmony';
+function setRegType(type, btn){
+  regType=type;
+  ['harmony','weapon','chara'].forEach(t=>{
+    const f=document.getElementById('form_'+t);
+    if(f) f.style.display=t===type?'':'none';
+  });
+  document.querySelectorAll('#regtype_harmony,#regtype_weapon,#regtype_chara').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels={harmony:'登録済みハーモニー',weapon:'登録済み武器',chara:'登録済みキャラ'};
+  const h=document.getElementById('reg_list_head');
+  if(h) h.textContent=labels[type];
+  document.getElementById('customList').style.display = type==='harmony'?'':'none';
+  document.getElementById('charaList').style.display  = (type==='weapon'||type==='chara')?'':'none';
+  if(type==='weapon'||type==='chara'){ charaType=type; renderCharaList(); }
+}
+function setCharaType(type,btn){ setRegType(type,btn); }
+
+const CH_FIELDS=['base_atk','atk_pct','flat_atk','hp_pct','flat_hp','def_pct',
+  'crit_rate','crit_dmg','dmg_fire','dmg_ice','dmg_thunder',
+  'dmg_wind','dmg_light','dmg_dark','dmg_normal','dmg_heavy',
+  'dmg_skill','dmg_lib','dmg_echo'];
+
+function getCharaEntries(type){
+  try{return JSON.parse(localStorage.getItem('echo_chara_'+type)||'[]');}catch{return[];}
+}
+
+function addCharaEntry(){
+  // キャラは _c サフィックスのID、武器は標準ID
+  const sfx = charaType==='chara' ? '_c' : '';
+  const nameEl = document.getElementById('ch_name'+sfx) || document.getElementById('ch_name');
+  const descEl = document.getElementById('ch_desc'+sfx) || document.getElementById('ch_desc');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if(!name){alert('名称を入力してください');return;}
+  const entry={id:'ch_'+Date.now(), name, type:charaType, desc:descEl?descEl.value||'':''};
+  CH_FIELDS.forEach(k=>{
+    const el=document.getElementById('ch_'+k+sfx)||document.getElementById('ch_'+k);
+    entry[k]=el?parseFloat(el.value)||0:0;
+  });
+  const list=getCharaEntries(charaType);
+  list.push(entry);
+  try{localStorage.setItem('echo_chara_'+charaType, JSON.stringify(list));}catch{}
+  if(nameEl) nameEl.value='';
+  if(descEl) descEl.value='';
+  CH_FIELDS.forEach(k=>{
+    const el=document.getElementById('ch_'+k+sfx)||document.getElementById('ch_'+k);
+    if(el) el.value='';
+  });
+  renderCharaList();
+  rebuildCharaWeaponSelects();
+}
+
+function deleteCharaEntry(type, id){
+  const list=getCharaEntries(type).filter(e=>e.id!==id);
+  try{localStorage.setItem('echo_chara_'+type, JSON.stringify(list));}catch{}
+  renderCharaList();
+  rebuildCharaWeaponSelects();
+}
+
+function renderCharaList(){
+  const d=document.getElementById('charaList'); if(!d) return;
+  const list=getCharaEntries(charaType);
+  if(!list.length){d.innerHTML='<div style="color:var(--text3);font-size:11px;">登録データなし</div>';return;}
+  d.innerHTML=list.map(e=>{
+    const buffParts=CH_FIELDS.filter(k=>e[k]>0).map(k=>`${k.replace('dmg_','').replace('_pct','%').replace('flat_','')} +${e[k]}`);
+    return `<div class="custom-item">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;font-weight:500;">${e.name}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　')||'ステータス未設定'}</div>
+        ${e.desc?`<div style="font-size:9px;color:var(--text3);margin-top:1px;">${e.desc}</div>`:''}
+      </div>
+      <button class="btn btn-d" style="padding:3px 8px;font-size:10px;flex-shrink:0;"
+        onclick="deleteCharaEntry('${e.type}','${e.id}')">削除</button>
+    </div>`;
+  }).join('');
+}
+
+function init(){
+  updateRatioVis();
+  buildHarmonyPicker();
+  buildEchoGrid();
+  buildNewSubs();
+  renderCustomList();
+  renderCharaList();
+  rebuildCharaWeaponSelects();
+  recalcAll();
+  // 初期値に対してinput幅を調整
+  setTimeout(autoSizeAll, 50);
+}
+
+init();
+</script>
+</body>
+</html>
