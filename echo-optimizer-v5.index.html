@@ -357,7 +357,7 @@ details.card-collapse>.card-body{padding:14px;}
         <div class="card-body">
           <details class="how-to"><summary>📖 使い方</summary>
           <div class="how-to-body">
-            <b>合計値入力</b>：キャラの全ステータスをそのまま入力します。登録データは使用されません。<br>
+            <b>合計値入力</b>：キャラの全ステータスをそのまま入力します。ハーモニー・装備音骸のステータスは反映されません。登録データも使用されません。<br>
             <b>項目別入力</b>：ハーモニー・武器・キャラ・音骸メイン/サブの内訳を入力します。登録データがあれば自動入力されます（手動で上書き可）。<br>
             <b>使用属性</b>：選択した属性のバフのみ計算に使用します。<br>
             <b>ダメージ比率</b>：各スキルの比率に応じてスコアの重み付けが変わります。合計100を推奨。
@@ -365,9 +365,11 @@ details.card-collapse>.card-body{padding:14px;}
         </details>
 
         <!-- 入力モード切り替え -->
-        <div class="mode-sw" style="margin:8px 0 10px;">
+        <div class="mode-sw" style="margin:8px 0 6px;">
           <button id="inputModeBtn_total" class="mode-btn active" onclick="setInputMode('total',this)">合計値入力</button>
           <button id="inputModeBtn_detail" class="mode-btn" onclick="setInputMode('detail',this)">項目別入力</button>
+        </div>
+        <div id="note_total_mode" class="warn-box" style="font-size:10px;padding:5px 9px;margin-bottom:8px;">⚠ 合計値入力モード：ハーモニー・装備音骸のステータスはこのタブに反映されません。実際の合計値を直接入力してください。</div>
         </div>
 
         <!-- キャラ/武器 選択（項目別のみ表示） -->
@@ -499,13 +501,16 @@ details.card-collapse>.card-body{padding:14px;}
       </div>
     </div>
 
-      <div class="card">
-        <div class="card-head"><h2>ハーモニー効果</h2></div>
+      <details class="card-collapse" id="card_harmony">
+        <summary>
+          <h2>ハーモニー効果</h2>
+          <span class="card-collapse-caret">▶</span>
+        </summary>
         <div class="card-body">
           <div class="harmony-picker" id="harmonyPicker"></div>
           <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
         </div>
-      </div>
+      </details>
 
       <details class="card-collapse" id="card_dmgbuf">
         <summary>
@@ -1876,6 +1881,7 @@ function setInputMode(mode, btn){
   setDisplay('skillbuf_total', showTotal);
   setDisplay('skillbuf_detail', !showTotal);
   setDisplay('cw_select_block', !showTotal);
+  setDisplay('note_total_mode', showTotal);
   if(!showTotal){
     buildDetailRows();
     fillDetailInputs();
