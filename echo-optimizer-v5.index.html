@@ -61,9 +61,10 @@ input:focus,select:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(37,99,2
 .inline2{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
 
 /* STAT ROW */
-.stat-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+.stat-row{display:flex;align-items:center;gap:6px;margin-bottom:7px;padding-left:4px;padding-right:4px;}
 .sname{font-size:11px;color:var(--text2);width:auto;min-width:9em;flex-shrink:0;white-space:nowrap;}
-.stat-row input{flex:1;min-width:48px;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;}
+.stat-row input{flex:1;min-width:48px;max-width:calc(100% - 10em);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 8px;}
+.stat-row select{flex:1;min-width:48px;max-width:calc(100% - 10em);}
 .unit{font-size:10px;color:var(--text3);width:14px;flex-shrink:0;}
 .hn{display:none;font-size:10px;padding:2px 7px;background:var(--p-light);color:var(--p);border-radius:4px;font-weight:500;white-space:nowrap;flex-shrink:0;}
 .hn.show{display:inline-flex;}
@@ -241,7 +242,8 @@ details.card-collapse>summary::-webkit-details-marker{display:none;}
 details.card-collapse>summary h2{font-size:10px;font-weight:700;letter-spacing:1.8px;color:var(--p);text-transform:uppercase;font-family:'IBM Plex Sans',sans-serif;flex:1;}
 .card-collapse-caret{font-size:10px;color:var(--text3);transition:transform .2s;flex-shrink:0;}
 details.card-collapse[open] .card-collapse-caret{transform:rotate(90deg);}
-details.card-collapse>.card-body{padding:14px;}
+details.card-collapse>.card-body{padding:14px;display:block;}
+details.card-collapse:not([open])>.card-body{display:none;}
 .di-acc{border:1px solid var(--border);border-radius:7px;margin-bottom:6px;overflow:hidden;}
 .di-acc summary{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#fafbfd;cursor:pointer;font-size:11px;font-weight:600;list-style:none;user-select:none;border-bottom:1px solid transparent;}
 .di-acc[open] summary{border-bottom-color:var(--border);}
@@ -370,7 +372,6 @@ details.card-collapse>.card-body{padding:14px;}
           <button id="inputModeBtn_detail" class="mode-btn" onclick="setInputMode('detail',this)">項目別入力</button>
         </div>
         <div id="note_total_mode" class="warn-box" style="font-size:10px;padding:5px 9px;margin-bottom:8px;">⚠ 合計値入力モード：ハーモニー・装備音骸のステータスはこのタブに反映されません。実際の合計値を直接入力してください。</div>
-        </div>
 
         <!-- キャラ/武器 選択（項目別のみ表示） -->
         <div id="cw_select_block">
@@ -498,8 +499,8 @@ details.card-collapse>.card-body{padding:14px;}
           </details>
         </div>
 
-      </div>
-    </div>
+        </div><!-- /.card-body -->
+      </div><!-- /.card -->
 
       <details class="card-collapse" id="card_harmony">
         <summary>
@@ -882,6 +883,8 @@ details.card-collapse>.card-body{padding:14px;}
           <div class="sec-title">メインステータス</div>
           <div class="cw-grid">
             <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk_c" placeholder="0"></div>
+            <div class="cw-field"><label>基礎HP</label><input type="number" step="any" id="ch_base_hp_c" placeholder="0"></div>
+            <div class="cw-field"><label>基礎防御力</label><input type="number" step="any" id="ch_base_def_c" placeholder="0"></div>
             <div class="cw-field"><label>攻撃力%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_atk_pct_c" placeholder="0"><span class="unit">%</span></div></div>
             <div class="cw-field"><label>攻撃力実数</label><input type="number" step="any" id="ch_flat_atk_c" placeholder="0"></div>
             <div class="cw-field"><label>HP%</label><div class="cw-inp-row"><input type="number" step="any" id="ch_hp_pct_c" placeholder="0"><span class="unit">%</span></div></div>
@@ -1293,7 +1296,7 @@ function updateAutoStatRows(){
 // ENGINE
 // ================================================================
 function getCharaWeaponBuff(){
-  const t={base_atk:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
+  const t={base_atk:0,base_hp:0,base_def:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
     crit_rate:0,crit_dmg:0,
     dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,
     dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0,dmg_all:0};
@@ -1309,7 +1312,7 @@ function getCharaWeaponBuff(){
 }
 
 function getWeaponBuff(){
-  const t={base_atk:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
+  const t={base_atk:0,base_hp:0,base_def:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
     crit_rate:0,crit_dmg:0,
     dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,
     dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0,dmg_all:0};
@@ -1322,7 +1325,7 @@ function getWeaponBuff(){
 }
 
 function getCharaBuff(){
-  const t={base_atk:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
+  const t={base_atk:0,base_hp:0,base_def:0,atk_pct:0,flat_atk:0,hp_pct:0,flat_hp:0,def_pct:0,
     crit_rate:0,crit_dmg:0,
     dmg_fire:0,dmg_ice:0,dmg_thunder:0,dmg_wind:0,dmg_light:0,dmg_dark:0,
     dmg_normal:0,dmg_heavy:0,dmg_skill:0,dmg_lib:0,dmg_echo:0,dmg_all:0};
@@ -1336,7 +1339,7 @@ function getCharaBuff(){
 
 function onCharaWeaponChange(){
   const CW=getCharaWeaponBuff();
-  const labelMap={base_atk:'基礎攻撃力',atk_pct:'攻撃力%',flat_atk:'攻撃力実数',
+  const labelMap={base_atk:'基礎攻撃力',base_hp:'基礎HP',base_def:'基礎防御力',atk_pct:'攻撃力%',flat_atk:'攻撃力実数',
     hp_pct:'HP%',flat_hp:'HP実数',def_pct:'防御%',crit_rate:'クリ率',crit_dmg:'クリダメ',
     dmg_fire:'焦熱',dmg_ice:'凝縮',dmg_thunder:'電導',dmg_wind:'気動',
     dmg_light:'回折',dmg_dark:'消滅',dmg_all:'全属性',dmg_normal:'通常',dmg_heavy:'重撃',
@@ -1975,8 +1978,10 @@ function fillDetailInputs(){
   function fill(id, val){ const el=document.getElementById(id); if(el&&val) el.value=val||''; }
 
   // 基礎攻撃力
-  fill('di_base_weapon', W.base_atk||'');
-  fill('di_base_chara',  C.base_atk||'');
+  // 基礎ステータス（statModeに応じてキーを切り替え）
+  const baseKey=ml==='atk'?'base_atk':ml==='hp'?'base_hp':'base_def';
+  fill('di_base_weapon', W[baseKey]||'');
+  fill('di_base_chara',  C[baseKey]||'');
   // 全体攻撃力 %バフ
   const statPctKey=ml==='atk'?'atk_pct':ml==='hp'?'hp_pct':'def_pct';
   fill('di_stat_pct_h',  H[statPctKey]||'');
@@ -3055,7 +3060,7 @@ function setRegType(type, btn){
 }
 function setCharaType(type,btn){ setRegType(type,btn); }
 
-const CH_FIELDS=['base_atk','atk_pct','flat_atk','hp_pct','flat_hp','def_pct',
+const CH_FIELDS=['base_atk','base_hp','base_def','atk_pct','flat_atk','hp_pct','flat_hp','def_pct',
   'crit_rate','crit_dmg','dmg_fire','dmg_ice','dmg_thunder',
   'dmg_wind','dmg_light','dmg_dark','dmg_all','dmg_normal','dmg_heavy',
   'dmg_skill','dmg_lib','dmg_echo'];
