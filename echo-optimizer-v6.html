@@ -605,11 +605,15 @@ details.stat-detail[open]>summary span:first-child{transform:rotate(90deg);displ
         <div class="inline2" style="margin-bottom:10px;">
           <div class="field"><label>音骸名（メモ）</label><input type="text" id="newName" placeholder="例：無冠者"></div>
           <div class="field"><label>現在レベル</label>
-            <select id="newLevel" onchange="buildNewSubs()">
-              <option value="0">+0（0枠）</option><option value="5">+5（1枠）</option>
-              <option value="10">+10（2枠）</option><option value="15">+15（3枠）</option>
-              <option value="20">+20（4枠）</option><option value="25">+25（5枠）</option>
-            </select></div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <button type="button" onclick="stepLevel(-1)" style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:#f8fafc;color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
+              <select id="newLevel" onchange="buildNewSubs()" style="flex:1;">
+                <option value="0">+0（0枠）</option><option value="5">+5（1枠）</option>
+                <option value="10">+10（2枠）</option><option value="15">+15（3枠）</option>
+                <option value="20">+20（4枠）</option><option value="25">+25（5枠）</option>
+              </select>
+              <button type="button" onclick="stepLevel(1)" style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:#f8fafc;color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">＋</button>
+            </div></div>
         </div>
         <div class="inline2" style="margin-bottom:6px;">
           <div class="field"><label>コスト</label>
@@ -2595,6 +2599,16 @@ function updateProbability(remainSlots, needed, existingKeys=[]){
       必要1枠平均（新規）：<b>${fmtPct(needed/5)}</b><br>
       <span style="font-size:9px;color:var(--text3)">※ 重複なしモンテカルロ法（${TRIALS.toLocaleString()}試行）による推定</span>
     </div>`;
+}
+
+function stepLevel(dir){
+  const sel=document.getElementById('newLevel'); if(!sel) return;
+  const steps=[0,5,10,15,20,25];
+  const cur=parseInt(sel.value)||0;
+  const idx=steps.indexOf(cur);
+  const next=steps[Math.max(0,Math.min(steps.length-1,idx+dir))];
+  sel.value=next;
+  buildNewSubs();
 }
 
 function onNewCost(){
