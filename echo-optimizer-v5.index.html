@@ -1513,7 +1513,7 @@
                             <!-- 全体攻撃力 内訳 -->
                             <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（H）</label><input type="number" step="any"
                                         id="di_stat_pct_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>%バフ（武器）</label><input type="number" step="any"
@@ -1522,15 +1522,15 @@
                                 <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" step="any"
                                         id="di_stat_pct_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸M）</label><input type="number" step="any"
                                         id="di_stat_pct_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸S）</label><input type="number" step="any"
                                         id="di_stat_pct_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸M）</label><input type="number" step="any"
                                         id="di_stat_flat_em" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸S）</label><input type="number" step="any"
                                         id="di_stat_flat_es" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
                                 <div class="detail-item"><label>その他</label><input type="number" step="any"
                                         id="di_stat_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
@@ -2813,8 +2813,11 @@
         function onCharaWeaponChange() {
             const CW = getCharaWeaponBuff();
             const labelMap = {
-                base_atk: '基礎攻撃力', atk_pct: '攻撃力%', flat_atk: '攻撃力実数',
-                hp_pct: 'HP%', flat_hp: 'HP実数', def_pct: '防御%', crit_rate: 'クリ率', crit_dmg: 'クリダメ',
+                base_atk: '基礎攻撃力', base_hp: '基礎HP', base_def: '基礎防御力',
+                atk_pct: '攻撃力%', flat_atk: '攻撃力実数',
+                hp_pct: 'HP%', flat_hp: 'HP実数',
+                def_pct: '防御力%', flat_def: '防御力実数',
+                crit_rate: 'クリ率', crit_dmg: 'クリダメ',
                 dmg_fire: '焦熱', dmg_ice: '凝縮', dmg_thunder: '電導', dmg_wind: '気動',
                 dmg_light: '回折', dmg_dark: '消滅', dmg_all: '全属性', dmg_normal: '通常', dmg_heavy: '重撃',
                 dmg_skill: 'スキル', dmg_lib: '解放', dmg_echo: '音骸'
@@ -4403,9 +4406,14 @@
             const custom = customHarmonies();
             if (!custom.length) { d.innerHTML = '<div style="color:var(--text3);font-size:11px;">登録データなし</div>'; return; }
             const bLabel = k => ({
-                atk_pct: 'ATK%', hp_pct: 'HP%', def_pct: 'DEF%', dmg_all: '全属性', dmg_fire: '焦熱', dmg_ice: '凝縮',
+                base_atk: '基礎攻撃力', base_hp: '基礎HP', base_def: '基礎防御力',
+                atk_pct: '攻撃力%', flat_atk: '攻撃力実数',
+                hp_pct: 'HP%', flat_hp: 'HP実数',
+                def_pct: '防御力%', flat_def: '防御力実数',
+                crit_rate: 'クリ率', crit_dmg: 'クリダメ',
+                dmg_all: '全属性', dmg_fire: '焦熱', dmg_ice: '凝縮',
                 dmg_thunder: '電導', dmg_wind: '気動', dmg_light: '回折', dmg_dark: '消滅',
-                crit_rate: 'CR', crit_dmg: 'CD', dmg_normal: '通常', dmg_heavy: '重撃',
+                dmg_normal: '通常', dmg_heavy: '重撃',
                 dmg_skill: 'スキル', dmg_lib: '解放', dmg_echo: '音骸'
             })[k] || k;
             const fmtBuff = b => Object.entries(b).filter(([, v]) => v > 0).map(([k, v]) => `${bLabel(k)}+${v}%`).join(' ');
@@ -4567,7 +4575,13 @@
             const list = getCharaEntries(charaType);
             if (!list.length) { d.innerHTML = '<div style="color:var(--text3);font-size:11px;">登録データなし</div>'; return; }
             d.innerHTML = list.map(e => {
-                const buffParts = CH_FIELDS.filter(k => e[k] > 0).map(k => `${k.replace('dmg_', '').replace('_pct', '%').replace('flat_', '')} +${e[k]}`);
+                const chLabel = { base_atk: '基礎攻撃力', base_hp: '基礎HP', base_def: '基礎防御力',
+                    atk_pct: '攻撃力%', flat_atk: '攻撃力実数', hp_pct: 'HP%', flat_hp: 'HP実数',
+                    def_pct: '防御力%', flat_def: '防御力実数', crit_rate: 'クリ率', crit_dmg: 'クリダメ',
+                    dmg_fire: '焦熱', dmg_ice: '凝縮', dmg_thunder: '電導', dmg_wind: '気動',
+                    dmg_light: '回折', dmg_dark: '消滅', dmg_all: '全属性',
+                    dmg_normal: '通常', dmg_heavy: '重撃', dmg_skill: 'スキル', dmg_lib: '解放', dmg_echo: '音骸' };
+                const buffParts = CH_FIELDS.filter(k => e[k] > 0).map(k => `${chLabel[k] || k} +${e[k]}`);
                 return `<div class="custom-item">
       <div style="flex:1;min-width:0;">
         <div style="font-size:11px;font-weight:500;">${e.name}</div>
