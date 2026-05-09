@@ -1496,6 +1496,52 @@
                             </div>
                         </div>
 
+                        <div class="divider"></div>
+                        <div class="sec-title">使用属性</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
+                            <button class="attr-sel-btn" data-attr="fire" onclick="setUseAttr('fire',this)"
+                                style="border-color:#ef4444;color:#ef4444">焦熱</button>
+                            <button class="attr-sel-btn" data-attr="ice" onclick="setUseAttr('ice',this)"
+                                style="border-color:#3b82f6;color:#3b82f6">凝縮</button>
+                            <button class="attr-sel-btn" data-attr="thunder" onclick="setUseAttr('thunder',this)"
+                                style="border-color:#a855f7;color:#a855f7">電導</button>
+                            <button class="attr-sel-btn" data-attr="wind" onclick="setUseAttr('wind',this)"
+                                style="border-color:#22c55e;color:#22c55e">気動</button>
+                            <button class="attr-sel-btn" data-attr="light" onclick="setUseAttr('light',this)"
+                                style="border-color:#eab308;color:#eab308">回折</button>
+                            <button class="attr-sel-btn" data-attr="dark" onclick="setUseAttr('dark',this)"
+                                style="border-color:#ec4899;color:#ec4899">消滅</button>
+                        </div>
+                        <div class="sub-note" id="note_useattr"></div>
+                        <div class="hint">選択した属性バフのみ計算に使用します。</div>
+                        <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
+                                100%</span>
+                        </div>
+                        <div class="inline2">
+                            <div class="field"><label>通常攻撃</label>
+                                <input type="number" min="0" max="100" id="r_n" value="0"
+                                    oninput="S.ratio.normal=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                            </div>
+                            <div class="field"><label>重撃</label>
+                                <input type="number" min="0" max="100" id="r_h" value="0"
+                                    oninput="S.ratio.heavy=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                            </div>
+                            <div class="field"><label>共鳴スキル</label>
+                                <input type="number" min="0" max="100" id="r_s" value="100"
+                                    oninput="S.ratio.skill=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                            </div>
+                            <div class="field"><label>共鳴解放</label>
+                                <input type="number" min="0" max="100" id="r_l" value="0"
+                                    oninput="S.ratio.lib=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                            </div>
+                            <div class="field"><label>音骸スキル</label>
+                                <input type="number" min="0" max="100" id="r_e" value="0"
+                                    oninput="S.ratio.echo=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                            </div>
+                        </div>
+                        <div class="ratio-vis" id="ratioVis"></div>
+                        <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
+
                         <!-- ===== 項目別モード ===== -->
                         <div id="block_detail" style="display:none;">
                             <!-- 基礎攻撃力 内訳 -->
@@ -1655,88 +1701,6 @@
                         <div class="sub-note" id="note_da"></div>
                         <div class="divider"></div>
                         <div class="sec-title">スキル種別ダメバフ</div>
-
-                        <!-- 合計値モード -->
-                        <div id="skillbuf_total">
-                            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" step="any"
-                                    id="inp_dn" value="0"
-                                    oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">重撃</span><input type="number" step="any"
-                                    id="inp_dh" value="0"
-                                    oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" step="any"
-                                    id="inp_ds" value="0"
-                                    oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span>
-                            </div>
-                            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" step="any"
-                                    id="inp_dl" value="0"
-                                    oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" step="any"
-                                    id="inp_de" value="0"
-                                    oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                        </div>
-
-                        <!-- 項目別モード -->
-                        <div id="skillbuf_detail" style="display:none;">
-                            <div id="di_skill_rows"></div>
-                        </div>
-
-                        <div class="divider"></div>
-                        <div class="sec-title">使用属性</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
-                            <button class="attr-sel-btn" data-attr="fire" onclick="setUseAttr('fire',this)"
-                                style="border-color:#ef4444;color:#ef4444">焦熱</button>
-                            <button class="attr-sel-btn" data-attr="ice" onclick="setUseAttr('ice',this)"
-                                style="border-color:#3b82f6;color:#3b82f6">凝縮</button>
-                            <button class="attr-sel-btn" data-attr="thunder" onclick="setUseAttr('thunder',this)"
-                                style="border-color:#a855f7;color:#a855f7">電導</button>
-                            <button class="attr-sel-btn" data-attr="wind" onclick="setUseAttr('wind',this)"
-                                style="border-color:#22c55e;color:#22c55e">気動</button>
-                            <button class="attr-sel-btn" data-attr="light" onclick="setUseAttr('light',this)"
-                                style="border-color:#eab308;color:#eab308">回折</button>
-                            <button class="attr-sel-btn" data-attr="dark" onclick="setUseAttr('dark',this)"
-                                style="border-color:#ec4899;color:#ec4899">消滅</button>
-                        </div>
-                        <div class="sub-note" id="note_useattr"></div>
-                        <div class="hint">選択した属性バフのみ計算に使用します。</div>
-                        <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
-                                100%</span>
-                        </div>
-                        <div class="inline2">
-                            <div class="field"><label>通常攻撃</label>
-                                <input type="number" min="0" max="100" id="r_n" value="0"
-                                    oninput="S.ratio.normal=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>重撃</label>
-                                <input type="number" min="0" max="100" id="r_h" value="0"
-                                    oninput="S.ratio.heavy=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>共鳴スキル</label>
-                                <input type="number" min="0" max="100" id="r_s" value="100"
-                                    oninput="S.ratio.skill=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>共鳴解放</label>
-                                <input type="number" min="0" max="100" id="r_l" value="0"
-                                    oninput="S.ratio.lib=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>音骸スキル</label>
-                                <input type="number" min="0" max="100" id="r_e" value="0"
-                                    oninput="S.ratio.echo=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                        </div>
-                        <div class="ratio-vis" id="ratioVis"></div>
-                        <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-head">
-                        <h2>ハーモニー効果</h2>
                     </div>
                     <div class="card-body">
                         <div class="harmony-picker" id="harmonyPicker"></div>
@@ -2161,6 +2125,33 @@
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
+                        <div class="sec-title">属性バフ</div>
+                        <div class="cw-grid">
+                            <div class="cw-field"><label style="color:#ef4444">焦熱</label>
+                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_fire"
+                                        placeholder="0"><span class="unit">%</span></div>
+                            </div>
+                            <div class="cw-field"><label style="color:#3b82f6">凝縮</label>
+                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_ice"
+                                        placeholder="0"><span class="unit">%</span></div>
+                            </div>
+                            <div class="cw-field"><label style="color:#a855f7">電導</label>
+                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_thunder"
+                                        placeholder="0"><span class="unit">%</span></div>
+                            </div>
+                            <div class="cw-field"><label style="color:#22c55e">気動</label>
+                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_wind"
+                                        placeholder="0"><span class="unit">%</span></div>
+                            </div>
+                            <div class="cw-field"><label style="color:#eab308">回折</label>
+                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_light"
+                                        placeholder="0"><span class="unit">%</span></div>
+                            </div>
+                            <div class="cw-field"><label style="color:#ec4899">消滅</label>
+                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_dark"
+                                        placeholder="0"><span class="unit">%</span></div>
+                            </div>
+                        </div>
                         <div class="sec-title">スキル種別ダメバフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
@@ -2295,6 +2286,24 @@
                             <div class="cw-field"><label>全属性バフ</label>
                                 <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_all_c"
                                         placeholder="0"><span class="unit">%</span></div>
+                            </div>
+                        </div>
+                        <div class="sec-title">ダメージ比率（合計100推奨）</div>
+                        <div class="cw-grid">
+                            <div class="cw-field"><label>通常攻撃</label>
+                                <input type="number" min="0" max="100" id="ch_ratio_normal_c" placeholder="0">
+                            </div>
+                            <div class="cw-field"><label>重撃</label>
+                                <input type="number" min="0" max="100" id="ch_ratio_heavy_c" placeholder="0">
+                            </div>
+                            <div class="cw-field"><label>共鳴スキル</label>
+                                <input type="number" min="0" max="100" id="ch_ratio_skill_c" placeholder="0">
+                            </div>
+                            <div class="cw-field"><label>共鳴解放</label>
+                                <input type="number" min="0" max="100" id="ch_ratio_lib_c" placeholder="0">
+                            </div>
+                            <div class="cw-field"><label>音骸スキル</label>
+                                <input type="number" min="0" max="100" id="ch_ratio_echo_c" placeholder="0">
                             </div>
                         </div>
                         <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
@@ -2827,6 +2836,26 @@
             const note = document.getElementById('note_charaweapon');
             if (note) note.textContent = parts.length ? '加算: ' + parts.join(' / ') : '';
             if (inputMode === 'detail') fillDetailInputs();
+
+            // キャラに ratio が登録されていれば S.ratio に反映
+            const selChara = document.getElementById('sel_chara');
+            if (selChara && selChara.value) {
+                const charaEntry = getCharaEntries('chara').find(e => e.id === selChara.value);
+                if (charaEntry && charaEntry.ratio) {
+                    const r = charaEntry.ratio;
+                    S.ratio.normal = r.normal ?? S.ratio.normal;
+                    S.ratio.heavy  = r.heavy  ?? S.ratio.heavy;
+                    S.ratio.skill  = r.skill  ?? S.ratio.skill;
+                    S.ratio.lib    = r.lib    ?? S.ratio.lib;
+                    S.ratio.echo   = r.echo   ?? S.ratio.echo;
+                    const ids = { normal: 'r_n', heavy: 'r_h', skill: 'r_s', lib: 'r_l', echo: 'r_e' };
+                    Object.entries(ids).forEach(([k, id]) => {
+                        const el = document.getElementById(id);
+                        if (el) { el.value = S.ratio[k]; autoSize(el); }
+                    });
+                    updateRatioVis();
+                }
+            }
         }
 
         function rebuildCharaWeaponSelects() {
@@ -4502,6 +4531,12 @@
 
         const BUILTIN_CHARA = [
             // ▼ここからキャラを追記▼
+            //
+            // ダメージ比率を登録する場合は ratio プロパティを追加してください。
+            // キー: normal=通常攻撃, heavy=重撃, skill=共鳴スキル, lib=共鳴解放, echo=音骸スキル
+            // 合計100を推奨。省略したキーは0扱いになります。
+            // 例: ratio: { normal: 0, heavy: 0, skill: 60, lib: 40, echo: 0 }
+            //
             { name: '今汐S0', desc: '全バフ発動時', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 20, dmg_all: 20 },
             { name: 'ツバキS0', desc: '全バフ発動時', base_atk: 412, base_hp: 10325, base_def: 1161, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_dark: 15, dmg_normal: 15 },
             // ▲ここまで▲
@@ -4551,6 +4586,15 @@
                 const el = document.getElementById('ch_' + k + sfx) || document.getElementById('ch_' + k);
                 entry[k] = el ? parseFloat(el.value) || 0 : 0;
             });
+            if (charaType === 'chara') {
+                entry.ratio = {
+                    normal: parseFloat(document.getElementById('ch_ratio_normal_c')?.value) || 0,
+                    heavy:  parseFloat(document.getElementById('ch_ratio_heavy_c')?.value)  || 0,
+                    skill:  parseFloat(document.getElementById('ch_ratio_skill_c')?.value)  || 0,
+                    lib:    parseFloat(document.getElementById('ch_ratio_lib_c')?.value)    || 0,
+                    echo:   parseFloat(document.getElementById('ch_ratio_echo_c')?.value)   || 0,
+                };
+            }
             const list = getCharaEntries(charaType);
             list.push(entry);
             try { localStorage.setItem('echo_chara_' + charaType, JSON.stringify(list)); } catch { }
@@ -4558,6 +4602,10 @@
             if (descEl) descEl.value = '';
             CH_FIELDS.forEach(k => {
                 const el = document.getElementById('ch_' + k + sfx) || document.getElementById('ch_' + k);
+                if (el) el.value = '';
+            });
+            ['normal','heavy','skill','lib','echo'].forEach(k => {
+                const el = document.getElementById('ch_ratio_' + k + '_c');
                 if (el) el.value = '';
             });
             renderCharaList();
