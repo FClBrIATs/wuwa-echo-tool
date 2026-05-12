@@ -1559,7 +1559,7 @@
                             <!-- 全体攻撃力 内訳 -->
                             <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>%バフ（H）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" step="any"
                                         id="di_stat_pct_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>%バフ（武器）</label><input type="number" step="any"
@@ -1568,15 +1568,15 @@
                                 <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" step="any"
                                         id="di_stat_pct_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸M）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" step="any"
                                         id="di_stat_pct_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸S）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" step="any"
                                         id="di_stat_pct_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>実数（音骸M）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" step="any"
                                         id="di_stat_flat_em" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>実数（音骸S）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" step="any"
                                         id="di_stat_flat_es" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
                                 <div class="detail-item"><label>その他</label><input type="number" step="any"
                                         id="di_stat_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
@@ -2837,24 +2837,23 @@
             if (note) note.textContent = parts.length ? '加算: ' + parts.join(' / ') : '';
             if (inputMode === 'detail') fillDetailInputs();
 
-            // キャラに ratio が登録されていれば S.ratio に反映
+            // キャラに ratio が登録されていれば S.ratio に反映、なければデフォルトにリセット
             const selChara = document.getElementById('sel_chara');
             if (selChara && selChara.value) {
                 const charaEntry = getCharaEntries('chara').find(e => e.id === selChara.value);
-                if (charaEntry && charaEntry.ratio) {
-                    const r = charaEntry.ratio;
-                    S.ratio.normal = r.normal ?? S.ratio.normal;
-                    S.ratio.heavy  = r.heavy  ?? S.ratio.heavy;
-                    S.ratio.skill  = r.skill  ?? S.ratio.skill;
-                    S.ratio.lib    = r.lib    ?? S.ratio.lib;
-                    S.ratio.echo   = r.echo   ?? S.ratio.echo;
-                    const ids = { normal: 'r_n', heavy: 'r_h', skill: 'r_s', lib: 'r_l', echo: 'r_e' };
-                    Object.entries(ids).forEach(([k, id]) => {
-                        const el = document.getElementById(id);
-                        if (el) { el.value = S.ratio[k]; autoSize(el); }
-                    });
-                    updateRatioVis();
-                }
+                const defaultRatio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
+                const r = (charaEntry && charaEntry.ratio) ? charaEntry.ratio : defaultRatio;
+                S.ratio.normal = r.normal ?? 0;
+                S.ratio.heavy  = r.heavy  ?? 0;
+                S.ratio.skill  = r.skill  ?? 0;
+                S.ratio.lib    = r.lib    ?? 0;
+                S.ratio.echo   = r.echo   ?? 0;
+                const ids = { normal: 'r_n', heavy: 'r_h', skill: 'r_s', lib: 'r_l', echo: 'r_e' };
+                Object.entries(ids).forEach(([k, id]) => {
+                    const el = document.getElementById(id);
+                    if (el) { el.value = S.ratio[k]; autoSize(el); }
+                });
+                updateRatioVis();
             }
         }
 
@@ -3968,16 +3967,32 @@
             const lvl = parseInt(document.getElementById('newLevel')?.value) || 0;
             const slots = { 0: 0, 5: 1, 10: 2, 15: 3, 20: 4, 25: 5 }[lvl] || 0;
             const d = document.getElementById('newSubRows'); if (!d) return;
+
+            // 現在の入力値を退避
+            const saved = [];
+            for (let s = 0; ; s++) {
+                const kEl = document.getElementById(`ns_${s}_k`);
+                if (!kEl) break;
+                saved.push({ key: kEl.value, val: document.getElementById(`ns_${s}_v`)?.value || '' });
+            }
+
             d.innerHTML = '';
             for (let s = 0; s < slots; s++) {
                 const usedKeys = _getNewUsedKeys(s, slots);
                 const row = document.createElement('div'); row.className = 'sub-row';
+                const prevKey = saved[s]?.key || '';
+                const prevVal = saved[s]?.val || '';
                 row.innerHTML = `
-      ${makeStatSelectHTML(`ns_${s}_k`, '', `onNewKey(${s})`, 'stat-sel', usedKeys)}
-      <select class="val-sel" id="ns_${s}_v" disabled><option value=""></option></select>
+      ${makeStatSelectHTML(`ns_${s}_k`, prevKey, `onNewKey(${s})`, 'stat-sel', usedKeys)}
+      ${prevKey ? makeValSelectHTML(`ns_${s}_v`, prevKey, prevVal, `onNewVal(${s})`) : `<select class="val-sel" id="ns_${s}_v" disabled><option value=""></option></select>`}
       <span class="sub-mv" id="ns_${s}_m" style="color:var(--text3)"></span>
     `;
                 d.appendChild(row);
+            }
+
+            // スコア表示を更新
+            for (let s = 0; s < slots; s++) {
+                if (saved[s]?.key && saved[s]?.val) onNewVal(s);
             }
         }
 
@@ -4133,10 +4148,10 @@
       </button>
     </div>`;
 
-            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean));
+            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), newMainKey);
         }
 
-        function updateProbability(remainSlots, needed, existingKeys = []) {
+        function updateProbability(remainSlots, needed, existingKeys = [], mainKey = '') {
             const d = document.getElementById('probResult'); if (!d) return;
             if (remainSlots <= 0) {
                 d.innerHTML = needed <= 0 ?
@@ -4175,7 +4190,8 @@
             const mu = allScores.reduce((a, b) => a + b, 0) / allScores.length;
 
             const prob = simulate(remainSlots, existingKeys);
-            const prob5 = simulate(5, []);
+            const mainKeyLocked = mainKey ? [mainKey] : [];
+            const prob5 = simulate(5, mainKeyLocked);
 
             const col = prob > 60 ? '#15803d' : prob > 30 ? '#d97706' : '#dc2626';
             const col5 = prob5 > 60 ? '#15803d' : prob5 > 30 ? '#d97706' : '#dc2626';
@@ -4634,10 +4650,16 @@
                     dmg_light: '回折', dmg_dark: '消滅', dmg_all: '全属性',
                     dmg_normal: '通常', dmg_heavy: '重撃', dmg_skill: 'スキル', dmg_lib: '解放', dmg_echo: '音骸' };
                 const buffParts = CH_FIELDS.filter(k => e[k] > 0).map(k => `${chLabel[k] || k} +${e[k]}`);
+                const ratioLabel = { normal: '通常', heavy: '重撃', skill: 'スキル', lib: '解放', echo: '音骸' };
+                const ratioParts = e.ratio
+                    ? Object.entries(e.ratio).filter(([, v]) => v > 0).map(([k, v]) => `${ratioLabel[k] || k}:${v}%`)
+                    : [];
+                const ratioStr = ratioParts.length ? `［比率 ${ratioParts.join(' ')}］` : '';
                 return `<div class="custom-item">
       <div style="flex:1;min-width:0;">
         <div style="font-size:11px;font-weight:500;">${e.name}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　') || 'ステータス未設定'}</div>
+        ${ratioStr ? `<div style="font-size:9px;color:var(--p);margin-top:2px;">${ratioStr}</div>` : ''}
         ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${e.desc}</div>` : ''}
       </div>
       ${e._builtin
