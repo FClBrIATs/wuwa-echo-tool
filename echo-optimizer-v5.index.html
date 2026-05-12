@@ -120,7 +120,6 @@
             padding: 20px;
             max-width: 1440px;
             margin: 0 auto;
-            overflow-x: hidden;
         }
 
         .page.active {
@@ -129,27 +128,39 @@
 
         .grid2 {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 16px;
         }
 
         .grid5 {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 12px;
         }
 
-        @media(max-width:1100px) {
+        @media(max-width:1200px) {
             .grid5 {
-                grid-template-columns: repeat(3, 1fr)
+                grid-template-columns: repeat(4, minmax(0, 1fr))
             }
         }
 
-        @media(max-width:800px) {
+        @media(max-width:960px) {
+            .grid5 {
+                grid-template-columns: repeat(3, minmax(0, 1fr))
+            }
+        }
 
+        @media(max-width:700px) {
             .grid2,
             .grid5 {
-                grid-template-columns: 1fr
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+        }
+
+        @media(max-width:480px) {
+            .grid2,
+            .grid5 {
+                grid-template-columns: minmax(0, 1fr)
             }
         }
 
@@ -1383,13 +1394,6 @@
             }
         }
 
-        /* --- 装備音骸 grid5: 400px未満は2列 --- */
-        @media(max-width:400px) {
-            .grid5 {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
         /* --- inline2: 300px未満は1列 --- */
         @media(max-width:320px) {
             .inline2 {
@@ -2556,7 +2560,6 @@
             { key: 'dmg_heavy', name: '重撃バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
             { key: 'dmg_skill', name: 'スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
             { key: 'dmg_lib', name: '解放バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_echo', name: '音骸バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
             { key: 'res_eff', name: '共鳴効率', unit: '%', vals: [6.8, 7.6, 8.4, 9.2, 10.0, 10.8, 11.6, 12.4] },
         ];
         const SUB_MAX = Object.fromEntries(SUB_STATS.map(s => [s.key, s.vals[s.vals.length - 1]]));
@@ -2927,8 +2930,11 @@
             ) / 100); // 合計値モードでは total がそのまま stat_eff
             const stat_eff_final = inputMode === 'detail' ? total : n(S.total_stat) || n(S.base_stat);
 
-            const crit_factor = 1 + cr_eff / 100 * (cd_eff / 100 - 1);
+            const cr_clamped = Math.min(cr_eff, 100); // クリ率は100%上限
+            const crit_factor = 1 + cr_clamped / 100 * (cd_eff / 100 - 1);
             const E = stat_eff_final * (1 + DMG_eff) * crit_factor;
+            // クリ率が100%に達していると追加クリ率の限界効果はゼロ
+            const pCR_marginal = cr_clamped >= 100 ? 0 : stat_eff_final * (1 + DMG_eff) * (cd_eff / 100 - 1) / 100;
 
             return {
                 E, stat_eff: stat_eff_final, DMG_eff, crit_factor, base, total: stat_eff_final,
@@ -2936,8 +2942,8 @@
                 pStat_pct: base / 100 * (1 + DMG_eff) * crit_factor,
                 pStat_flat: (1 + DMG_eff) * crit_factor,
                 pDmg: stat_eff_final / 100 * crit_factor,
-                pCR: stat_eff_final * (1 + DMG_eff) * (cd_eff / 100 - 1) / 100,
-                pCD: stat_eff_final * (1 + DMG_eff) * (cr_eff / 100) / 100,
+                pCR: pCR_marginal,
+                pCD: stat_eff_final * (1 + DMG_eff) * (cr_clamped / 100) / 100,
             };
         }
 
@@ -4056,10 +4062,14 @@
                     else if (cd.fixedHp != null) mainScore += mv('flat_hp', cd.fixedHp);
                 }
             }
-            const currentScore = subScore + mainScore;
+            const currentScore = subScore; // サブステのみで比較
 
             const cmpIdx = parseInt(document.getElementById('compareSlot')?.value ?? '-1');
-            const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScore(e) }));
+            // 比較もサブステのみで統一
+            const scores = S.echoes.map((e, i) => ({
+                idx: i,
+                score: e.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0)
+            }));
             const sorted = [...scores].sort((a, b) => a.score - b.score);
             const targetIdx = cmpIdx >= 0 ? cmpIdx : sorted[0].idx;
             const compareScore = scores[targetIdx].score;
@@ -4122,8 +4132,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
       <div class="ed-box">
         <div class="ed-val" style="color:${curCol}">${fmt(currentScore)}</div>
-        <div class="ed-label">新規音骸 現スコア</div>
-        ${mainScore > 0 ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;">メイン ${fmt(mainScore)} ＋ サブ ${fmt(subScore)}</div>` : ''}
+        <div class="ed-label">新規音骸 現スコア（サブステのみ）</div>
       </div>
       <div class="ed-box">
         <div class="ed-val" style="font-size:17px;color:var(--text2)">${fmt(compareScore)}</div>
