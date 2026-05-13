@@ -4157,10 +4157,12 @@
       </button>
     </div>`;
 
-            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), newMainKey);
+            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), newMainKey, compareScore);
         }
 
-        function updateProbability(remainSlots, needed, existingKeys = [], mainKey = '') {
+        // fullNeeded: 未強化音骸（全5枠）が目標に届くために必要な合計スコア = compareScore
+        // needed:     現在の音骸が残りremainSlots枠で必要な追加スコア = compareScore - currentScore
+        function updateProbability(remainSlots, needed, existingKeys = [], mainKey = '', fullNeeded = null) {
             const d = document.getElementById('probResult'); if (!d) return;
             if (remainSlots <= 0) {
                 d.innerHTML = needed <= 0 ?
@@ -4170,14 +4172,18 @@
             }
             if (needed <= 0) { d.innerHTML = '<div class="info-box">既に交換ラインを超えています。</div>'; return; }
 
+            // fullNeeded が渡されなかった場合は needed にフォールバック（後方互換）
+            const neededForNew = fullNeeded != null ? fullNeeded : needed;
+
             const E = getPartials().E;
 
             // サブステ全選択肢をkey別に用意
             const subPool = SUB_STATS.map(sd => ({ key: sd.key, scores: sd.vals.map(v => mv(sd.key, v)) }));
 
             // モンテカルロ：重複なしでn枠引いた合計スコアの分布を推定
+            // threshold: この値以上になれば成功とみなす（呼び出し元で用途別に渡す）
             const TRIALS = 20000;
-            function simulate(slots, lockedKeys) {
+            function simulate(slots, lockedKeys, threshold) {
                 let success = 0;
                 for (let t = 0; t < TRIALS; t++) {
                     const used = new Set(lockedKeys);
@@ -4189,7 +4195,7 @@
                         used.add(sd.key);
                         total += sd.scores[Math.floor(Math.random() * sd.scores.length)];
                     }
-                    if (total >= needed) success++;
+                    if (total >= threshold) success++;
                 }
                 return success / TRIALS * 100;
             }
@@ -4198,9 +4204,11 @@
             const allScores = subPool.flatMap(s => s.scores);
             const mu = allScores.reduce((a, b) => a + b, 0) / allScores.length;
 
-            const prob = simulate(remainSlots, existingKeys);
+            // 現在の音骸：残りremainSlots枠でneeded（追加スコア）を達成できるか
+            const prob = simulate(remainSlots, existingKeys, needed);
+            // 未強化音骸（+0）：全5枠でneededForNew（= compareScore、サブステ0からの合計）を達成できるか
             const mainKeyLocked = mainKey ? [mainKey] : [];
-            const prob5 = simulate(5, mainKeyLocked);
+            const prob5 = simulate(5, mainKeyLocked, neededForNew);
 
             const col = prob > 60 ? '#15803d' : prob > 30 ? '#d97706' : '#dc2626';
             const col5 = prob5 > 60 ? '#15803d' : prob5 > 30 ? '#d97706' : '#dc2626';
@@ -4236,7 +4244,7 @@
     <div style="font-size:10px;color:var(--text2);line-height:1.9;">
       1枠平均期待スコア：<b>${fmtPct(mu)}</b><br>
       必要1枠平均（現在）：<b>${fmtPct(needed / remainSlots)}</b><br>
-      必要1枠平均（新規）：<b>${fmtPct(needed / 5)}</b><br>
+      必要1枠平均（新規）：<b>${fmtPct(neededForNew / 5)}</b><br>
       <span style="font-size:9px;color:var(--text3)">※ 重複なしモンテカルロ法（${TRIALS.toLocaleString()}試行）による推定</span>
     </div>`;
         }
