@@ -2392,7 +2392,16 @@
         // set2/set5 は累積値（5セット選択時は2セット効果も込み）
         // 条件付き効果は最大値想定
         const HARMONIES = [
-            //  3.1 
+            {
+                id: '静寂', name: '静寂祈念の雪', attr: 'ice', setType: '2+5',
+                set2: B({ dmg_ice: 10 }), set5: B({ crit_rate: 25 }),
+                desc: '降雪効果を所持時：解放ダメを与えた時、降雪効果を消費して、クリ率25%,終奏スキルを発動時、降雪効果を消費して、変奏スキルで登場するキャラの凝縮ダメを25%'
+            },
+            {
+                id: 'モンタージュ', name: 'モンタージュ・シルエット', attr: 'other', setType: '2+5',
+                set2: B({ atk_pct: 10 }), set5: B({ }),
+                desc: ' '
+            },
             {
                 id: 'アストロ', name: 'アストロ・ロード', attr: 'fire', setType: '2+5',
                 set2: B({ dmg_fire: 10 }), set5: B({ dmg_fire: 30, crit_rate: 20 }),
