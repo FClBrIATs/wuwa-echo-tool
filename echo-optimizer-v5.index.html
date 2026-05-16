@@ -2976,10 +2976,7 @@
             return 0;
         }
         function echoScore(echo) {
-            const subScore = echo.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0);
-            const { key1, val1, key2, val2 } = echo.main;
-            const mainScore = (key1 && val1 ? mv(key1, val1) : 0) + (key2 && val2 ? mv(key2, val2) : 0);
-            return subScore + mainScore;
+            return echo.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0);
         }
         function mvColor(v, mx) { const r = v / (mx || 1); return r > .7 ? '#15803d' : r > .4 ? '#2563eb' : r > .2 ? '#d97706' : '#dc2626'; }
         function pctStr(v, E) { return E > 0 ? (v / E * 100).toFixed(2) + '%' : ''; }
@@ -4054,24 +4051,7 @@
                 key: document.getElementById(`ns_${s}_k`)?.value || '',
                 val: document.getElementById(`ns_${s}_v`)?.value || '',
             }));
-            const subScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val) : 0), 0);
-
-            // メインステスコア
-            const newMainKey = document.getElementById('newMainKey')?.value || '';
-            const newCostRaw = document.getElementById('newCost')?.value || '';
-            const newCost = newCostRaw ? parseInt(newCostRaw) : null;
-            let mainScore = 0;
-            if (newCost && newMainKey) {
-                const cd = COST_DATA[newCost];
-                const st = cd ? cd.stats.find(s => s.key === newMainKey) : null;
-                if (st) mainScore += mv(newMainKey, st.val);
-                // メインステ2（固定枠）
-                if (cd) {
-                    if (cd.fixedAtk != null) mainScore += mv('flat_atk', cd.fixedAtk);
-                    else if (cd.fixedHp != null) mainScore += mv('flat_hp', cd.fixedHp);
-                }
-            }
-            const currentScore = subScore; // サブステのみで比較
+            const currentScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val) : 0), 0);
 
             const cmpIdx = parseInt(document.getElementById('compareSlot')?.value ?? '-1');
             // 比較もサブステのみで統一
@@ -4166,12 +4146,12 @@
       </button>
     </div>`;
 
-            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), newMainKey, compareScore);
+            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), compareScore);
         }
 
         // fullNeeded: 未強化音骸（全5枠）が目標に届くために必要な合計スコア = compareScore
         // needed:     現在の音骸が残りremainSlots枠で必要な追加スコア = compareScore - currentScore
-        function updateProbability(remainSlots, needed, existingKeys = [], mainKey = '', fullNeeded = null) {
+        function updateProbability(remainSlots, needed, existingKeys = [], fullNeeded = null) {
             const d = document.getElementById('probResult'); if (!d) return;
             if (remainSlots <= 0) {
                 d.innerHTML = needed <= 0 ?
@@ -4216,8 +4196,7 @@
             // 現在の音骸：残りremainSlots枠でneeded（追加スコア）を達成できるか
             const prob = simulate(remainSlots, existingKeys, needed);
             // 未強化音骸（+0）：全5枠でneededForNew（= compareScore、サブステ0からの合計）を達成できるか
-            const mainKeyLocked = mainKey ? [mainKey] : [];
-            const prob5 = simulate(5, mainKeyLocked, neededForNew);
+            const prob5 = simulate(5, [], neededForNew);
 
             const col = prob > 60 ? '#15803d' : prob > 30 ? '#d97706' : '#dc2626';
             const col5 = prob5 > 60 ? '#15803d' : prob5 > 30 ? '#d97706' : '#dc2626';
