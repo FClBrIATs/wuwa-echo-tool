@@ -196,7 +196,74 @@
             padding: 14px;
         }
 
-        /* FORMS */
+        .card-head {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .card-head .card-toggle-icon {
+            margin-left: auto;
+            color: var(--p);
+            font-size: 9px;
+            line-height: 1;
+            transition: transform .15s;
+            flex-shrink: 0;
+        }
+
+        .card:not(.collapsed) .card-toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        .card.collapsed .card-body {
+            display: none;
+        }
+
+        
+        .collapsible-section {
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .collapsible-section:first-child {
+            border-top: 0;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .collapsible-section summary.sec-title {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+            margin-bottom: 0;
+        }
+
+        .collapsible-section summary.sec-title::-webkit-details-marker {
+            display: none;
+        }
+
+        .collapsible-section summary.sec-title::before {
+            content: '▶';
+            color: var(--p);
+            font-size: 9px;
+            line-height: 1;
+            transition: transform .15s;
+        }
+
+        .collapsible-section[open] summary.sec-title {
+            margin-bottom: 8px;
+        }
+
+        .collapsible-section[open] summary.sec-title::before {
+            transform: rotate(90deg);
+        }
+
+        .collapsible-content > .divider:first-child {
+            display: none;
+        }/* FORMS */
         .field {
             margin-bottom: 9px;
         }
@@ -1545,6 +1612,8 @@
                         </div>
                         <div class="ratio-vis" id="ratioVis"></div>
                         <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
+                        <div class="harmony-picker" id="harmonyPicker"></div>
+                        <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
 
                         <!-- ===== 項目別モード ===== -->
                         <div id="block_detail" style="display:none;">
@@ -1703,13 +1772,38 @@
                         </div>
 
                         <div class="sub-note" id="note_da"></div>
-                        <div class="divider"></div>
-                        <div class="sec-title">スキル種別ダメバフ</div>
+                        <div class="divider"></div>                        <div class="sec-title">スキル種別ダメバフ</div>
+
+                        <!-- 合計値モード -->
+                        <div id="skillbuf_total">
+                            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" step="any"
+                                    id="inp_dnormal" placeholder="0"
+                                    oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)"><span
+                                    class="unit">%</span></div>
+                            <div class="stat-row"><span class="sname">重撃</span><input type="number" step="any"
+                                    id="inp_dheavy" placeholder="0"
+                                    oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)"><span
+                                    class="unit">%</span></div>
+                            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" step="any"
+                                    id="inp_dskill" placeholder="0"
+                                    oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)"><span
+                                    class="unit">%</span></div>
+                            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" step="any"
+                                    id="inp_dlib" placeholder="0"
+                                    oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)"><span
+                                    class="unit">%</span></div>
+                            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" step="any"
+                                    id="inp_decho" placeholder="0"
+                                    oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)"><span
+                                    class="unit">%</span></div>
+                        </div>
+
+                        <!-- 項目別モード -->
+                        <div id="skillbuf_detail" style="display:none;">
+                            <div id="di_skill_rows"></div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="harmony-picker" id="harmonyPicker"></div>
-                        <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
-                    </div>
+
                 </div>
             </div>
 
@@ -2569,6 +2663,7 @@
             { key: 'dmg_heavy', name: '重撃バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
             { key: 'dmg_skill', name: 'スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
             { key: 'dmg_lib', name: '解放バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
+            { key: 'dmg_echo', name: '音骸スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
             { key: 'res_eff', name: '共鳴効率', unit: '%', vals: [6.8, 7.6, 8.4, 9.2, 10.0, 10.8, 11.6, 12.4] },
         ];
         const SUB_MAX = Object.fromEntries(SUB_STATS.map(s => [s.key, s.vals[s.vals.length - 1]]));
@@ -3417,7 +3512,64 @@
             if (el) el.style.display = show ? '' : 'none';
         }
 
-        // 項目別：属性バフ・スキルバフの内訳行をJS生成
+        
+        function initCollapsibleSections() {
+            document.querySelectorAll('.card-body').forEach(body => {
+                if (body.dataset.collapsibleReady === '1') return;
+                const titles = Array.from(body.children).filter(el =>
+                    el.classList && el.classList.contains('sec-title') && !el.closest('.collapsible-section')
+                );
+                titles.forEach(title => {
+                    if (!title.parentElement || title.parentElement !== body) return;
+                    const details = document.createElement('details');
+                    details.className = 'collapsible-section';
+                    const summary = document.createElement('summary');
+                    summary.className = title.className;
+                    if (title.id) summary.id = title.id;
+                    if (title.getAttribute('style')) summary.setAttribute('style', title.getAttribute('style'));
+                    while (title.firstChild) summary.appendChild(title.firstChild);
+                    const content = document.createElement('div');
+                    content.className = 'collapsible-content';
+                    body.insertBefore(details, title);
+                    details.appendChild(summary);
+                    details.appendChild(content);
+                    const oldTitle = title;
+                    let node = oldTitle.nextSibling;
+                    oldTitle.remove();
+                    while (node) {
+                        const next = node.nextSibling;
+                        if (node.nodeType === 1 && node.classList && node.classList.contains('sec-title')) break;
+                        content.appendChild(node);
+                        node = next;
+                    }
+                });
+                body.dataset.collapsibleReady = '1';
+            });
+        }
+
+        function initCardCollapse() {
+            document.querySelectorAll('.card').forEach((card, idx) => {
+                if (card.dataset.collapseReady === '1') return;
+                const head = card.querySelector(':scope > .card-head');
+                const body = card.querySelector(':scope > .card-body');
+                if (!head || !body) { card.dataset.collapseReady = '1'; return; }
+                const key = body.id || (head.querySelector('h2') && head.querySelector('h2').textContent.trim()) || ('card_' + idx);
+                card.dataset.collapseKey = key;
+                const icon = document.createElement('span');
+                icon.className = 'card-toggle-icon';
+                icon.textContent = '▶';
+                head.appendChild(icon);
+                head.addEventListener('click', (e) => {
+                    if (e.target.closest('button,select,input,a,label,textarea')) return;
+                    const collapsed = card.classList.toggle('collapsed');
+                    try { localStorage.setItem('cardCollapse_' + key, collapsed ? '1' : '0'); } catch { }
+                });
+                let saved;
+                try { saved = localStorage.getItem('cardCollapse_' + key); } catch { }
+                if (saved === '1') card.classList.add('collapsed');
+                card.dataset.collapseReady = '1';
+            });
+        }// 項目別：属性バフ・スキルバフの内訳行をJS生成
         const ATTR_DETAIL = [
             { key: 'fire', label: '焦熱', color: '#ef4444' },
             { key: 'ice', label: '凝縮', color: '#3b82f6' },
@@ -3592,6 +3744,35 @@
         function saveEchoPresets(presets) {
             localStorage.setItem(ECHO_PRESET_KEY, JSON.stringify(presets));
         }
+        function normalizeEcho(echo, idx = 0) {
+            const base = S.echoes[idx] || S.echoes[0] || {
+                name: `スロット${idx + 1}`,
+                main: { cost: null, key1: '', val1: 0, key2: '', val2: 0 },
+                subs: []
+            };
+            const src = echo && typeof echo === 'object' ? echo : {};
+            const main = src.main && typeof src.main === 'object' ? src.main : {};
+            const subs = Array.isArray(src.subs) ? src.subs : [];
+            return {
+                name: src.name || base.name || `スロット${idx + 1}`,
+                main: {
+                    cost: main.cost != null && main.cost !== '' ? parseInt(main.cost) : (base.main?.cost ?? null),
+                    key1: main.key1 || '',
+                    val1: main.val1 != null && main.val1 !== '' ? parseFloat(main.val1) || 0 : 0,
+                    key2: main.key2 || '',
+                    val2: main.val2 != null && main.val2 !== '' ? parseFloat(main.val2) || 0 : 0,
+                },
+                subs: Array.from({ length: 5 }, (_, i) => {
+                    const sub = subs[i] && typeof subs[i] === 'object' ? subs[i] : {};
+                    return { key: sub.key || '', val: sub.val != null ? sub.val : '' };
+                })
+            };
+        }
+
+        function normalizeEchoSet(echoes) {
+            const src = Array.isArray(echoes) ? echoes : [];
+            return Array.from({ length: 5 }, (_, i) => normalizeEcho(src[i], i));
+        }
 
         function rebuildPresetSelect() {
             const sel = document.getElementById('echoPresetSelect'); if (!sel) return;
@@ -3631,13 +3812,14 @@
             const presets = getEchoPresets();
             if (isNaN(idx) || !presets[idx]) { showPresetMsg('セットを選択してください', '#dc2626'); return; }
             const preset = presets[idx];
-            // S.echoesに展開
-            S.echoes = JSON.parse(JSON.stringify(preset.echoes));
+            // S.echoesに展開（古い保存形式や欠けたスロットも現在形式へ補正）
+            S.echoes = normalizeEchoSet(JSON.parse(JSON.stringify(preset.echoes || [])));
             buildEchoGrid();
+            if (inputMode === 'detail') fillDetailInputs();
             recalcAll();
+            requestAnimationFrame(updateEchoScores);
             showPresetMsg(`「${preset.name}」を呼び出しました`, '#15803d');
         }
-
         function deleteEchoPreset() {
             const sel = document.getElementById('echoPresetSelect');
             const idx = sel ? parseInt(sel.value) : NaN;
@@ -4633,14 +4815,18 @@
                 if (el) el.value = '';
             });
             renderCharaList();
-            rebuildCharaWeaponSelects();
+                        initCollapsibleSections();
+                        initCardCollapse();
+rebuildCharaWeaponSelects();
         }
 
         function deleteCharaEntry(type, id) {
             const list = getCharaEntries(type).filter(e => e.id !== id);
             try { localStorage.setItem('echo_chara_' + type, JSON.stringify(list)); } catch { }
             renderCharaList();
-            rebuildCharaWeaponSelects();
+                        initCollapsibleSections();
+                        initCardCollapse();
+rebuildCharaWeaponSelects();
         }
 
         function renderCharaList() {
@@ -4682,7 +4868,9 @@
             buildNewSubs();
             renderCustomList();
             renderCharaList();
-            rebuildCharaWeaponSelects();
+                        initCollapsibleSections();
+                        initCardCollapse();
+rebuildCharaWeaponSelects();
             recalcAll();
             // 初期値に対してinput幅を調整
             setTimeout(autoSizeAll, 50);
