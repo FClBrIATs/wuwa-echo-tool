@@ -1,0 +1,12 @@
+{
+  "name": "wuwa-echo-tool",
+  "version": "5.0.0",
+  "private": true,
+  "description": "鳴潮 音骸厳選支援ツール（配布物は echo-optimizer-v5.index.html 単体で動作します）",
+  "scripts": {
+    "test": "node test/run.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}
