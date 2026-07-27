@@ -2102,7 +2102,7 @@
                             <b>新規音骸のスコアが装備中スロットの合格ラインを超えるか判定します。</b><br>
                             <b>レベル</b>：選択した強化段階までのサブ枠数が入力可能になります。<br>
                             <b>比較スロット</b>：「自動」は②タブの最弱スロットを参照します。<br>
-                            <b>期待確率</b>：残サブ枠でランダムに付与された場合に合格ラインを超える確率（正規分布近似）です。
+                            <b>期待確率</b>：残サブ枠でランダムに付与された場合に合格ラインを超える確率です。実際の抽選確率を用いたモンテカルロ法で推定しています。
                         </div>
                     </details>
                     <div class="inline2" style="margin-bottom:10px;">
@@ -2178,7 +2178,7 @@
             </div>
         </div>
         <div class="info-box" style="font-size:10px;margin-top:0;">
-            ※ 確率計算は「全サブステが均等な確率で出現する」という仮定のもとに算出しています。実際の出現確率とは異なる場合があります。
+            ※ 確率計算は鳴潮wiki公開の抽選確率データに基づいています。サブステの<b>種類</b>は全13種の均等抽選、<b>値</b>は種類ごとの実際の出現確率で重み付けしています。モンテカルロ法（20,000試行）による推定のため、実行ごとに小数点以下がわずかに変動します。
         </div>
     </div>
 
@@ -2964,6 +2964,25 @@
         // HELPERS
         // ================================================================
         function n(v) { return parseFloat(v) || 0; }
+
+        // 登録名・メモなどのユーザー入力をHTMLへ埋め込む前に無害化する。
+        // 属性値に入れる場合があるので " と ' も対象にすること。
+        function esc(v) {
+            return String(v == null ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // コスト・メインステ・サブステのいずれにも一度も触れていないスロットか。
+        // 「不要なサブステを省略した」スロットと区別するための判定なので、
+        // 1つでも入力があれば未着手とはみなさない。
+        function isEchoUntouched(echo) {
+            if (!echo) return true;
+            const m = echo.main || {};
+            if (m.cost || m.key1 || m.key2) return false;
+            return !echo.subs.some(s => s.key || (s.val !== '' && s.val != null));
+        }
+
         function customHarmonies() { try { return JSON.parse(localStorage.getItem('echo_custom_h') || '[]'); } catch { return []; } }
         function allHarmonies() { return [...HARMONIES, ...customHarmonies()]; }
 
@@ -3618,7 +3637,7 @@
             div.className = `h-slot${filled ? ' filled' : ''}`;
             div.id = `hslot_${i}`;
 
-            const a = filled && h ? ATTR[h.attr || 'other'] : ATTR.other;
+            const a = (filled && h ? ATTR[h.attr] : null) || ATTR.other;
             const iconHTML = `<span class="attr-icon ${a.cls}" style="${filled ? '' : 'opacity:.3'}"></span>`;
 
             // カスタムドロップダウン
@@ -3626,9 +3645,12 @@
             const g25 = allH.filter(x => x.setType === '2+5');
             const g3 = allH.filter(x => x.setType === '3');
             const makeOpts = arr => arr.map(x =>
-                `<div class="custom-sel-option${x.id === slot.id ? ' selected' : ''}" onclick="onHarmonySelect(${i},'${x.id}')" data-id="${x.id}">
-      <span class="attr-icon ${ATTR[x.attr || 'other'].cls}"></span>
-      <span>${x.name}${x.unknown ? '*' : ''}</span>
+                // id はツールが生成する値（custom_<timestamp> 等）なので属性に直接埋めてよい。
+                // name は登録時のユーザー入力なので必ずエスケープする。
+                // attr も登録データ由来なので、未知の値でも落ちないよう other にフォールバックする。
+                `<div class="custom-sel-option${x.id === slot.id ? ' selected' : ''}" onclick="onHarmonySelect(${i},'${x.id}')" data-id="${esc(x.id)}">
+      <span class="attr-icon ${(ATTR[x.attr] || ATTR.other).cls}"></span>
+      <span>${esc(x.name)}${x.unknown ? '*' : ''}</span>
     </div>`).join('');
             const noneOpt = `<div class="custom-sel-option${!slot.id ? ' selected' : ''}" onclick="clearHarmony(${i})" data-id="">
     <span style="color:var(--text3);font-size:11px;">なし</span>
@@ -3637,7 +3659,7 @@
             const dropHTML = `
     <div class="custom-sel-wrap" id="hsel_wrap_${i}">
       <button class="custom-sel-btn" onclick="toggleHDrop(${i},event)" type="button">
-        ${filled && h ? `<span class="attr-icon ${a.cls}"></span><span>${h.name}</span>` : '<span style="color:var(--text3)">選択</span>'}
+        ${filled && h ? `<span class="attr-icon ${a.cls}"></span><span>${esc(h.name)}</span>` : '<span style="color:var(--text3)">選択</span>'}
         <span class="caret">▾</span>
       </button>
       <div class="custom-sel-list" id="hsel_list_${i}">
@@ -3678,7 +3700,7 @@
                     .join('　');
             }
 
-            const desc = h ? `<div class="h-desc">${h.desc}</div>` : '';
+            const desc = h ? `<div class="h-desc">${esc(h.desc)}</div>` : '';
             const unknown = h && h.unknown ? `<div class="h-unknown">⚠ 数値未公表。実測値を手動入力してください。</div>` : '';
 
             div.innerHTML = `
@@ -4337,7 +4359,7 @@
             const presets = getEchoPresets();
             const prev = sel.value;
             sel.innerHTML = '<option value="">-- セットを選択 --</option>'
-                + presets.map((p, i) => `<option value="${i}">${p.name}</option>`).join('');
+                + presets.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('');
             if (prev !== '' && presets[parseInt(prev)]) sel.value = prev;
         }
 
@@ -4429,7 +4451,7 @@
             wrap.innerHTML = `<div class="echo-card" id="ec_${idx}">
     <div class="echo-head">
       <span class="slot-lbl">SLOT ${idx + 1}</span>
-      <input type="text" value="${echo.name}" placeholder="音骸名" oninput="S.echoes[${idx}].name=this.value">
+      <input type="text" value="${esc(echo.name)}" placeholder="音骸名" oninput="S.echoes[${idx}].name=this.value">
       <span class="echo-score-badge" id="esb_${idx}" style="background:var(--card2);color:var(--text3)"></span>
     </div>
     <div class="echo-body" id="ebd_${idx}"></div>
@@ -4696,11 +4718,18 @@
                 const col = rank === 0 ? 'var(--red)' : rank === 1 ? 'var(--orange)' : rank === 2 ? 'var(--gold)' : 'var(--text3)';
                 const disp = E > 0 ? (s.score / E * 100).toFixed(2) + '%' : (s.score * 10000).toFixed(0);
                 const echo = S.echoes[s.idx];
+                // 未入力のサブステは「不要なので省略した」＝価値0として計上する仕様。
+                // ただしコストもメインステもサブステも一切触っていないスロットは
+                // 単に未着手なので、順位や計算は変えずに印だけ付けて区別できるようにする。
+                const untouched = isEchoUntouched(echo);
+                const tag = untouched
+                    ? '<span style="font-size:9px;color:var(--text3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:6px;">未入力</span>'
+                    : '';
                 return `<div class="rank-row">
       <span class="rank-num" style="color:${col}">${rank + 1}</span>
       <div class="rank-info">
-        <div class="rank-name">${echo.name}</div>
-        <div class="rank-detail">スコア ${disp}　（最強比 ${(pctR * 100).toFixed(0)}%）${rank === 0 ? '　← 最優先で更新' : ''}</div>
+        <div class="rank-name">${esc(echo.name)}${tag}</div>
+        <div class="rank-detail">スコア ${disp}　（最強比 ${(pctR * 100).toFixed(0)}%）${rank === 0 && !untouched ? '　← 最優先で更新' : ''}</div>
         <div class="prio-bar"><div class="prio-fill" style="width:${pctR * 100}%;background:${col}"></div></div>
       </div>
     </div>`;
@@ -4846,7 +4875,7 @@
     <div class="echo-card" style="margin-top:8px;">
       <div class="echo-head">
         <span class="slot-lbl">SLOT ${slotNo}</span>
-        <span style="font-size:11px;font-weight:500;flex:1;padding:3px 6px;">${targetName || '名前なし'}</span>
+        <span style="font-size:11px;font-weight:500;flex:1;padding:3px 6px;">${esc(targetName) || '名前なし'}</span>
         <span class="echo-score-badge" style="background:var(--card2);color:var(--text2);">${fmt(compareScore)}</span>
       </div>
       <div class="echo-body">${mainHTML}${subHTML}</div>
@@ -5025,7 +5054,7 @@
                 _swapPending = true;
                 _swapTargetIdx = targetIdx;
                 const slotName = S.echoes[targetIdx].name || `スロット${targetIdx + 1}`;
-                btn.innerHTML = `⚠️ もう一度押すと「${slotName}」を上書き`;
+                btn.innerHTML = `⚠️ もう一度押すと「${esc(slotName)}」を上書き`;
                 btn.style.background = 'rgba(245,158,11,.15)';
                 btn.style.color = '#fbbf24';
                 btn.style.borderColor = 'rgba(245,158,11,.5)';
@@ -5082,7 +5111,7 @@
             btn.style.borderColor = 'rgba(34,197,94,.5)';
             setTimeout(() => {
                 if (btn) {
-                    btn.innerHTML = `🔄 比較先（${slotName}）を新規音骸で上書き`;
+                    btn.innerHTML = `🔄 比較先（${esc(slotName)}）を新規音骸で上書き`;
                     btn.style.background = 'var(--border)';
                     btn.style.color = 'var(--text2)';
                     btn.style.borderColor = 'var(--border2)';
@@ -5218,9 +5247,9 @@
                 return `<div class="custom-item">
       <span class="attr-icon ${a.cls}"></span>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;">${h.name} <span style="font-size:9px;color:var(--text3);font-weight:400;">${h.setType}</span></div>
+        <div style="font-size:11px;font-weight:500;">${esc(h.name)} <span style="font-size:9px;color:var(--text3);font-weight:400;">${esc(h.setType)}</span></div>
         ${s2str ? `<div style="font-size:9px;color:#2563eb;">2セット: ${s2str}</div>` : ''}
-        <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : '3セット: '}${s5str || '未設定'}${h.desc ? `<span style="color:var(--text3);margin-left:5px;">${h.desc}</span>` : ''}</div>
+        <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : '3セット: '}${s5str || '未設定'}${h.desc ? `<span style="color:var(--text3);margin-left:5px;">${esc(h.desc)}</span>` : ''}</div>
       </div>
       <button class="btn btn-d" style="padding:3px 8px;font-size:10px;flex-shrink:0;" onclick="deleteCustomHarmony('${h.id}')">削除</button>
     </div>`;
@@ -5440,10 +5469,10 @@ rebuildCharaWeaponSelects();
                 const attrStr = attrKey && ATTR[attrKey] ? `<span style="font-size:9px;color:${ATTR[attrKey].color};border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-right:5px;">${ATTR[attrKey].label}</span>` : '';
                 return `<div class="custom-item">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;">${attrStr}${e.name}</div>
+        <div style="font-size:11px;font-weight:500;">${attrStr}${esc(e.name)}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　') || 'ステータス未設定'}</div>
         ${ratioStr ? `<div style="font-size:9px;color:var(--p);margin-top:2px;">${ratioStr}</div>` : ''}
-        ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${e.desc}</div>` : ''}
+        ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${esc(e.desc)}</div>` : ''}
       </div>
       ${e._builtin
                         ? '<span style="font-size:9px;color:var(--text3);padding:2px 6px;border:1px solid var(--border);border-radius:3px;">固定</span>'
