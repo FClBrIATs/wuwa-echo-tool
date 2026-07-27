@@ -2886,23 +2886,51 @@
         // ================================================================
         // SUB-STATS
         // ================================================================
+        // 出典：鳴潮（めいちょう）wiki 公開のサブステータス抽選確率表
+        //
+        // vals … 実際に出現する値（この配列に無い値はゲーム上存在しない）
+        // w    … 各値の抽選重み。整数で保持し、合計を分母として扱う（丸め誤差ゼロ）
+        //          クリ率・クリダメ            : 合計 300
+        //          その他8段の項目・固定攻撃力・固定防御力 : 合計 103
+        //
+        // サブステの「種類」の抽選は全13種で均等（各 1/13 ≒ 7.6923%）。
+        // 音骸スキルダメージアップはサブステとして存在しないため、ここには含めない
+        // （ステータスとしては別途バフ入力欄で扱う）。
+        const W_CRIT = [70, 70, 70, 24, 24, 24, 9, 9];   // 合計300
+        const W_STD = [7, 8, 21, 25, 18, 15, 6, 3];      // 合計103
         const SUB_STATS = [
-            { key: 'crit_rate', name: 'クリ率', unit: '%', vals: [6.3, 6.9, 7.5, 8.1, 8.7, 9.3, 9.9, 10.5] },
-            { key: 'crit_dmg', name: 'クリダメ', unit: '%', vals: [12.6, 13.8, 15.0, 16.2, 17.4, 18.6, 19.8, 21.0] },
-            { key: 'atk_pct', name: '攻撃力%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'flat_atk', name: '攻撃力実数', unit: '', vals: [30, 35, 40, 45, 50, 55, 60] },
-            { key: 'hp_pct', name: 'HP%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'flat_hp', name: 'HP実数', unit: '', vals: [320, 360, 400, 430, 470, 510, 540, 580], approx: true },
-            { key: 'def_pct', name: '防御%', unit: '%', vals: [8.1, 9.0, 9.9, 10.8, 11.7, 12.6, 13.5, 14.7] },
-            { key: 'flat_def', name: '防御実数', unit: '', vals: [30, 35, 40, 45, 50, 55, 60], approx: true },
-            { key: 'dmg_normal', name: '通常バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_heavy', name: '重撃バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_skill', name: 'スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_lib', name: '解放バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_echo', name: '音骸スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'res_eff', name: '共鳴効率', unit: '%', vals: [6.8, 7.6, 8.4, 9.2, 10.0, 10.8, 11.6, 12.4] },
+            { key: 'crit_rate', name: 'クリ率', unit: '%', vals: [6.3, 6.9, 7.5, 8.1, 8.7, 9.3, 9.9, 10.5], w: W_CRIT },
+            { key: 'crit_dmg', name: 'クリダメ', unit: '%', vals: [12.6, 13.8, 15.0, 16.2, 17.4, 18.6, 19.8, 21.0], w: W_CRIT },
+            { key: 'atk_pct', name: '攻撃力%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'flat_atk', name: '攻撃力実数', unit: '', vals: [30, 40, 50, 60], w: [7, 54, 39, 3] },
+            { key: 'hp_pct', name: 'HP%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'flat_hp', name: 'HP実数', unit: '', vals: [320, 360, 390, 430, 470, 510, 540, 580], w: W_STD },
+            { key: 'def_pct', name: '防御%', unit: '%', vals: [8.1, 9.0, 10.0, 10.9, 11.8, 12.8, 13.8, 14.7], w: W_STD },
+            { key: 'flat_def', name: '防御実数', unit: '', vals: [40, 50, 60, 70], w: [15, 46, 33, 9] },
+            { key: 'dmg_normal', name: '通常バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'dmg_heavy', name: '重撃バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'dmg_skill', name: 'スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'dmg_lib', name: '解放バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'res_eff', name: '共鳴効率', unit: '%', vals: [6.8, 7.6, 8.4, 9.2, 10.0, 10.8, 11.6, 12.4], w: W_STD },
         ];
         const SUB_MAX = Object.fromEntries(SUB_STATS.map(s => [s.key, s.vals[s.vals.length - 1]]));
+
+        // 抽選重みの合計（分母）
+        function wSum(sd) { return sd.w.reduce((a, b) => a + b, 0); }
+        // 重み付き期待値：そのサブステを1枠引いたときの平均値
+        function expectedVal(sd) {
+            if (!sd || !sd.vals.length) return 0;
+            return sd.vals.reduce((a, v, i) => a + v * sd.w[i], 0) / wSum(sd);
+        }
+        // 重みに従って値を1つ抽選する
+        function drawVal(sd) {
+            let r = Math.random() * wSum(sd);
+            for (let i = 0; i < sd.vals.length; i++) {
+                r -= sd.w[i];
+                if (r < 0) return sd.vals[i];
+            }
+            return sd.vals[sd.vals.length - 1];
+        }
 
         // ================================================================
         // STATE
@@ -3450,40 +3478,38 @@
             const el = document.getElementById('mvRanking'); if (!el) return;
             if (E <= 0) { el.innerHTML = '<div style="color:var(--text3);font-size:11px;">ステータスを入力すると表示されます</div>'; return; }
 
-            // SUB_STATSから中間値を取得するヘルパー
+            // サブステ1枠あたりの期待値（実際の出現確率で重み付け）
             function subMid(key) {
                 const sd = SUB_STATS.find(s => s.key === key);
                 if (!sd) return 5;
-                const v = sd.vals;
-                const mid = v[Math.floor((v.length - 1) / 2)];
-                return mid;
+                return Math.round(expectedVal(sd) * 100) / 100;
             }
 
             const list = [];
 
-            // 攻撃力/HP/防御力%：サブステ中間値
+            // 攻撃力/HP/防御力%：サブステ期待値
             const statPctKey = { atk: 'atk_pct', hp: 'hp_pct', def: 'def_pct' }[statMode];
             const statLabel = { atk: '攻撃力%', hp: 'HP%', def: '防御力%' }[statMode];
             const dStat = subMid(statPctKey);
             const gainStat = p.pStat_pct * dStat / E * 100;
-            list.push({ name: statLabel, gain: gainStat, note: `サブステ中間値 +${dStat}%` });
+            list.push({ name: statLabel, gain: gainStat, note: `サブステ期待値 +${dStat}%` });
 
             // クリ率
             const dCR = subMid('crit_rate');
             const gainCR = p.pCR * dCR / E * 100;
-            list.push({ name: 'クリ率', gain: gainCR, note: `サブステ中間値 +${dCR}% (現在: ${p.cr_eff.toFixed(1)}%)` });
+            list.push({ name: 'クリ率', gain: gainCR, note: `サブステ期待値 +${dCR}% (現在: ${p.cr_eff.toFixed(1)}%)` });
 
             // クリダメ
             const dCD = subMid('crit_dmg');
             const gainCD = p.pCD * dCD / E * 100;
-            list.push({ name: 'クリダメ', gain: gainCD, note: `サブステ中間値 +${dCD}% (現在: ${p.cd_eff.toFixed(1)}%)` });
+            list.push({ name: 'クリダメ', gain: gainCD, note: `サブステ期待値 +${dCD}% (現在: ${p.cd_eff.toFixed(1)}%)` });
 
-            // 属性バフ：サブステに属性バフはないので代表として攻撃力%中間値を流用
+            // 属性バフ：サブステに属性バフはないので代表として攻撃力%の期待値を流用
             const dDA = subMid('atk_pct');
             const gainDA = p.pDmg * dDA / E * 100;
-            list.push({ name: '属性バフ', gain: gainDA, note: `参考値 +${dDA}%`, isAttr: true });
+            list.push({ name: '属性バフ', gain: gainDA, note: `参考値 +${dDA}%（サブステでは出ません）`, isAttr: true });
 
-            // スキル種別ダメバフ：各スキルサブステ中間値
+            // スキル種別ダメバフ：各スキルサブステ期待値
             const rn = S.ratio.normal / 100, rh = S.ratio.heavy / 100, rs = S.ratio.skill / 100;
             const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
             const SKILL_TYPES = [
@@ -3491,14 +3517,17 @@
                 { name: '重撃ダメバフ', r: rh, key: 'dmg_heavy' },
                 { name: '共鳴スキルダメバフ', r: rs, key: 'dmg_skill' },
                 { name: '共鳴解放ダメバフ', r: rl, key: 'dmg_lib' },
-                { name: '音骸スキルダメバフ', r: re, key: 'dmg_echo' },
+                // 音骸スキルダメバフはサブステとして存在しないため、
+                // 属性バフと同様に攻撃力%の期待値を参考値として流用する
+                { name: '音骸スキルダメバフ', r: re, key: 'atk_pct', ref: true },
             ];
             SKILL_TYPES.forEach(sk => {
                 if (sk.r <= 0) return;
                 const dSk = subMid(sk.key);
                 const pSkill = p.stat_eff * sk.r * p.crit_factor / 100;
                 const g = pSkill * dSk / E * 100;
-                list.push({ name: sk.name, gain: g, note: `サブステ中間値 +${dSk}% (比率${(sk.r * 100).toFixed(0)}%)` });
+                const label = sk.ref ? `参考値 +${dSk}%（サブステでは出ません）` : `サブステ期待値 +${dSk}%`;
+                list.push({ name: sk.name, gain: g, note: `${label} (比率${(sk.r * 100).toFixed(0)}%)` });
             });
 
             list.sort((a, b) => b.gain - a.gain);
@@ -4838,8 +4867,24 @@
 
             const E = getPartials().E;
 
-            // サブステ全選択肢をkey別に用意
-            const subPool = SUB_STATS.map(sd => ({ key: sd.key, scores: sd.vals.map(v => mv(sd.key, v)) }));
+            // サブステ全選択肢をkey別に用意（重みも保持し、値の抽選は実際の出現確率に従う）
+            const subPool = SUB_STATS.map(sd => ({
+                key: sd.key,
+                scores: sd.vals.map(v => mv(sd.key, v)),
+                w: sd.w,
+                wTotal: wSum(sd),
+                // このサブステを1枠引いたときのスコア期待値（重み付き）
+                mean: sd.vals.reduce((a, v, i) => a + mv(sd.key, v) * sd.w[i], 0) / wSum(sd),
+            }));
+            // 重みに従ってスコアを1つ引く
+            function drawScore(s) {
+                let r = Math.random() * s.wTotal;
+                for (let i = 0; i < s.scores.length; i++) {
+                    r -= s.w[i];
+                    if (r < 0) return s.scores[i];
+                }
+                return s.scores[s.scores.length - 1];
+            }
 
             // モンテカルロ：重複なしでn枠引いた合計スコアの分布を推定
             // threshold: この値以上になれば成功とみなす（呼び出し元で用途別に渡す）
@@ -4852,18 +4897,18 @@
                     for (let i = 0; i < slots; i++) {
                         const avail = subPool.filter(s => !used.has(s.key));
                         if (!avail.length) break;
+                        // 種類は全13種から均等抽選、値は実際の出現確率に従って抽選
                         const sd = avail[Math.floor(Math.random() * avail.length)];
                         used.add(sd.key);
-                        total += sd.scores[Math.floor(Math.random() * sd.scores.length)];
+                        total += drawScore(sd);
                     }
                     if (total >= threshold) success++;
                 }
                 return success / TRIALS * 100;
             }
 
-            // 1枠平均（重複なし全組み合わせの平均）
-            const allScores = subPool.flatMap(s => s.scores);
-            const mu = allScores.reduce((a, b) => a + b, 0) / allScores.length;
+            // 1枠平均：種類は均等、値は重み付き期待値
+            const mu = subPool.reduce((a, s) => a + s.mean, 0) / subPool.length;
 
             // 現在の音骸：残りremainSlots枠でneeded（追加スコア）を達成できるか
             const prob = simulate(remainSlots, existingKeys, needed);
