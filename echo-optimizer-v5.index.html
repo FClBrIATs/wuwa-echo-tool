@@ -3943,6 +3943,7 @@
         }
 
         // 登録データ（キャラ / 武器 / ハーモニー / 音骸セット）のバックアップ対象キー
+        const BACKUP_VER = 2;
         const BACKUP_LS_KEYS = {
             chara: 'echo_chara_chara',
             weapon: 'echo_chara_weapon',
@@ -3956,7 +3957,7 @@
                 try { data[label] = JSON.parse(localStorage.getItem(key) || 'null'); } catch { data[label] = null; }
             });
             return {
-                __app: 'echo-optimizer', __ver: 2, __kind: 'registrations',
+                __app: 'echo-optimizer', __ver: BACKUP_VER, __kind: 'registrations',
                 savedAt: new Date().toISOString(),
                 data,
             };
@@ -4015,6 +4016,12 @@
                 backupMsg('このツール用のバックアップデータではないようです。', true);
                 return;
             }
+            // 将来フォーマットを変えたとき、新しいJSONを古いツールで開いても壊れないようにする
+            const ver = Number(obj.__ver) || 1;
+            if (ver > BACKUP_VER) {
+                backupMsg(`より新しいバージョン（v${ver}）のバックアップです。ツールを更新してから復元してください。`, true);
+                return;
+            }
             confirmDialog('現在登録済みのキャラ・武器・ハーモニー・音骸セットを、貼り付けたデータで上書きします。よろしいですか？', () => {
                 try {
                     importState(obj);
@@ -4028,8 +4035,15 @@
         function importState(obj) {
             const data = obj.data || {};
             Object.entries(BACKUP_LS_KEYS).forEach(([label, key]) => {
-                if (data[label] === undefined || data[label] === null) return;
-                try { localStorage.setItem(key, JSON.stringify(data[label])); } catch { }
+                const val = data[label];
+                if (val === undefined || val === null) return;
+                // 想定外の型を書き込むと読み出し側のスプレッドで落ちるため配列のみ受け付ける
+                if (!Array.isArray(val)) return;
+                // 古いバックアップには固定プリセットのコピーが含まれている場合があるので取り除く
+                const clean = (label === 'chara' || label === 'weapon')
+                    ? val.filter(e => e && !e._builtin && !String(e.id || '').startsWith('builtin_'))
+                    : val;
+                try { localStorage.setItem(key, JSON.stringify(clean)); } catch { }
             });
 
             // 画面表示を再構築
@@ -4039,7 +4053,7 @@
             rebuildCharaWeaponSelects();
             buildHarmonyPicker();
             recalcAll();
-        }// 項目別
+        }
 
         // ================================================================
         // TAB RESET (セクション別リセット)
@@ -4289,7 +4303,14 @@
             try { return JSON.parse(localStorage.getItem(ECHO_PRESET_KEY) || '[]'); } catch (e) { return []; }
         }
         function saveEchoPresets(presets) {
-            localStorage.setItem(ECHO_PRESET_KEY, JSON.stringify(presets));
+            // 他のlocalStorage書き込みと同様、容量超過やプライベートモードでも落ちないようにする
+            try {
+                localStorage.setItem(ECHO_PRESET_KEY, JSON.stringify(presets));
+                return true;
+            } catch (e) {
+                showPresetMsg('保存に失敗しました（ブラウザの保存容量またはプライベートモード）', '#dc2626');
+                return false;
+            }
         }
         function normalizeEcho(echo, idx = 0) {
             const base = S.echoes[idx] || S.echoes[0] || {
@@ -4344,7 +4365,8 @@
             const existing = presets.findIndex(p => p.name === name);
             const data = { name, echoes: JSON.parse(JSON.stringify(S.echoes)) };
             if (existing >= 0) { presets[existing] = data; } else { presets.push(data); }
-            saveEchoPresets(presets);
+            // 保存に失敗した場合は saveEchoPresets 側がメッセージを出すので、成功扱いにしない
+            if (!saveEchoPresets(presets)) return;
             rebuildPresetSelect();
             // 保存したセットを選択状態に
             const newIdx = getEchoPresets().findIndex(p => p.name === name);
@@ -4375,7 +4397,7 @@
             const name = presets[idx].name;
             confirmDialog(`「${name}」を削除しますか？`, () => {
                 presets.splice(idx, 1);
-                saveEchoPresets(presets);
+                if (!saveEchoPresets(presets)) return;
                 rebuildPresetSelect();
                 showPresetMsg(`「${name}」を削除しました`, '#d97706');
             });
@@ -5331,6 +5353,21 @@
             'dmg_wind', 'dmg_light', 'dmg_dark', 'dmg_all', 'dmg_normal', 'dmg_heavy',
             'dmg_skill', 'dmg_lib', 'dmg_echo'];
 
+        // 固定プリセットを除いた「ユーザー登録分のみ」を返す。
+        // 保存時は必ずこちらを使うこと。getCharaEntries() の戻り値をそのまま保存すると
+        // 固定プリセットまでlocalStorageに書き込まれ、登録のたびに増殖する。
+        function getSavedCharaEntries(type) {
+            let saved = [];
+            try { saved = JSON.parse(localStorage.getItem('echo_chara_' + type) || '[]'); } catch { }
+            if (!Array.isArray(saved)) return [];
+            // 過去のバージョンで混入した固定プリセットのコピーを除去（マイグレーション）
+            return saved.filter(e => e && !e._builtin && !String(e.id || '').startsWith('builtin_'));
+        }
+
+        function saveCharaEntries(type, list) {
+            try { localStorage.setItem('echo_chara_' + type, JSON.stringify(list)); } catch { }
+        }
+
         function getCharaEntries(type) {
             // 固定プリセット（コード内のBUILTIN_*配列）をlocalStorage登録分と合算して返す
             const builtin = (type === 'chara' ? BUILTIN_CHARA : BUILTIN_WEAPON).map((e, i) => ({
@@ -5339,9 +5376,18 @@
                 type,
                 _builtin: true,  // 固定プリセットフラグ（削除ボタンを出さないために使用）
             }));
-            let saved = [];
-            try { saved = JSON.parse(localStorage.getItem('echo_chara_' + type) || '[]'); } catch { }
-            return [...builtin, ...saved];
+            return [...builtin, ...getSavedCharaEntries(type)];
+        }
+
+        // 起動時に一度だけ、過去バージョンが書き込んだ固定プリセットのコピーを掃除する
+        function migrateCharaStorage() {
+            ['chara', 'weapon'].forEach(type => {
+                let raw = [];
+                try { raw = JSON.parse(localStorage.getItem('echo_chara_' + type) || '[]'); } catch { return; }
+                if (!Array.isArray(raw)) { saveCharaEntries(type, []); return; }
+                const cleaned = getSavedCharaEntries(type);
+                if (cleaned.length !== raw.length) saveCharaEntries(type, cleaned);
+            });
         }
 
         function addCharaEntry() {
@@ -5368,9 +5414,9 @@
                     echo:   parseFloat(document.getElementById('ch_ratio_echo_c')?.value)   || 0,
                 };
             }
-            const list = getCharaEntries(charaType);
+            const list = getSavedCharaEntries(charaType);
             list.push(entry);
-            try { localStorage.setItem('echo_chara_' + charaType, JSON.stringify(list)); } catch { }
+            saveCharaEntries(charaType, list);
             if (nameEl) nameEl.value = '';
             if (descEl) descEl.value = '';
             CH_FIELDS.forEach(k => {
@@ -5389,8 +5435,8 @@ rebuildCharaWeaponSelects();
         }
 
         function deleteCharaEntry(type, id) {
-            const list = getCharaEntries(type).filter(e => e.id !== id);
-            try { localStorage.setItem('echo_chara_' + type, JSON.stringify(list)); } catch { }
+            const list = getSavedCharaEntries(type).filter(e => e.id !== id);
+            saveCharaEntries(type, list);
             renderCharaList();
                         initCollapsibleSections();
                         initCardCollapse();
@@ -5431,6 +5477,7 @@ rebuildCharaWeaponSelects();
         }
 
         function init() {
+            migrateCharaStorage();
             updateRatioVis();
             buildHarmonyPicker();
             buildEchoGrid();
