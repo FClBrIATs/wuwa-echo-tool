@@ -497,6 +497,15 @@
             box-sizing: border-box;
         }
 
+        /* 導出欄：登録データから自動計算される値。編集しても計算には使われないため
+           入力欄と見分けがつくようにする */
+        .detail-item input[readonly] {
+            background: transparent;
+            border-style: dashed;
+            color: var(--text2);
+            cursor: default;
+        }
+
         .detail-item .unit {
             font-size: 10px;
             color: var(--text3);
@@ -1653,7 +1662,7 @@
                     登録済みの「キャラ」「武器」「ハーモニー」「音骸セット」をJSONとして書き出し、コピーして保存できます。復元する場合はJSONを貼り付けて「復元」を押してください。
                 </div>
                 <div style="font-size:11px;color:var(--orange);margin-bottom:8px;">
-                    ⚠ ①②③タブに入力中のステータス・装備音骸は対象外です（バックアップされません）。
+                    ⚠ ①②③タブに入力中の内容は対象外です（自動保存はされますが、このJSONには含まれません）。
                 </div>
                 <textarea id="backupText" placeholder="ここにJSONが表示されます／貼り付けます"></textarea>
                 <div class="modal-actions">
@@ -1830,11 +1839,11 @@
                             <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
                             <div class="detail-grid">
                                 <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_weapon" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+                                        id="di_base_weapon" placeholder="0" readonly tabindex="-1"></div>
                                 <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_chara" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+                                        id="di_base_chara" placeholder="0" readonly tabindex="-1"></div>
                                 <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+                                        id="di_base_other" placeholder="0" oninput="onDetailOther('base',this.value);autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_base">合計: 0</div>
                             <div class="divider"></div>
@@ -1842,26 +1851,26 @@
                             <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
                             <div class="detail-grid">
                                 <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_stat_pct_h" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>%バフ（武器）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_stat_pct_w" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_stat_pct_c" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_stat_pct_em" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_stat_pct_es" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_flat_em" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+                                        id="di_stat_flat_em" placeholder="0" readonly tabindex="-1"></div>
                                 <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_flat_es" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+                                        id="di_stat_flat_es" placeholder="0" readonly tabindex="-1"></div>
                                 <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
+                                        id="di_stat_other" placeholder="0" oninput="onDetailOther('stat',this.value);autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_total">全体: 0</div>
                             <div class="divider"></div>
@@ -1869,22 +1878,22 @@
                             <div class="sec-title">クリ率</div>
                             <div class="detail-grid">
                                 <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cr_h" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cr_w"
-                                        placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
                                 </div>
                                 <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cr_c"
-                                        placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
                                 </div>
                                 <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cr_em" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cr_es" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cr_other" placeholder="0" oninput="onDetailOther('cr',this.value);autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="detail-total" id="dt_cr">合計: 0%</div>
@@ -1893,22 +1902,22 @@
                             <div class="sec-title">クリダメ</div>
                             <div class="detail-grid">
                                 <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cd_h" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cd_w"
-                                        placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
                                 </div>
                                 <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cd_c"
-                                        placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
                                 </div>
                                 <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cd_em" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cd_es" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_cd_other" placeholder="0" oninput="onDetailOther('cd',this.value);autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="detail-total" id="dt_cd">合計: 0%</div>
@@ -1965,16 +1974,16 @@
                             <div class="sec-title" style="margin-top:8px;">全属性バフ</div>
                             <div class="detail-grid">
                                 <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_dall_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_dall_h" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_dall_w"
-                                        placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
                                 </div>
                                 <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_dall_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_dall_c" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
                                 <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_dall_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
+                                        id="di_dall_other" placeholder="0" oninput="onDetailOther('dall',this.value);autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="detail-total" id="dt_dall">合計: 0%</div>
@@ -2953,6 +2962,7 @@
                 { id: '', setLevel: 5, custom: B() },
             ],
             harmonyManual: B(), // 手動ハーモニーバフ
+            other: {}, // 項目別モードの「その他」欄（ユーザー直接入力）
             echoes: Array.from({ length: 5 }, (_, i) => ({
                 name: `スロット${i + 1}`,
                 main: { cost: null, key1: '', val1: 0, key2: '', val2: 0 },
@@ -3281,30 +3291,21 @@
             let base, total, cr_eff, cd_eff, da, da_eff, dn, dh, ds, dl, de;
 
             if (inputMode === 'detail') {
-                // 項目別モード：内訳入力欄から合算
-                base = getDI('di_base_weapon') + getDI('di_base_chara') + getDI('di_base_other');
-                const statPct = getDI('di_stat_pct_h') + getDI('di_stat_pct_w') + getDI('di_stat_pct_c') + getDI('di_stat_pct_em') + getDI('di_stat_pct_es');
-                const statFlat = getDI('di_stat_flat_em') + getDI('di_stat_flat_es') + getDI('di_stat_other');
-                total = base * (1 + statPct / 100) + statFlat;
+                // 項目別モード：内訳をすべて状態から計算する（DOMは読まない）
+                const D = detailBreakdown();
+                base = D.base.total;
+                total = D.total;
+                cr_eff = D.cr.total;
+                cd_eff = D.cd.total;
 
-                cr_eff = getDI('di_cr_h') + getDI('di_cr_w') + getDI('di_cr_c') + getDI('di_cr_em') + getDI('di_cr_es') + getDI('di_cr_other');
-                cd_eff = getDI('di_cd_h') + getDI('di_cd_w') + getDI('di_cd_c') + getDI('di_cd_em') + getDI('di_cd_es') + getDI('di_cd_other');
+                // 属性バフ：使用属性が指定されていればその属性のみ、未指定なら全属性を合算
+                da = useAttr
+                    ? (D.attr[useAttr] ? D.attr[useAttr].total : 0)
+                    : ATTR_DETAIL.reduce((acc, a) => acc + D.attr[a.key].total, 0);
+                da_eff = da + D.dall.total;
 
-                // 属性バフ：使用属性フィルタ
-                const ATTR_KEYS_D = ['fire', 'ice', 'thunder', 'wind', 'light', 'dark'];
-                if (useAttr) {
-                    da = getDI(`di_d${useAttr}_h`) + getDI(`di_d${useAttr}_w`) + getDI(`di_d${useAttr}_c`) + getDI(`di_d${useAttr}_em`) + getDI(`di_d${useAttr}_other`);
-                } else {
-                    da = ATTR_KEYS_D.reduce((s, k) => s + getDI(`di_d${k}_h`) + getDI(`di_d${k}_w`) + getDI(`di_d${k}_c`) + getDI(`di_d${k}_em`) + getDI(`di_d${k}_other`), 0);
-                }
-                const dall = getDI('di_dall_h') + getDI('di_dall_w') + getDI('di_dall_c') + getDI('di_dall_other');
-                da_eff = da + dall;
-
-                dn = getDI('di_snormal_h') + getDI('di_snormal_w') + getDI('di_snormal_c') + getDI('di_snormal_es') + getDI('di_snormal_other');
-                dh = getDI('di_sheavy_h') + getDI('di_sheavy_w') + getDI('di_sheavy_c') + getDI('di_sheavy_es') + getDI('di_sheavy_other');
-                ds = getDI('di_sskill_h') + getDI('di_sskill_w') + getDI('di_sskill_c') + getDI('di_sskill_es') + getDI('di_sskill_other');
-                dl = getDI('di_slib_h') + getDI('di_slib_w') + getDI('di_slib_c') + getDI('di_slib_es') + getDI('di_slib_other');
-                de = getDI('di_secho_h') + getDI('di_secho_w') + getDI('di_secho_c') + getDI('di_secho_es') + getDI('di_secho_other');
+                dn = D.skill.normal.total; dh = D.skill.heavy.total;
+                ds = D.skill.skill.total; dl = D.skill.lib.total; de = D.skill.echo.total;
             } else {
                 // 合計値モード：従来通り
                 const cw_base_atk = 0; // 合計値モードでは登録データ不使用
@@ -3466,7 +3467,7 @@
 
         function updateDmgNotes() {
             if (inputMode === 'detail') {
-                const dall = getDI('di_dall_h') + getDI('di_dall_w') + getDI('di_dall_c') + getDI('di_dall_other');
+                const dall = detailBreakdown().dall.total;
                 setText('note_da', dall > 0 ? `全属性バフ合計: +${dall.toFixed(1)}%` : '');
             } else {
                 setText('note_da', n(S.dmg_all) > 0 ? `全属性バフ: +${n(S.dmg_all)}%` : '');
@@ -4167,11 +4168,11 @@
       <div class="detail-attr-section">
         <div class="detail-attr-label" style="color:${a.color}">${a.label}バフ</div>
         <div class="detail-grid">
-          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_h" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_w" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_c" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_em" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="onDetailOther('d${a.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_d${a.key}">合計: 0%</div>
       </div>`).join('');
@@ -4184,11 +4185,11 @@
       <div class="detail-attr-section">
         <div class="detail-attr-label">${s.label}バフ</div>
         <div class="detail-grid">
-          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_h" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_w" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_c" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_es" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="onDetailOther('s${s.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_s${s.key}">合計: 0%</div>
       </div>`).join('');
@@ -4196,96 +4197,96 @@
             }
         }
 
-        // 登録データから項目別入力欄を自動入力
-        function fillDetailInputs() {
+        // ================================================================
+        // 項目別モードの内訳計算
+        // ================================================================
+        // 「ハーモニー/武器/キャラ/音骸メイン/音骸サブ」の各欄は S から導出できる値であり、
+        // ユーザーが直接入力するのは「その他」欄だけ（S.other に保持）。
+        // 以前は getPartials() が入力欄のDOMを直接読んでいたため、
+        // fillDetailInputs() を呼び忘れた経路では古い値で計算されうる状態だった。
+        // 計算・表示・入力欄への反映がすべてこの関数を参照するようにして、
+        // 内訳の出どころを1箇所にまとめている。
+        function detailBreakdown() {
             const H = getHarmonyTotal();
             const W = getWeaponBuff();
             const C = getCharaBuff();
             const EM = getEchoMainBuff();
             const ES = getEchoSubBuff();
+            const O = S.other || {};
+            const o = k => n(O[k]);
+            const sum = parts => Object.values(parts).reduce((a, b) => a + b, 0);
             const ml = statMode;
-
-            function fill(id, val) { const el = document.getElementById(id); if (el) el.value = (val != null && val !== undefined) ? val : ''; }
-
-            // 基礎ステータス（武器とキャラを別々に、statModeに応じて切り替え）
             const baseKey = ml === 'atk' ? 'base_atk' : ml === 'hp' ? 'base_hp' : 'base_def';
-            fill('di_base_weapon', W[baseKey] || '');
-            fill('di_base_chara', C[baseKey] || '');
-            // 全体攻撃力 %バフ
-            const statPctKey = ml === 'atk' ? 'atk_pct' : ml === 'hp' ? 'hp_pct' : 'def_pct';
-            fill('di_stat_pct_h', H[statPctKey] || '');
-            fill('di_stat_pct_w', W[statPctKey] || '');
-            fill('di_stat_pct_c', C[statPctKey] || '');
-            fill('di_stat_pct_em', EM[statPctKey] || '');
-            fill('di_stat_pct_es', ES[statPctKey] || '');
-            // 全体攻撃力 実数
+            const pctKey = ml === 'atk' ? 'atk_pct' : ml === 'hp' ? 'hp_pct' : 'def_pct';
             const flatKey = ml === 'atk' ? 'flat_atk' : ml === 'hp' ? 'flat_hp' : 'flat_def';
-            fill('di_stat_flat_em', EM[flatKey] || '');
-            fill('di_stat_flat_es', ES[flatKey] || '');
-            // クリ率
-            fill('di_cr_h', H.crit_rate || '');
-            fill('di_cr_w', W.crit_rate || '');
-            fill('di_cr_c', C.crit_rate || '');
-            fill('di_cr_em', EM.crit_rate || '');
-            fill('di_cr_es', ES.crit_rate || '');
-            // クリダメ
-            fill('di_cd_h', H.crit_dmg || '');
-            fill('di_cd_w', W.crit_dmg || '');
-            fill('di_cd_c', C.crit_dmg || '');
-            fill('di_cd_em', EM.crit_dmg || '');
-            fill('di_cd_es', ES.crit_dmg || '');
-            // 属性バフ
+
+            const withTotal = parts => ({ ...parts, total: sum(parts) });
+
+            const base = withTotal({ w: n(W[baseKey]), c: n(C[baseKey]), other: o('base') });
+            const statPct = withTotal({ h: n(H[pctKey]), w: n(W[pctKey]), c: n(C[pctKey]), em: n(EM[pctKey]), es: n(ES[pctKey]) });
+            const statFlat = withTotal({ em: n(EM[flatKey]), es: n(ES[flatKey]), other: o('stat') });
+            const cr = withTotal({ h: n(H.crit_rate), w: n(W.crit_rate), c: n(C.crit_rate), em: n(EM.crit_rate), es: n(ES.crit_rate), other: o('cr') });
+            const cd = withTotal({ h: n(H.crit_dmg), w: n(W.crit_dmg), c: n(C.crit_dmg), em: n(EM.crit_dmg), es: n(ES.crit_dmg), other: o('cd') });
+            const dall = withTotal({ h: n(H.dmg_all), w: n(W.dmg_all), c: n(C.dmg_all), other: o('dall') });
+
+            const attr = {};
             ATTR_DETAIL.forEach(a => {
-                fill(`di_d${a.key}_h`, H['dmg_' + a.key] || '');
-                fill(`di_d${a.key}_w`, W['dmg_' + a.key] || '');
-                fill(`di_d${a.key}_c`, C['dmg_' + a.key] || '');
-                fill(`di_d${a.key}_em`, EM['dmg_' + a.key] || '');
+                const k = 'dmg_' + a.key;
+                // 音骸サブステに属性ダメバフは存在しないため es 欄は無い
+                attr[a.key] = withTotal({ h: n(H[k]), w: n(W[k]), c: n(C[k]), em: n(EM[k]), other: o('d' + a.key) });
             });
-            // 全属性バフ
-            fill('di_dall_h', H.dmg_all || '');
-            fill('di_dall_w', W.dmg_all || '');
-            fill('di_dall_c', C.dmg_all || '');
-            // スキルバフ
+            const skill = {};
             SKILL_DETAIL.forEach(s => {
-                fill(`di_s${s.key}_h`, H['dmg_' + s.key] || '');
-                fill(`di_s${s.key}_w`, W['dmg_' + s.key] || '');
-                fill(`di_s${s.key}_c`, C['dmg_' + s.key] || '');
-                fill(`di_s${s.key}_es`, ES['dmg_' + s.key] || '');
+                const k = 'dmg_' + s.key;
+                skill[s.key] = withTotal({ h: n(H[k]), w: n(W[k]), c: n(C[k]), es: n(ES[k]), other: o('s' + s.key) });
             });
+
+            return {
+                base, statPct, statFlat, cr, cd, dall, attr, skill,
+                total: base.total * (1 + statPct.total / 100) + statFlat.total,
+            };
         }
 
-        // 項目別入力欄から値を読み取るヘルパー
-        function getDI(id) { return parseFloat(document.getElementById(id)?.value) || 0; }
+        // 「その他」欄の入力を状態へ書き戻す
+        function onDetailOther(key, val) {
+            if (!S.other) S.other = {};
+            S.other[key] = val;
+            recalcAll();
+        }
+
+        // 登録データから項目別入力欄を自動入力
+        function fillDetailInputs() {
+            const D = detailBreakdown();
+            const fill = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+            // 導出欄：内訳計算の結果を表示するだけ（編集しても計算には使われない）
+            fill('di_base_weapon', D.base.w); fill('di_base_chara', D.base.c);
+            ['h', 'w', 'c', 'em', 'es'].forEach(k => fill('di_stat_pct_' + k, D.statPct[k]));
+            fill('di_stat_flat_em', D.statFlat.em); fill('di_stat_flat_es', D.statFlat.es);
+            ['h', 'w', 'c', 'em', 'es'].forEach(k => { fill('di_cr_' + k, D.cr[k]); fill('di_cd_' + k, D.cd[k]); });
+            ATTR_DETAIL.forEach(a => ['h', 'w', 'c', 'em'].forEach(k => fill(`di_d${a.key}_${k}`, D.attr[a.key][k])));
+            ['h', 'w', 'c'].forEach(k => fill('di_dall_' + k, D.dall[k]));
+            SKILL_DETAIL.forEach(x => ['h', 'w', 'c', 'es'].forEach(k => fill(`di_s${x.key}_${k}`, D.skill[x.key][k])));
+            // 「その他」欄：ユーザーの入力そのものなので状態から復元する
+            const O = S.other || {};
+            fill('di_base_other', O.base); fill('di_stat_other', O.stat);
+            fill('di_cr_other', O.cr); fill('di_cd_other', O.cd); fill('di_dall_other', O.dall);
+            ATTR_DETAIL.forEach(a => fill(`di_d${a.key}_other`, O['d' + a.key]));
+            SKILL_DETAIL.forEach(x => fill(`di_s${x.key}_other`, O['s' + x.key]));
+        }
 
         // 項目別：合計表示を更新
         function updateDetailTotals() {
             if (inputMode !== 'detail') return;
-            const ml = statMode;
-
-            const base = getDI('di_base_weapon') + getDI('di_base_chara') + getDI('di_base_other');
-            setDT('dt_base', `合計: ${base.toFixed(0)}`);
-
-            const statPct = getDI('di_stat_pct_h') + getDI('di_stat_pct_w') + getDI('di_stat_pct_c') + getDI('di_stat_pct_em') + getDI('di_stat_pct_es');
-            const statFlat = getDI('di_stat_flat_em') + getDI('di_stat_flat_es') + getDI('di_stat_other');
-            const total = base * (1 + statPct / 100) + statFlat;
-            setDT('dt_total', `全体: ${total.toFixed(0)}`);
-
-            const cr = getDI('di_cr_h') + getDI('di_cr_w') + getDI('di_cr_c') + getDI('di_cr_em') + getDI('di_cr_es') + getDI('di_cr_other');
-            setDT('dt_cr', `合計: ${cr.toFixed(1)}%`);
-            const cd = getDI('di_cd_h') + getDI('di_cd_w') + getDI('di_cd_c') + getDI('di_cd_em') + getDI('di_cd_es') + getDI('di_cd_other');
-            setDT('dt_cd', `合計: ${cd.toFixed(1)}%`);
-
-            ATTR_DETAIL.forEach(a => {
-                const v = getDI(`di_d${a.key}_h`) + getDI(`di_d${a.key}_w`) + getDI(`di_d${a.key}_c`) + getDI(`di_d${a.key}_em`) + getDI(`di_d${a.key}_other`);
-                setDT(`dt_d${a.key}`, `合計: ${v.toFixed(1)}%`);
-            });
-            const dall = getDI('di_dall_h') + getDI('di_dall_w') + getDI('di_dall_c') + getDI('di_dall_other');
-            setDT('dt_dall', `合計: ${dall.toFixed(1)}%`);
-
-            SKILL_DETAIL.forEach(s => {
-                const v = getDI(`di_s${s.key}_h`) + getDI(`di_s${s.key}_w`) + getDI(`di_s${s.key}_c`) + getDI(`di_s${s.key}_es`) + getDI(`di_s${s.key}_other`);
-                setDT(`dt_s${s.key}`, `合計: ${v.toFixed(1)}%`);
-            });
+            // 表示されている入力欄と計算結果がずれないよう、導出欄を書き戻してから合計を出す
+            fillDetailInputs();
+            const D = detailBreakdown();
+            setDT('dt_base', `合計: ${D.base.total.toFixed(0)}`);
+            setDT('dt_total', `全体: ${D.total.toFixed(0)}`);
+            setDT('dt_cr', `合計: ${D.cr.total.toFixed(1)}%`);
+            setDT('dt_cd', `合計: ${D.cd.total.toFixed(1)}%`);
+            ATTR_DETAIL.forEach(a => setDT(`dt_d${a.key}`, `合計: ${D.attr[a.key].total.toFixed(1)}%`));
+            setDT('dt_dall', `合計: ${D.dall.total.toFixed(1)}%`);
+            SKILL_DETAIL.forEach(x => setDT(`dt_s${x.key}`, `合計: ${D.skill[x.key].total.toFixed(1)}%`));
         }
         function setDT(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
 
@@ -5481,8 +5482,71 @@ rebuildCharaWeaponSelects();
             }).join('');
         }
 
+        // ================================================================
+        // 入力内容の自動保存
+        // ================================================================
+        // 状態が S（＋モード類）に集約されたので、まとめて保存・復元できる。
+        // 登録データとは別キーで持つ。壊れた保存を読んでツールごと起動しなくなるのが
+        // 一番困るので、復元は失敗したら黙って初期状態から始める。
+        const STATE_KEY = 'ww_echo_state';
+        const STATE_VER = 1;
+        let saveTimer = null;
+
+        function saveState() {
+            try {
+                localStorage.setItem(STATE_KEY, JSON.stringify({
+                    __ver: STATE_VER, statMode, useAttr, inputMode, S,
+                }));
+            } catch { /* 容量超過やプライベートモードでは黙って諦める */ }
+        }
+
+        // 入力のたびに書き込むと打鍵ごとにJSON化が走るので少し待つ
+        function scheduleSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveState, 400);
+        }
+
+        function loadState() {
+            let saved;
+            try { saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch { return false; }
+            if (!saved || saved.__ver !== STATE_VER || !saved.S) return false;
+            try {
+                // 欠けたキーは初期値で補い、音骸は現在の形式へ正規化する
+                S = { ...S, ...saved.S };
+                S.other = saved.S.other && typeof saved.S.other === 'object' ? saved.S.other : {};
+                S.echoes = normalizeEchoSet(Array.isArray(saved.S.echoes) ? saved.S.echoes : []);
+                if (!Array.isArray(S.harmony) || S.harmony.length !== 2) {
+                    S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+                }
+                S.harmonyManual = { ...B(), ...(saved.S.harmonyManual || {}) };
+                S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0, ...(saved.S.ratio || {}) };
+                if (['atk', 'hp', 'def'].includes(saved.statMode)) statMode = saved.statMode;
+                if (typeof saved.useAttr === 'string') useAttr = saved.useAttr;
+                if (['total', 'detail'].includes(saved.inputMode)) inputMode = saved.inputMode;
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        // 合計値モードの入力欄を状態から復元する
+        function fillTotalInputs() {
+            const put = (id, v) => { const el = document.getElementById(id); if (el && v !== '' && v != null) el.value = v; };
+            put('inp_base', S.base_stat); put('inp_total', S.total_stat);
+            put('inp_cr', S.crit_rate); put('inp_cd', S.crit_dmg);
+            ['fire', 'ice', 'thunder', 'wind', 'light', 'dark', 'all'].forEach(k => {
+                const v = S['dmg_' + k]; if (v && v !== '0') put('inp_d' + k, v);
+            });
+            ['normal', 'heavy', 'skill', 'lib', 'echo'].forEach(k => {
+                const v = S['dmg_' + k]; if (v && v !== '0') put('inp_d' + k, v);
+            });
+            const R = { r_n: 'normal', r_h: 'heavy', r_s: 'skill', r_l: 'lib', r_e: 'echo' };
+            Object.entries(R).forEach(([id, k]) => put(id, S.ratio[k]));
+        }
+
         function init() {
             migrateCharaStorage();
+            const restored = loadState();
             updateRatioVis();
             buildHarmonyPicker();
             buildEchoGrid();
@@ -5493,7 +5557,22 @@ rebuildCharaWeaponSelects();
                         initCollapsibleSections();
                         initCardCollapse();
 rebuildCharaWeaponSelects();
+            if (restored) {
+                fillTotalInputs();
+                const smBtn = document.getElementById('statModeBtn_' + statMode);
+                if (smBtn) setStatMode(statMode, smBtn);
+                setInputMode(inputMode, null);
+                if (useAttr) {
+                    const ab = document.querySelector(`.attr-sel-btn[data-attr="${useAttr}"]`);
+                    if (ab) setUseAttr(useAttr, ab);
+                }
+                updateRatioVis();
+            }
             recalcAll();
+            // 入力・選択のあと必ず保存されるように、変更イベントを一括で拾う
+            document.addEventListener('input', scheduleSave, true);
+            document.addEventListener('change', scheduleSave, true);
+            document.addEventListener('click', scheduleSave, true);
             // 初期値に対してinput幅を調整
             setTimeout(autoSizeAll, 50);
         }
