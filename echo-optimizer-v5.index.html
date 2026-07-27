@@ -3306,26 +3306,45 @@
             const stat_eff_final = inputMode === 'detail' ? total : n(S.total_stat) || n(S.base_stat);
 
             const cr_clamped = Math.min(cr_eff, 100); // クリ率は100%上限
-            const crit_factor = 1 + cr_clamped / 100 * (cd_eff / 100 - 1);
+            // クリダメは「クリティカル時の倍率」なので100%未満はあり得ない。
+            // 未入力（0）のまま計算すると crit_factor が1を下回り、
+            // クリ率の限界価値が負になって優先度ランキングが逆転するため下限で止める。
+            const cd_unset = cd_eff < 100;
+            const cd_used = cd_unset ? 100 : cd_eff;
+            const crit_factor = 1 + cr_clamped / 100 * (cd_used / 100 - 1);
             const E = stat_eff_final * (1 + DMG_eff) * crit_factor;
-            // クリ率が100%に達していると追加クリ率の限界効果はゼロ
-            const pCR_marginal = cr_clamped >= 100 ? 0 : stat_eff_final * (1 + DMG_eff) * (cd_eff / 100 - 1) / 100;
+            // クリ率1%あたりの限界価値（100%到達分の頭打ちは mv() 側で処理する）
+            const pCR_unit = stat_eff_final * (1 + DMG_eff) * (cd_used / 100 - 1) / 100;
 
             return {
                 E, stat_eff: stat_eff_final, DMG_eff, crit_factor, base, total: stat_eff_final,
-                cr_eff, cd_eff, da_eff,
+                cr_eff, cd_eff, cd_used, cd_unset, da_eff,
                 pStat_pct: base / 100 * (1 + DMG_eff) * crit_factor,
                 pStat_flat: (1 + DMG_eff) * crit_factor,
                 pDmg: stat_eff_final / 100 * crit_factor,
-                pCR: pCR_marginal,
+                pCR: pCR_unit,
                 pCD: stat_eff_final * (1 + DMG_eff) * (cr_clamped / 100) / 100,
             };
+        }
+
+        // クリ率は100%で頭打ちになるため、実際に効いた分だけを返す。
+        //   included=true  … そのクリ率が既に cr_eff に含まれている（装備中の音骸サブステなど）
+        //                    → 抜いた場合との差分を取る
+        //   included=false … これから追加する（新規音骸の判定・確率計算など）
+        //                    → 上限までの残りしか効かない
+        function effectiveCR(v, cr_eff, included) {
+            const cap = x => Math.min(Math.max(x, 0), 100);
+            return included
+                ? cap(cr_eff) - cap(cr_eff - v)
+                : cap(cr_eff + v) - cap(cr_eff);
         }
 
         const STAT_PCT_KEY = { atk: 'atk_pct', hp: 'hp_pct', def: 'def_pct' };
         const STAT_FLAT_KEY = { atk: 'flat_atk', hp: 'flat_hp', def: 'flat_def' };
 
-        function mv(key, val) {
+        // included: そのサブステが既に現在のステータス合計に含まれているか
+        //           （装備中音骸=true / 新規音骸・確率計算=false）
+        function mv(key, val, included = true) {
             const v = n(val); if (!v) return 0;
             const p = getPartials();
             if (key === STAT_PCT_KEY[statMode]) return p.pStat_pct * v;
@@ -3337,7 +3356,7 @@
             if (key === 'dmg_skill') return p.pDmg * v * (S.ratio.skill / 100);
             if (key === 'dmg_lib') return p.pDmg * v * (S.ratio.lib / 100);
             if (key === 'dmg_echo') return p.pDmg * v * (S.ratio.echo / 100);
-            if (key === 'crit_rate') return p.pCR * v;
+            if (key === 'crit_rate') return p.pCR * effectiveCR(v, p.cr_eff, included);
             if (key === 'crit_dmg') return p.pCD * v;
             return 0;
         }
@@ -3464,12 +3483,22 @@
     <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#d97706">${p.DMG_eff > 0 ? (p.DMG_eff * 100).toFixed(1) + '%' : ''}</div><div class="ed-label">全体ダメバフ</div></div>
   `;
             const bn = document.getElementById('balanceNote'); if (!bn) return;
+            const box = (col, txt) => `<div style="font-size:10px;color:${col};padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:5px;margin-top:6px;">${txt}</div>`;
             const cr = p.cr_eff, cd = p.cd_eff;
-            if (cr > 0 && cd > 0) {
-                const ratio = cr / cd;
+            if (p.cd_unset && cr > 0) {
+                // クリダメは100%（＝クリティカルしても等倍）を下回れないため、
+                // 未入力のままでは期待ダメージが正しく出せない
+                bn.innerHTML = box('var(--red)', '⚠ クリダメが未入力です。ゲーム内の表示値（基礎150%＋増加分）を入力してください。現在はクリティカル分を計算に含めていません。');
+            } else if (cr > 0 && cd > 0) {
+                // クリダメの「100%」はクリティカルしても等倍という基準点なので、
+                // 実際に増分として効いているのは (cd - 100) の部分。
+                // 1ロールの期待値がクリダメ15.06% : クリ率7.53% ≒ 2:1 なので、
+                // 限界価値が釣り合うのは (cd - 100) = 2 × cr のとき。
+                const cdBonus = cd - 100;
+                const ratio = cdBonus > 0 ? cr / cdBonus : Infinity;
                 const note = ratio > 0.55 ? '⚠ クリ率過多 → クリダメ優先' : ratio < 0.45 ? '⚠ クリダメ過多 → クリ率優先' : '✓ クリ率:クリダメ バランス良好';
                 const col = ratio > 0.55 || ratio < 0.45 ? 'var(--orange)' : 'var(--green)';
-                bn.innerHTML = `<div style="font-size:10px;color:${col};padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:5px;margin-top:6px;">${note}（CR ${cr.toFixed(1)}% : CD ${cd.toFixed(1)}%）</div>`;
+                bn.innerHTML = box(col, `${note}（CR ${cr.toFixed(1)}% : CD増分 ${cdBonus.toFixed(1)}%　目標比 1:2）`);
             } else bn.innerHTML = '';
         }
 
@@ -4740,7 +4769,7 @@
             const val = document.getElementById(`ns_${s}_v`)?.value || '';
             const mvEl = document.getElementById(`ns_${s}_m`); if (!mvEl) return;
             const E = getPartials().E;
-            if (key && val) { const v = mv(key, val); mvEl.textContent = E > 0 ? `+${(v / E * 100).toFixed(2)}%` : ''; mvEl.style.color = v > 0 ? 'var(--p)' : 'var(--text3)'; }
+            if (key && val) { const v = mv(key, val, false); mvEl.textContent = E > 0 ? `+${(v / E * 100).toFixed(2)}%` : ''; mvEl.style.color = v > 0 ? 'var(--p)' : 'var(--text3)'; }
             else { mvEl.textContent = ''; mvEl.style.color = 'var(--text3)'; }
         }
 
@@ -4752,7 +4781,7 @@
                 key: document.getElementById(`ns_${s}_k`)?.value || '',
                 val: document.getElementById(`ns_${s}_v`)?.value || '',
             }));
-            const currentScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val) : 0), 0);
+            const currentScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val, false) : 0), 0);
 
             const cmpIdx = parseInt(document.getElementById('compareSlot')?.value ?? '-1');
             // 比較もサブステのみで統一
@@ -4870,11 +4899,11 @@
             // サブステ全選択肢をkey別に用意（重みも保持し、値の抽選は実際の出現確率に従う）
             const subPool = SUB_STATS.map(sd => ({
                 key: sd.key,
-                scores: sd.vals.map(v => mv(sd.key, v)),
+                scores: sd.vals.map(v => mv(sd.key, v, false)),
                 w: sd.w,
                 wTotal: wSum(sd),
                 // このサブステを1枠引いたときのスコア期待値（重み付き）
-                mean: sd.vals.reduce((a, v, i) => a + mv(sd.key, v) * sd.w[i], 0) / wSum(sd),
+                mean: sd.vals.reduce((a, v, i) => a + mv(sd.key, v, false) * sd.w[i], 0) / wSum(sd),
             }));
             // 重みに従ってスコアを1つ引く
             function drawScore(s) {
