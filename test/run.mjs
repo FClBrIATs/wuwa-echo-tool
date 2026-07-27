@@ -283,7 +283,8 @@ await withPage(async page => {
         const vs = document.getElementById('ns_0_v'); vs.value = '12.6'; onNewVal(0);
         document.getElementById('compareSlot').value = '0'; runJudge();
         o.判定結果あり = !!document.getElementById('judgeResult').textContent.trim();
-        o.確率表示あり = document.querySelectorAll('#probResult .prob-val').length;
+        o.分布図あり = document.querySelectorAll('#probResult svg').length;
+        o.比較行 = (document.getElementById('probResult').textContent.match(/育て/g) || []).length;
         // セット保存 → リセット → 呼び出し
         document.getElementById('echoPresetName').value = 'テスト'; saveEchoPreset();
         resetEquipTab(); document.getElementById('confirmOkBtn').click();
@@ -294,7 +295,8 @@ await withPage(async page => {
     }, BUILD);
     checkTrue('期待ダメージ指数が算出される', r.E > 0);
     checkTrue('新規判定が結果を出す', r.判定結果あり);
-    check('確率が2つ表示される', r.確率表示あり, 2);
+    check('分布図が描画される', r.分布図あり, 1);
+    check('継続と新規の2案が並ぶ', r.比較行, 2);
     check('リセットでスコアが0になる', r.リセット後, 0);
     checkTrue('保存したセットを呼び戻せる', r.復元後 > 0);
 });
@@ -468,12 +470,86 @@ await withPage(async page => {
         const v = document.getElementById('ns_0_v'); v.value = '320'; onNewVal(0);
         document.getElementById('compareSlot').value = '3';
         const runs = [];
-        for (let i = 0; i < 5; i++) { runJudge(); runs.push(document.querySelector('#probResult .prob-val')?.textContent); }
-        return { runs, ばらつきなし: new Set(runs).size === 1 };
+        for (let i = 0; i < 5; i++) { runJudge(); runs.push(document.getElementById('probResult').innerHTML); }
+        return { runs: runs.map(x => (x.match(/dc-val[^>]*>([\d.]+)%/) || [])[1]), ばらつきなし: new Set(runs).size === 1 };
     }, BUILD);
     // 以前はモンテカルロの乱数が毎回変わり、同じ入力でも±0.5ptほど揺れていた
     checkTrue('同じ入力なら確率が完全に一致する', r.ばらつきなし);
-    checkTrue('確率が表示されている', /%/.test(r.runs[0] || ''));
+    checkTrue('確率が表示されている', /\d/.test(r.runs[0] || ''));
+});
+
+// ── 新規判定の分布図 ──────────────────────────────────
+suite('新規音骸の最終スコア分布');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '16.2' }, { key: 'crit_rate', val: '8.1' },
+        { key: 'atk_pct', val: '9.4' }, { key: 'flat_atk', val: '50' }, { key: 'res_eff', val: '8.4' }];
+        buildEchoGrid(); recalcAll();
+        document.getElementById('newLevel').value = '10'; buildNewSubs();
+        [['crit_dmg', '15'], ['crit_rate', '8.1']].forEach(([k, v], i) => {
+            const ks = document.getElementById(`ns_${i}_k`); ks.value = k; onNewKey(i);
+            const vs = document.getElementById(`ns_${i}_v`); vs.value = v; onNewVal(i);
+        });
+        document.getElementById('compareSlot').value = '0';
+        const t0 = performance.now(); runJudge(); const ms = performance.now() - t0;
+
+        const box = document.getElementById('probResult');
+        const runs = [];
+        for (let i = 0; i < 3; i++) { runJudge(); runs.push(box.innerHTML); }
+
+        // 標本の性質を直接確認する
+        const E = getPartials().E;
+        const fixed = [{ key: 'crit_dmg', val: '15' }, { key: 'crit_rate', val: '8.1' }];
+        const cont = sampleFinalScores(0, fixed, 0x1F123BB5);
+        const fresh = sampleFinalScores(0, [], 0x2C9E7A31);
+        const line = echoScoreAt(0);
+        return {
+            ms: Math.round(ms),
+            図がある: box.querySelectorAll('svg').length,
+            決定的: new Set(runs).size === 1,
+            昇順: cont[0] <= cont[cont.length - 1] && fresh[0] <= fresh[fresh.length - 1],
+            標本数: cont.length,
+            // 2枠を良ロールで固定しているぶん、+0からより下限が高い
+            固定枠の下限が高い: cont[0] > fresh[0],
+            継続の勝率: +shareAtLeast(cont, line).toFixed(1),
+            新規の勝率: +shareAtLeast(fresh, line).toFixed(1),
+            合格ラインが表示される: box.textContent.includes('合格ライン'),
+            推奨が出る: /有利です|大差ありません/.test(box.textContent),
+        };
+    }, BUILD);
+    check('分布図が描画される', r.図がある, 1);
+    check('標本数', r.標本数, 2000);
+    checkTrue('標本が昇順に並んでいる', r.昇順);
+    checkTrue('良い枠を確保済みなら下限が上がる', r.固定枠の下限が高い);
+    checkTrue('継続のほうが勝率が高い（良ロール2枠を確保済みのため）', r.継続の勝率 > r.新規の勝率);
+    checkTrue('合格ラインが表示される', r.合格ラインが表示される);
+    checkTrue('どちらが有利かの判断が出る', r.推奨が出る);
+    checkTrue('同じ入力なら描画結果まで完全に一致する', r.決定的);
+    checkTrue('判定が1秒以内に終わる', r.ms < 1000);
+});
+
+suite('全枠開放済みの新規音骸');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[0].subs = [{ key: 'atk_pct', val: '7.9' }, { key: 'flat_atk', val: '40' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        buildEchoGrid(); recalcAll();
+        // +25 は5枠すべて開放済みなので、伸びしろが無い
+        document.getElementById('newLevel').value = '25'; buildNewSubs();
+        [['crit_dmg', '21'], ['crit_rate', '10.5'], ['atk_pct', '11.6'], ['dmg_skill', '11.6'], ['flat_atk', '60']]
+            .forEach(([k, v], i) => {
+                const ks = document.getElementById(`ns_${i}_k`); if (!ks) return; ks.value = k; onNewKey(i);
+                const vs = document.getElementById(`ns_${i}_v`); if (vs) { vs.value = v; onNewVal(i); }
+            });
+        document.getElementById('compareSlot').value = '0';
+        runJudge();
+        const box = document.getElementById('probResult');
+        return { 図がある: box.querySelectorAll('svg').length, 本文: box.textContent.replace(/\s+/g, ' ').trim() };
+    }, BUILD);
+    check('全枠開放済みでも図が出る', r.図がある, 1);
+    checkTrue('伸びしろが無い旨が読み取れる', r.本文.includes('全枠開放済み'));
 });
 
 await finish();
