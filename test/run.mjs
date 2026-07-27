@@ -414,4 +414,66 @@ await withPage(async page => {
     checkTrue('計算後に「その他」入力が保たれる', r.その他が保たれる);
 });
 
+// ── 入れ替え難易度 ────────────────────────────────────
+suite('スロットの入れ替え難易度（上位◯%）');
+await withPage(async page => {
+    await page.evaluate(b => {
+        eval(b);
+        // 強い順に並べた5スロット
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '11.6' }, { key: 'flat_atk', val: '60' }];
+        S.echoes[1].subs = [{ key: 'crit_dmg', val: '16.2' }, { key: 'crit_rate', val: '8.1' },
+        { key: 'atk_pct', val: '9.4' }, { key: 'flat_atk', val: '50' }, { key: 'res_eff', val: '8.4' }];
+        S.echoes[2].subs = [{ key: 'crit_rate', val: '7.5' }, { key: 'atk_pct', val: '7.9' },
+        { key: 'dmg_skill', val: '8.6' }, { key: 'flat_hp', val: '360' }, { key: 'def_pct', val: '9.0' }];
+        S.echoes[3].subs = [{ key: 'crit_dmg', val: '13.8' }, { key: 'flat_atk', val: '40' },
+        { key: 'hp_pct', val: '7.1' }, { key: 'def_pct', val: '8.1' }, { key: 'res_eff', val: '7.6' }];
+        S.echoes[4].subs = [{ key: 'atk_pct', val: '6.4' }, { key: 'flat_hp', val: '320' },
+        { key: 'def_pct', val: '9.9' }, { key: 'res_eff', val: '6.8' }, { key: 'flat_def', val: '40' }];
+        buildEchoGrid(); recalcAll();
+    }, BUILD);
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => {
+        const d = getDistributions();
+        const tops = S.echoes.map((_, i) => slotTopPercent(i, d));
+        const scores = S.echoes.map((_, i) => echoScoreAt(i));
+        // 同じ入力で作り直しても同じ値になること
+        distCache = { sig: null, byslot: null };
+        const again = S.echoes.map((_, i) => slotTopPercent(i, getDistributions()));
+        return {
+            tops, scores, again,
+            順位表示: [...document.querySelectorAll('.rank-row')].map(x => x.textContent.replace(/\s+/g, ' ').trim()),
+            分布の件数: d[0].length,
+        };
+    });
+    // スコアが高いスロットほど「上位」に来る（＝入れ替えが難しい）
+    const asc = r.scores.map((s, i) => ({ s, t: r.tops[i] })).sort((a, b) => a.s - b.s);
+    checkTrue('スコアが高いほど上位%が小さくなる', asc.every((x, i) => i === 0 || x.t <= asc[i - 1].t));
+    checkTrue('最強スロットは上位1%未満', r.tops[0] < 1);
+    checkTrue('最弱スロットは大半の音骸に負ける', r.tops[4] > 80);
+    check('固定シードなので再計算しても同じ値', r.again, r.tops);
+    check('標本数', r.分布の件数, 2000);
+    checkTrue('ランキングに上位%が表示される', r.順位表示.every(t => t.includes('上位') || t.includes('未入力')));
+});
+
+suite('確率と順位が毎回同じ値になる');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[3].subs = [{ key: 'atk_pct', val: '7.9' }, { key: 'flat_atk', val: '40' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        buildEchoGrid(); recalcAll();
+        document.getElementById('newLevel').value = '5'; buildNewSubs();
+        const k = document.getElementById('ns_0_k'); k.value = 'flat_hp'; onNewKey(0);
+        const v = document.getElementById('ns_0_v'); v.value = '320'; onNewVal(0);
+        document.getElementById('compareSlot').value = '3';
+        const runs = [];
+        for (let i = 0; i < 5; i++) { runJudge(); runs.push(document.querySelector('#probResult .prob-val')?.textContent); }
+        return { runs, ばらつきなし: new Set(runs).size === 1 };
+    }, BUILD);
+    // 以前はモンテカルロの乱数が毎回変わり、同じ入力でも±0.5ptほど揺れていた
+    checkTrue('同じ入力なら確率が完全に一致する', r.ばらつきなし);
+    checkTrue('確率が表示されている', /%/.test(r.runs[0] || ''));
+});
+
 await finish();
