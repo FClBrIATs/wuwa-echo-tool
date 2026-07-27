@@ -552,4 +552,141 @@ await withPage(async page => {
     checkTrue('伸びしろが無い旨が読み取れる', r.本文.includes('全枠開放済み'));
 });
 
+// ── 厳選難易度表 ──────────────────────────────────────
+suite('厳選難易度表');
+await withPage(async page => {
+    await page.evaluate(b => {
+        eval(b);
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '11.6' }, { key: 'flat_atk', val: '60' }];
+        S.echoes[1].subs = [{ key: 'atk_pct', val: '6.4' }, { key: 'flat_hp', val: '320' },
+        { key: 'def_pct', val: '9.9' }, { key: 'res_eff', val: '6.8' }, { key: 'flat_def', val: '40' }];
+        buildEchoGrid(); recalcAll();
+    }, BUILD);
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => {
+        const el = document.getElementById('difficultyBody');
+        const probs = [...el.querySelectorAll('tbody tr')].map(tr => parseFloat(tr.children[1].textContent) || 0);
+        return {
+            行数: probs.length, probs,
+            本文: el.textContent.replace(/\s+/g, ' ').trim(),
+            基準が入力済みスロット: !el.textContent.includes('スロット3') && !el.textContent.includes('スロット4'),
+        };
+    });
+    checkTrue('目標ごとの行が並ぶ', r.行数 >= 4);
+    checkTrue('目標が上がるほど確率が下がる', r.probs.every((p, i) => i === 0 || p <= r.probs[i - 1]));
+    checkTrue('期待個数が表示される', r.本文.includes('個に1個'));
+    checkTrue('中央値と上位ラインが出る', r.本文.includes('中央値') && r.本文.includes('上位1%'));
+    checkTrue('基準は入力済みの最弱スロット', r.基準が入力済みスロット);
+});
+
+// ── 登録データの編集 ──────────────────────────────────
+suite('ハーモニーの属性ダメバフ');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        setCAttr('ice', document.querySelector('#cAttrBtns .attr-sel-btn[data-attr="ice"]'), 'cAttrBtns');
+        document.getElementById('cName').value = 'テスト氷';
+        document.getElementById('cSetType').value = '2+5'; onCustomSetType('2+5');
+        document.getElementById('cDmg').value = '30';
+        document.getElementById('c2Dmg').value = '10';
+        addCustomHarmony();
+        const h = customHarmonies()[0];
+        // 「その他」は全属性として扱う
+        setCAttr('other', document.querySelector('#cAttrBtns .attr-sel-btn[data-attr="other"]'), 'cAttrBtns');
+        document.getElementById('cName').value = 'テスト全';
+        document.getElementById('cDmg').value = '20';
+        addCustomHarmony();
+        const all = customHarmonies()[1];
+        return { attr: h.attr, ice5: h.set5.dmg_ice, all5: h.set5.dmg_all, ice2: h.set2.dmg_ice, otherAll: all.set5.dmg_all };
+    });
+    // 以前は選択した属性を無視して全属性バフとして保存していた
+    check('選んだ属性のバフとして保存される', [r.attr, r.ice5, r.ice2], ['ice', 30, 10]);
+    check('全属性には入らない', r.all5, 0);
+    check('「その他」は全属性として保存される', r.otherAll, 20);
+});
+
+suite('登録データの編集');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        // 武器
+        charaType = 'weapon'; setRegType('weapon', null);
+        document.getElementById('ch_name').value = 'テスト武器';
+        document.getElementById('ch_base_atk').value = '500';
+        document.getElementById('ch_crit_rate').value = '20';
+        addCharaEntry();
+        const before = getSavedCharaEntries('weapon')[0];
+        editCharaEntry('weapon', before.id);
+        o.フォームに戻る = [document.getElementById('ch_name').value,
+        document.getElementById('ch_base_atk').value, document.getElementById('ch_crit_rate').value];
+        o.ボタンが保存表示になる = document.querySelector('#tab-custom [onclick="addCharaEntry()"]').textContent.includes('変更を保存');
+        document.getElementById('ch_crit_rate').value = '24.3';
+        addCharaEntry();
+        const list = getSavedCharaEntries('weapon');
+        o.増えない = list.length;
+        o.idが保たれる = list[0].id === before.id;
+        o.更新される = list[0].crit_rate;
+        o.ボタンが戻る = document.querySelector('#tab-custom [onclick="addCharaEntry()"]').textContent.includes('を登録');
+
+        // ハーモニー
+        setCAttr('fire', document.querySelector('#cAttrBtns .attr-sel-btn[data-attr="fire"]'), 'cAttrBtns');
+        document.getElementById('cName').value = 'テストH';
+        document.getElementById('cDmg').value = '30';
+        addCustomHarmony();
+        const h = customHarmonies()[0];
+        editCustomHarmony(h.id);
+        o.ハーモニーがフォームに戻る = [document.getElementById('cName').value, document.getElementById('cDmg').value];
+        document.getElementById('cDmg').value = '40';
+        addCustomHarmony();
+        const after = customHarmonies();
+        o.ハーモニーも増えない = after.length;
+        o.ハーモニーのidが保たれる = after[0].id === h.id;
+        o.ハーモニーが更新される = after[0].set5.dmg_fire;
+
+        // 編集をやめる
+        editCustomHarmony(after[0].id);
+        cancelHarmonyEdit();
+        o.やめるとフォームが空 = document.getElementById('cName').value === '';
+        return o;
+    });
+    check('編集で既存の値がフォームに戻る', r.フォームに戻る, ['テスト武器', '500', '20']);
+    checkTrue('ボタンが「変更を保存」になる', r.ボタンが保存表示になる);
+    check('保存しても件数が増えない', r.増えない, 1);
+    checkTrue('idが保たれる（選択が外れない）', r.idが保たれる);
+    check('値が更新される', r.更新される, 24.3);
+    checkTrue('保存後はボタンが「登録」に戻る', r.ボタンが戻る);
+    check('ハーモニーもフォームに戻る', r.ハーモニーがフォームに戻る, ['テストH', '30']);
+    check('ハーモニーも件数が増えない', r.ハーモニーも増えない, 1);
+    checkTrue('ハーモニーのidが保たれる', r.ハーモニーのidが保たれる);
+    check('ハーモニーの値が更新される', r.ハーモニーが更新される, 40);
+    checkTrue('「編集をやめる」でフォームが空になる', r.やめるとフォームが空);
+});
+
+// ── キーボード操作 ────────────────────────────────────
+suite('キーボードで操作できる');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const els = [...document.querySelectorAll('[onclick]')];
+        const unreachable = els.filter(e => !(e.tagName === 'BUTTON' || e.tagName === 'A' || e.hasAttribute('tabindex')));
+        return {
+            到達できない数: unreachable.length,
+            // 残るのはモーダルの背景（Escで閉じられる）だけ
+            残りの内訳: [...new Set(unreachable.map(e => String(e.className).split(' ')[0]))],
+            選択肢がbutton: document.querySelectorAll('button.custom-sel-option').length,
+        };
+    });
+    checkTrue('ハーモニー選択肢がボタンになっている', r.選択肢がbutton > 0);
+    check('キーボードで到達できない操作は背景のみ', r.残りの内訳, ['modal-overlay']);
+    check('その数', r.到達できない数, 2);
+
+    // Escで閉じられること
+    const esc = await page.evaluate(() => {
+        openBackupModal();
+        const before = document.getElementById('backupModal').classList.contains('open');
+        onGlobalKeydown({ key: 'Escape' });
+        return { before, after: document.getElementById('backupModal').classList.contains('open') };
+    });
+    checkTrue('Escでモーダルが閉じる', esc.before && !esc.after);
+});
+
 await finish();
