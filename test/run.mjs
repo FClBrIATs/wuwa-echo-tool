@@ -216,6 +216,50 @@ await withPage(async page => {
     checkTrue('未知の属性値でも描画が落ちない', r.不正な属性でも描画できる);
 });
 
+// ── 項目別モード ────────────────────────────────────────
+suite('項目別モードが状態から計算される');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        setInputMode('detail', null);
+        // 登録データ由来のバフ（ハーモニー）＋ ユーザーの「その他」入力
+        S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
+        S.other = { base: '500', cr: '5', cd: '150', dlight: '10' };
+        buildHarmonyPicker(); recalcAll();
+        const D = detailBreakdown();
+        o.ハーモニーの攻撃力が内訳に入る = D.statPct.h;
+        o.その他のクリ率が内訳に入る = D.cr.other;
+        o.クリダメ合計 = D.cd.total;
+        o.回折バフ合計 = D.attr.light.total;
+        const p = getPartials();
+        o.計算に反映される = { cr: p.cr_eff, cd: p.cd_eff };
+
+        // DOMの導出欄を書き換えても計算は変わらないこと（DOMを読んでいない証拠）
+        document.getElementById('di_cr_h').value = '9999';
+        o.DOM改変後のクリ率 = getPartials().cr_eff;
+
+        // 「その他」欄はDOM経由の入力が状態に入ること
+        onDetailOther('cr', '12');
+        o.その他入力後のクリ率 = getPartials().cr_eff;
+
+        // 再描画しても「その他」の入力が消えないこと
+        fillDetailInputs();
+        o.再描画後のその他欄 = document.getElementById('di_cr_other').value;
+        o.導出欄は読み取り専用 = document.getElementById('di_cr_h').readOnly;
+        return o;
+    });
+    check('登録データ由来のバフが内訳に入る', r.ハーモニーの攻撃力が内訳に入る, 30);
+    check('「その他」入力が内訳に入る', r.その他のクリ率が内訳に入る, 5);
+    check('クリダメ合計は「その他」のみ', r.クリダメ合計, 150);
+    check('属性バフはハーモニー＋その他', r.回折バフ合計, 20);
+    check('内訳が期待ダメージ計算に反映される', r.計算に反映される, { cr: 5, cd: 150 });
+    // 以前は入力欄のDOMを直接読んでいたため、この改変で計算が変わってしまっていた
+    check('導出欄のDOMを書き換えても計算は変わらない', r.DOM改変後のクリ率, 5);
+    check('「その他」欄の入力は計算に反映される', r.その他入力後のクリ率, 12);
+    check('再描画しても「その他」の入力は保持される', r.再描画後のその他欄, '12');
+    checkTrue('導出欄は読み取り専用', r.導出欄は読み取り専用);
+});
+
 suite('確率計算の説明が実装と一致する');
 await withPage(async page => {
     const t = await page.evaluate(() => document.body.textContent);
@@ -253,6 +297,61 @@ await withPage(async page => {
     check('確率が2つ表示される', r.確率表示あり, 2);
     check('リセットでスコアが0になる', r.リセット後, 0);
     checkTrue('保存したセットを呼び戻せる', r.復元後 > 0);
+});
+
+// ── 入力内容の自動保存 ──────────────────────────────────
+suite('入力内容がリロードで復元される');
+await withPage(async page => {
+    await page.evaluate(() => {
+        S.base_stat = '500'; S.total_stat = '2600'; S.crit_rate = '68'; S.crit_dmg = '245';
+        S.ratio = { normal: 0, heavy: 0, skill: 80, lib: 20, echo: 0 };
+        S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
+        S.other = { cr: '7' };
+        S.echoes[0].name = 'テスト音骸';
+        S.echoes[0].main = { cost: 4, key1: 'crit_rate', val1: 22, key2: 'flat_atk', val2: 150 };
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'atk_pct', val: '11.6' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        statMode = 'atk'; useAttr = 'light';
+        buildHarmonyPicker(); buildEchoGrid(); recalcAll();
+        saveState();
+    });
+    const before = await page.evaluate(() => ({ E: Math.round(getPartials().E), score: Math.round(echoScore(S.echoes[0])) }));
+    await page.reload();
+    await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
+    const after = await page.evaluate(() => ({
+        E: Math.round(getPartials().E), score: Math.round(echoScore(S.echoes[0])),
+        base: S.base_stat, cr: S.crit_rate, ratio: S.ratio, useAttr,
+        harmony: S.harmony[0].id, other: S.other.cr, name: S.echoes[0].name,
+        cost: S.echoes[0].main.cost, subs: S.echoes[0].subs.filter(x => x.key).length,
+        欄に値が入っている: document.getElementById('inp_total').value,
+    }));
+    check('期待ダメージ指数が一致', after.E, before.E);
+    check('音骸スコアが一致', after.score, before.score);
+    check('ステータス入力が戻る', [after.base, after.cr, after.欄に値が入っている], ['500', '68', '2600']);
+    check('ダメージ比率が戻る', after.ratio, { normal: 0, heavy: 0, skill: 80, lib: 20, echo: 0 });
+    check('使用属性が戻る', after.useAttr, 'light');
+    check('ハーモニー選択が戻る', after.harmony, 'リフレクト');
+    check('項目別の「その他」が戻る', after.other, '7');
+    check('音骸の名前・コスト・サブステが戻る', [after.name, after.cost, after.subs], ['テスト音骸', 4, 2]);
+});
+
+suite('壊れた保存データで起動できる');
+await withPage(async page => {
+    for (const bad of ['{', 'null', '{"__ver":1}', '{"__ver":99,"S":{}}', '{"__ver":1,"S":{"echoes":"壊れた","harmony":3}}']) {
+        await page.evaluate(v => localStorage.setItem('ww_echo_state', v), bad);
+        await page.reload();
+        await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
+        const ok = await page.evaluate(() => Array.isArray(S.echoes) && S.echoes.length === 5 && !!document.getElementById('ec_0'));
+        checkTrue(`壊れた保存(${bad.slice(0, 22)})でも初期状態で起動する`, ok);
+    }
+});
+
+suite('入力すると自動保存される');
+await withPage(async page => {
+    await page.evaluate(() => { const el = document.getElementById('inp_total'); el.value = '3000'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    await page.waitForTimeout(700);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ww_echo_state') || 'null'));
+    checkTrue('入力後に保存が走る', saved && saved.S && saved.S.total_stat === '3000');
 });
 
 await finish();
