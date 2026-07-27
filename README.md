@@ -40,7 +40,7 @@
 
 ## 使い方
 
-1. `index.html` をダウンロード
+1. `echo-optimizer-v5.index.html` をダウンロード
 2. ブラウザで開く（Chromeを推奨）
 3. ① タブでキャラのステータスを入力 → ② タブで装備音骸を入力 → ③ タブで新規音骸を判定
 
@@ -78,11 +78,15 @@
 ## ファイル構成
 
 ```
-index.html    # ツール本体（単一ファイル）
+echo-optimizer-v5.index.html   # ツール本体（単一ファイル）
+index.html                     # 本体への転送ページ（GitHub Pages のトップ用）
 README.md
-PHASES.md     # 改修フェーズ計画
+PHASES.md                      # 改修フェーズ計画
 LICENSE
 ```
+
+ダウンロードして使う場合は `echo-optimizer-v5.index.html` だけで動作します。
+`index.html` は GitHub Pages のトップにアクセスした際に本体へ転送するためだけのファイルです。
 
 ---
 
