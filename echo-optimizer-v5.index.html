@@ -146,21 +146,17 @@
             gap: 16px;
         }
 
+        /* 音骸カードは5枚。横1列だとサブステの選択欄が窮屈になるので、
+           広い画面では3列（3枚＋2枚の2段）にして1枚あたりの幅を確保する */
         .grid5 {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
         }
 
         @media(max-width:1200px) {
             .grid5 {
-                grid-template-columns: repeat(4, minmax(0, 1fr))
-            }
-        }
-
-        @media(max-width:960px) {
-            .grid5 {
-                grid-template-columns: repeat(3, minmax(0, 1fr))
+                grid-template-columns: repeat(2, minmax(0, 1fr))
             }
         }
 
@@ -855,6 +851,12 @@
         }
 
         .custom-sel-option {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            color: inherit;
+            text-align: left;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -1088,6 +1090,112 @@
         .rank-name {
             font-size: 11px;
             font-weight: 500;
+        }
+
+        .custom-item.editing {
+            border-color: var(--p);
+            background: var(--p-light);
+        }
+
+        /* キーボード操作時のフォーカス表示。マウス操作では出さない */
+        :focus-visible {
+            outline: 2px solid var(--p);
+            outline-offset: 2px;
+            border-radius: 3px;
+        }
+
+        /* 厳選難易度表 */
+        .dt-kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dt-kpi {
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 9px 11px;
+        }
+
+        .dt-kpi-v {
+            font-size: 19px;
+            font-weight: 600;
+            color: var(--p);
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dt-kpi-l {
+            font-size: 9.5px;
+            color: var(--text3);
+            margin-top: 1px;
+        }
+
+        .dt-table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 400px;
+            font-size: 11px;
+        }
+
+        .dt-table th {
+            font-size: 10px;
+            color: var(--text3);
+            font-weight: 500;
+            text-align: right;
+            padding: 4px 8px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .dt-table th:first-child {
+            text-align: left;
+        }
+
+        .dt-table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .dt-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dt-k {
+            color: var(--text2);
+        }
+
+        .dt-v {
+            text-align: right;
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dt-bar {
+            width: 42%;
+            min-width: 110px;
+        }
+
+        .dt-track {
+            background: var(--dc-dim);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .dt-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .note-sm {
+            font-size: 10px;
+            color: var(--text3);
+            line-height: 1.8;
+            margin-top: 10px;
         }
 
         /* 分布図（新規判定タブ） */
@@ -2092,6 +2200,14 @@
                 <div style="color:var(--text3);font-size:11px;">音骸のサブステを入力すると優先度が表示されます</div>
             </div>
         </div>
+        <div class="card">
+            <div class="card-head">
+                <h2>厳選難易度 — 目標スコアは何個に1個か</h2>
+            </div>
+            <div class="card-body" id="difficultyBody">
+                <div style="color:var(--text3);font-size:11px;">ステータスと音骸を入力すると表示されます</div>
+            </div>
+        </div>
         <!-- Echo Preset UI -->
         <div class="card" style="margin-bottom:12px;">
             <div class="card-head">
@@ -2421,6 +2537,8 @@
                         <div class="cw-field" style="margin-bottom:8px;"><label>説明（任意）</label><input type="text"
                                 id="cDesc" placeholder="発動条件など"></div>
                         <button class="btn btn-p" onclick="addCustomHarmony()" style="width:100%;">ハーモニーを登録</button>
+                        <button class="btn" id="hCancelEdit" onclick="cancelHarmonyEdit()"
+                            style="width:100%;margin-top:6px;display:none;">編集をやめる</button>
                     </div>
 
                     <!-- 武器フォーム -->
@@ -2527,6 +2645,8 @@
                             <input type="text" id="ch_desc" placeholder="例：精錬5、パッシブ込み">
                         </div>
                         <button class="btn btn-p" onclick="addCharaEntry()" style="width:100%;">武器を登録</button>
+                        <button class="btn" class="cha-cancel-edit" onclick="cancelCharaEdit()"
+                            style="width:100%;margin-top:6px;display:none;">編集をやめる</button>
                     </div>
 
                     <!-- キャラフォーム -->
@@ -2679,6 +2799,8 @@
                             <input type="text" id="ch_desc_c" placeholder="例：共鳴スキルLv10、パッシブ込み">
                         </div>
                         <button class="btn btn-p" onclick="addCharaEntry()" style="width:100%;">キャラを登録</button>
+                        <button class="btn" class="cha-cancel-edit" onclick="cancelCharaEdit()"
+                            style="width:100%;margin-top:6px;display:none;">編集をやめる</button>
                     </div>
 
                 </div>
@@ -3844,13 +3966,13 @@
                 // id はツールが生成する値（custom_<timestamp> 等）なので属性に直接埋めてよい。
                 // name は登録時のユーザー入力なので必ずエスケープする。
                 // attr も登録データ由来なので、未知の値でも落ちないよう other にフォールバックする。
-                `<div class="custom-sel-option${x.id === slot.id ? ' selected' : ''}" onclick="onHarmonySelect(${i},'${x.id}')" data-id="${esc(x.id)}">
+                `<button type="button" role="option" aria-selected="${x.id === slot.id}" class="custom-sel-option${x.id === slot.id ? ' selected' : ''}" onclick="onHarmonySelect(${i},'${x.id}')" data-id="${esc(x.id)}">
       <span class="attr-icon ${(ATTR[x.attr] || ATTR.other).cls}"></span>
       <span>${esc(x.name)}${x.unknown ? '*' : ''}</span>
-    </div>`).join('');
-            const noneOpt = `<div class="custom-sel-option${!slot.id ? ' selected' : ''}" onclick="clearHarmony(${i})" data-id="">
+    </button>`).join('');
+            const noneOpt = `<button type="button" role="option" aria-selected="${!slot.id}" class="custom-sel-option${!slot.id ? ' selected' : ''}" onclick="clearHarmony(${i})" data-id="">
     <span style="color:var(--text3);font-size:11px;">なし</span>
-  </div>`;
+  </button>`;
 
             const dropHTML = `
     <div class="custom-sel-wrap" id="hsel_wrap_${i}">
@@ -4905,6 +5027,56 @@
             updateRanking(scores, sorted, E);
         }
 
+        // ================================================================
+        // 厳選難易度表
+        // ================================================================
+        // 「スコア20%」と言われても拾う個数の実感に結びつかない。
+        // 目標スコアごとに「何個に1個か」を出して、どこで満足すべきかの目安にする。
+        // 分布は入れ替え難易度と同じものを使う（最弱スロット＝更新候補を基準にする）。
+        function updateDifficulty(dist, weakestIdx) {
+            const el = document.getElementById('difficultyBody'); if (!el) return;
+            const E = getPartials().E;
+            if (!dist || E <= 0) {
+                el.innerHTML = '<div style="color:var(--text3);font-size:11px;">ステータスと音骸を入力すると表示されます</div>';
+                return;
+            }
+            const arr = dist[weakestIdx];
+            const maxPct = arr[arr.length - 1] / E * 100;
+            // 目標は5%刻み。分布の上限を超える段は出しても意味がないので打ち切る
+            const targets = [];
+            for (let t = 5; t <= 45; t += 5) {
+                if (t > maxPct + 5) break;
+                targets.push(t);
+            }
+            const quant = f => arr[Math.min(arr.length - 1, Math.floor(f * arr.length))] / E * 100;
+            const rows = targets.map(t => {
+                const prob = shareAtLeast(arr, t * E / 100);
+                const oneIn = prob > 0 ? Math.round(100 / prob) : null;
+                // 確率は桁が大きく変わるので、バーは対数目盛にする
+                const w = prob > 0 ? Math.min(100, Math.pow(prob, 0.32) * 26) : 0;
+                const col = prob >= 10 ? 'var(--g5x)' : prob >= 1 ? 'var(--g4x)' : 'var(--g3x)';
+                return `<tr>
+      <td class="dt-k">${t}% 以上</td>
+      <td class="dt-v">${prob >= 0.05 ? prob.toFixed(2) + '%' : '&lt;0.05%'}</td>
+      <td class="dt-v" style="color:${col}">${oneIn ? oneIn.toLocaleString() + ' 個に1個' : `${DIST_SAMPLES.toLocaleString()}個に1個未満`}</td>
+      <td class="dt-bar"><div class="dt-track"><div class="dt-fill" style="width:${w.toFixed(1)}%;background:${col}"></div></div></td>
+    </tr>`;
+            }).join('');
+            el.innerHTML = `
+    <div class="dt-kpis">
+      <div class="dt-kpi"><div class="dt-kpi-v">${quant(0.5).toFixed(2)}%</div><div class="dt-kpi-l">中央値（半分はこれ以下）</div></div>
+      <div class="dt-kpi"><div class="dt-kpi-v">${quant(0.9).toFixed(2)}%</div><div class="dt-kpi-l">上位10%のライン</div></div>
+      <div class="dt-kpi"><div class="dt-kpi-v">${quant(0.99).toFixed(2)}%</div><div class="dt-kpi-l">上位1%のライン</div></div>
+    </div>
+    <div class="scrollx"><table class="dt-table">
+      <thead><tr><th>目標スコア</th><th>到達確率</th><th>期待個数</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="note-sm">音骸を1個拾って5枠すべて開放したときに、その目標に届く確率です。
+      基準は最も弱いスロット（${esc(S.echoes[weakestIdx].name)}）を入れ替えた場合。
+      バーは対数目盛です。</div>`;
+        }
+
         // 「上位◯%」の表示。分布がまだ計算できていない間は何も出さない。
         function topLabel(top, untouched) {
             if (untouched || top == null) return '';
@@ -4922,11 +5094,20 @@
             clearTimeout(distTimer);
             distTimer = setTimeout(() => {
                 const hasData = S.echoes.some(e => e.subs.some(x => x.key && x.val !== ''));
-                if (!hasData || getPartials().E <= 0) { rankTopPct = [null, null, null, null, null]; return; }
+                if (!hasData || getPartials().E <= 0) {
+                    rankTopPct = [null, null, null, null, null];
+                    updateDifficulty(null);
+                    return;
+                }
                 const dist = getDistributions();
                 rankTopPct = S.echoes.map((_, i) => slotTopPercent(i, dist));
                 const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScoreAt(i) }));
-                updateRanking(scores, [...scores].sort((a, b) => a.score - b.score), getPartials().E);
+                const sorted = [...scores].sort((a, b) => a.score - b.score);
+                updateRanking(scores, sorted, getPartials().E);
+                // 難易度表の基準は「実際に入れ替えたいスロット」＝入力済みで最も弱いもの。
+                // 手つかずのスロットを基準にしても更新判断の材料にならない。
+                const ref = sorted.find(x => !isEchoUntouched(S.echoes[x.idx])) || sorted[0];
+                updateDifficulty(dist, ref.idx);
             }, 300);
         }
 
@@ -5426,13 +5607,19 @@
             });
         }
 
-        function readBuff(prefix) {
+        // attr: 属性ダメバフをどの属性に割り当てるか。
+        // 'other'（または未指定）は全属性ダメバフとして扱う。
+        // 以前はここが常に dmg_all だったため、焦熱を選んで登録したバフが
+        // 凝縮ビルドにも加算されていた。
+        function readBuff(prefix, attr) {
             const g = id => n((document.getElementById(id) || {}).value);
+            const dmg = g(prefix + 'Dmg');
+            const attrKey = attr && attr !== 'other' ? 'dmg_' + attr : 'dmg_all';
             return B({
                 atk_pct: g(prefix + 'Atk'),
                 hp_pct: g(prefix + 'HP'),
                 def_pct: g(prefix + 'DEF'),
-                dmg_all: g(prefix + 'Dmg'),
+                [attrKey]: dmg,
                 crit_rate: g(prefix + 'CR'),
                 crit_dmg: g(prefix + 'CD'),
                 dmg_normal: g(prefix + 'DN'),
@@ -5443,36 +5630,96 @@
             });
         }
 
+        // 編集中のハーモニーID（null なら新規登録）
+        let editingHarmonyId = null;
+
+        const H_FIELD_IDS = ['cName', 'cAtk', 'cHP', 'cDEF', 'cDmg', 'cCR', 'cCD', 'cDN', 'cDH', 'cDS', 'cDL', 'cDE',
+            'c2Atk', 'c2HP', 'c2DEF', 'c2Dmg', 'c2CR', 'c2CD', 'c2DN', 'c2DH', 'c2DS', 'c2DL', 'c2DE', 'cDesc'];
+
+        function clearHarmonyForm() {
+            H_FIELD_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        }
+
+        // 保存済みのバフ値をフォームに戻す。
+        // 属性ダメバフは dmg_<属性> に入っているので、登録時の属性から取り出す。
+        function fillBuffForm(prefix, buff, attr) {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ? v : ''; };
+            const attrKey = attr && attr !== 'other' ? 'dmg_' + attr : 'dmg_all';
+            set(prefix + 'Atk', buff.atk_pct); set(prefix + 'HP', buff.hp_pct); set(prefix + 'DEF', buff.def_pct);
+            set(prefix + 'Dmg', buff[attrKey] || buff.dmg_all);
+            set(prefix + 'CR', buff.crit_rate); set(prefix + 'CD', buff.crit_dmg);
+            set(prefix + 'DN', buff.dmg_normal); set(prefix + 'DH', buff.dmg_heavy);
+            set(prefix + 'DS', buff.dmg_skill); set(prefix + 'DL', buff.dmg_lib); set(prefix + 'DE', buff.dmg_echo);
+        }
+
+        function setHarmonyEditMode(id) {
+            editingHarmonyId = id;
+            const btn = document.querySelector('#tab-custom [onclick="addCustomHarmony()"]');
+            if (btn) btn.textContent = id ? 'ハーモニーの変更を保存' : 'ハーモニーを登録';
+            const cancel = document.getElementById('hCancelEdit');
+            if (cancel) cancel.style.display = id ? 'block' : 'none';
+        }
+
+        function editCustomHarmony(id) {
+            const h = customHarmonies().find(x => x.id === id);
+            if (!h) return;
+            document.getElementById('cName').value = h.name || '';
+            document.getElementById('cDesc').value = h.desc || '';
+            const sel = document.getElementById('cSetType');
+            if (sel) { sel.value = h.setType || '2+5'; onCustomSetType(sel.value); }
+            const attr = h.attr || 'other';
+            setCAttr(attr, document.querySelector(`#cAttrBtns .attr-sel-btn[data-attr="${attr}"]`), 'cAttrBtns');
+            fillBuffForm('c', h.set5 || h.set3 || B(), attr);
+            fillBuffForm('c2', h.set2 || B(), attr);
+            setHarmonyEditMode(id);
+            renderCustomList();
+            const nameEl = document.getElementById('cName');
+            if (nameEl) { nameEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); nameEl.focus(); }
+        }
+
+        function cancelHarmonyEdit() {
+            clearHarmonyForm();
+            setHarmonyEditMode(null);
+            renderCustomList();
+        }
+
         function addCustomHarmony() {
             const name = document.getElementById('cName').value.trim();
             if (!name) { alert('名称を入力してください'); return; }
             const setType = document.getElementById('cSetType').value;
-            const buff5 = readBuff('c');   // 5セット（または3セット）
-            const buff2 = setType === '2+5' ? readBuff('c2') : B(); // 2セット（2+5のみ）
+            const attr = document.getElementById('cAttr').value;
+            const buff5 = readBuff('c', attr);   // 5セット（または3セット）
+            const buff2 = setType === '2+5' ? readBuff('c2', attr) : B(); // 2セット（2+5のみ）
             const custom = customHarmonies();
-            custom.push({
-                id: 'custom_' + Date.now(), name,
-                attr: document.getElementById('cAttr').value,
+            const entry = {
+                id: editingHarmonyId || 'custom_' + Date.now(), name,
+                attr,
                 setType,
                 set2: buff2,
                 set5: buff5,
                 set3: buff5,
                 desc: document.getElementById('cDesc').value || '',
                 custom: true,
-            });
+            };
+            if (editingHarmonyId) {
+                // idを保つ。①タブで選択中のハーモニーが編集で外れないようにする
+                const i = custom.findIndex(x => x.id === editingHarmonyId);
+                if (i >= 0) custom[i] = entry; else custom.push(entry);
+            } else {
+                custom.push(entry);
+            }
             try { localStorage.setItem('echo_custom_h', JSON.stringify(custom)); } catch { }
-            // フィールドクリア
-            ['cName', 'cAtk', 'cHP', 'cDEF', 'cDmg', 'cCR', 'cCD', 'cDN', 'cDH', 'cDS', 'cDL', 'cDE',
-                'c2Atk', 'c2HP', 'c2DEF', 'c2Dmg', 'c2CR', 'c2CD', 'c2DN', 'c2DH', 'c2DS', 'c2DL', 'c2DE', 'cDesc'].forEach(id => {
-                    const el = document.getElementById(id); if (el) el.value = '';
-                });
+            clearHarmonyForm();
+            setHarmonyEditMode(null);
             renderCustomList();
             buildHarmonyPicker();
+            recalcAll();
         }
 
         function deleteCustomHarmony(id) {
             const custom = customHarmonies().filter(h => h.id !== id);
             try { localStorage.setItem('echo_custom_h', JSON.stringify(custom)); } catch { }
+            if (editingHarmonyId === id) { clearHarmonyForm(); setHarmonyEditMode(null); }
             renderCustomList();
             buildHarmonyPicker();
         }
@@ -5495,16 +5742,27 @@
             const fmtBuff = b => Object.entries(b).filter(([, v]) => v > 0).map(([k, v]) => `${bLabel(k)}+${v}%`).join(' ');
             d.innerHTML = custom.map(h => {
                 const a = ATTR[h.attr] || ATTR.other;
+                // 属性を選んで登録したのに全属性バフとして保存されている古いデータ。
+                // 意図が判別できないため自動では直さず、編集で直せるよう印だけ付ける。
+                const legacyAll = h.attr && h.attr !== 'other' &&
+                    [h.set5, h.set3, h.set2].some(x => x && x.dmg_all > 0);
+                const warn = legacyAll
+                    ? '<div style="font-size:9px;color:var(--orange);margin-top:2px;">⚠ 属性ダメバフが「全属性」として保存されています。編集して保存し直すと選択した属性に反映されます。</div>'
+                    : '';
                 const s5str = fmtBuff(h.set5 || h.set3 || B());
                 const s2str = h.setType === '2+5' ? fmtBuff(h.set2 || B()) : '';
-                return `<div class="custom-item">
+                return `<div class="custom-item${h.id === editingHarmonyId ? ' editing' : ''}">
       <span class="attr-icon ${a.cls}"></span>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;">${esc(h.name)} <span style="font-size:9px;color:var(--text3);font-weight:400;">${esc(h.setType)}</span></div>
+        <div style="font-size:11px;font-weight:500;">${esc(h.name)} <span style="font-size:9px;color:var(--text3);font-weight:400;">${esc(h.setType)}</span>${h.id === editingHarmonyId ? ' <span style="font-size:9px;color:var(--p)">編集中</span>' : ''}</div>
         ${s2str ? `<div style="font-size:9px;color:#2563eb;">2セット: ${s2str}</div>` : ''}
         <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : '3セット: '}${s5str || '未設定'}${h.desc ? `<span style="color:var(--text3);margin-left:5px;">${esc(h.desc)}</span>` : ''}</div>
+        ${warn}
       </div>
-      <button class="btn btn-d" style="padding:3px 8px;font-size:10px;flex-shrink:0;" onclick="deleteCustomHarmony('${h.id}')">削除</button>
+      <div style="display:flex;gap:5px;flex-shrink:0;">
+        <button class="btn" style="padding:3px 8px;font-size:10px;" onclick="editCustomHarmony('${h.id}')">編集</button>
+        <button class="btn btn-d" style="padding:3px 8px;font-size:10px;" onclick="deleteCustomHarmony('${h.id}')">削除</button>
+      </div>
     </div>`;
             }).join('');
         }
@@ -5526,7 +5784,9 @@
                 if (f) f.style.display = t === type ? '' : 'none';
             });
             document.querySelectorAll('#regtype_harmony,#regtype_weapon,#regtype_chara').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            // btn が渡されない経路（編集で種別を切り替える場合など）でも動くようにする
+            const active = btn || document.getElementById('regtype_' + type);
+            if (active) active.classList.add('active');
             const labels = { harmony: '登録済みハーモニー', weapon: '登録済み武器', chara: '登録済みキャラ' };
             const h = document.getElementById('reg_list_head');
             if (h) h.textContent = labels[type];
@@ -5534,7 +5794,12 @@
             document.getElementById('charaList').style.display = (type === 'weapon' || type === 'chara') ? '' : 'none';
             if (type === 'weapon' || type === 'chara') { charaType = type; renderCharaList(); }
         }
-        function setCharaType(type, btn) { setRegType(type, btn); }
+        function setCharaType(type, btn) {
+            // 種別を跨いで編集状態が残ると、別種のフォームに値が残って紛らわしい
+            if (editingCharaId) { editingCharaId = null; fillCharaForm(null); }
+            setRegType(type, btn);
+            setCharaEditMode(null);
+        }
 
         // ================================================================
         // ▼▼▼ キャラ・武器 固定プリセット ▼▼▼
@@ -5648,6 +5913,59 @@
             });
         }
 
+        // 編集中のエントリID（null なら新規登録）
+        let editingCharaId = null;
+
+        // 武器・キャラ登録フォームの入力欄をまとめて扱う。
+        // キャラ側は _c サフィックス付きのIDが別に用意されているため、
+        // 見つからなければサフィックス無しにフォールバックする。
+        function charaField(key) {
+            const sfx = charaType === 'chara' ? '_c' : '';
+            return document.getElementById('ch_' + key + sfx) || document.getElementById('ch_' + key);
+        }
+
+        // フォームに既存の登録内容を流し込む
+        function fillCharaForm(entry) {
+            const set = (el, v) => { if (el) el.value = (v === 0 || v == null || v === '') ? '' : v; };
+            set(charaField('name'), entry ? entry.name : '');
+            set(charaField('desc'), entry ? entry.desc : '');
+            CH_FIELDS.forEach(k => set(charaField(k), entry ? entry[k] : ''));
+            ['normal', 'heavy', 'skill', 'lib', 'echo'].forEach(k => {
+                const el = document.getElementById('ch_ratio_' + k + '_c');
+                set(el, entry && entry.ratio ? entry.ratio[k] : '');
+            });
+            const attr = entry ? (entry.attr || '') : '';
+            const btn = attr ? document.querySelector(`#chAttrBtns .attr-sel-btn[data-attr="${attr}"]`) : null;
+            setCharaAttr(attr, btn);
+        }
+
+        // 編集モードの見た目を切り替える
+        function setCharaEditMode(id) {
+            editingCharaId = id;
+            const label = charaType === 'chara' ? 'キャラ' : '武器';
+            const btn = document.querySelector(`#tab-custom [onclick="addCharaEntry()"]`);
+            if (btn) btn.textContent = id ? `${label}の変更を保存` : `${label}を登録`;
+            document.querySelectorAll('.cha-cancel-edit').forEach(el => { el.style.display = id ? 'block' : 'none'; });
+        }
+
+        function editCharaEntry(type, id) {
+            const entry = getSavedCharaEntries(type).find(e => e.id === id);
+            if (!entry) return;
+            if (charaType !== type) setRegType(type, null);
+            charaType = type;
+            fillCharaForm(entry);
+            setCharaEditMode(id);
+            renderCharaList();
+            const nameEl = charaField('name');
+            if (nameEl) { nameEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); nameEl.focus(); }
+        }
+
+        function cancelCharaEdit() {
+            fillCharaForm(null);
+            setCharaEditMode(null);
+            renderCharaList();
+        }
+
         function addCharaEntry() {
             // キャラは _c サフィックスのID、武器は標準ID
             const sfx = charaType === 'chara' ? '_c' : '';
@@ -5673,19 +5991,17 @@
                 };
             }
             const list = getSavedCharaEntries(charaType);
-            list.push(entry);
+            if (editingCharaId) {
+                // 編集中は id を保った上書き。ドロップダウンの選択が外れないようにする
+                const i = list.findIndex(e => e.id === editingCharaId);
+                entry.id = editingCharaId;
+                if (i >= 0) list[i] = entry; else list.push(entry);
+            } else {
+                list.push(entry);
+            }
             saveCharaEntries(charaType, list);
-            if (nameEl) nameEl.value = '';
-            if (descEl) descEl.value = '';
-            CH_FIELDS.forEach(k => {
-                const el = document.getElementById('ch_' + k + sfx) || document.getElementById('ch_' + k);
-                if (el) el.value = '';
-            });
-            ['normal','heavy','skill','lib','echo'].forEach(k => {
-                const el = document.getElementById('ch_ratio_' + k + '_c');
-                if (el) el.value = '';
-            });
-            setCharaAttr('', null);
+            fillCharaForm(null);
+            setCharaEditMode(null);
             renderCharaList();
                         initCollapsibleSections();
                         initCardCollapse();
@@ -5695,6 +6011,7 @@ rebuildCharaWeaponSelects();
         function deleteCharaEntry(type, id) {
             const list = getSavedCharaEntries(type).filter(e => e.id !== id);
             saveCharaEntries(type, list);
+            if (editingCharaId === id) { fillCharaForm(null); setCharaEditMode(null); }
             renderCharaList();
                         initCollapsibleSections();
                         initCardCollapse();
@@ -5720,16 +6037,19 @@ rebuildCharaWeaponSelects();
                 const ratioStr = ratioParts.length ? `［比率 ${ratioParts.join(' ')}］` : '';
                 const attrKey = e.attr || inferCharaAttr(e);
                 const attrStr = attrKey && ATTR[attrKey] ? `<span style="font-size:9px;color:${ATTR[attrKey].color};border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-right:5px;">${ATTR[attrKey].label}</span>` : '';
-                return `<div class="custom-item">
+                return `<div class="custom-item${e.id === editingCharaId ? ' editing' : ''}">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;">${attrStr}${esc(e.name)}</div>
+        <div style="font-size:11px;font-weight:500;">${attrStr}${esc(e.name)}${e.id === editingCharaId ? ' <span style="font-size:9px;color:var(--p)">編集中</span>' : ''}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　') || 'ステータス未設定'}</div>
         ${ratioStr ? `<div style="font-size:9px;color:var(--p);margin-top:2px;">${ratioStr}</div>` : ''}
         ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${esc(e.desc)}</div>` : ''}
       </div>
       ${e._builtin
                         ? '<span style="font-size:9px;color:var(--text3);padding:2px 6px;border:1px solid var(--border);border-radius:3px;">固定</span>'
-                        : `<button class="btn btn-d" style="padding:3px 8px;font-size:10px;flex-shrink:0;" onclick="deleteCharaEntry('${e.type}','${e.id}')">削除</button>`}
+                        : `<div style="display:flex;gap:5px;flex-shrink:0;">
+        <button class="btn" style="padding:3px 8px;font-size:10px;" onclick="editCharaEntry('${e.type}','${e.id}')">編集</button>
+        <button class="btn btn-d" style="padding:3px 8px;font-size:10px;" onclick="deleteCharaEntry('${e.type}','${e.id}')">削除</button>
+      </div>`}
     </div>`;
             }).join('');
         }
@@ -5796,6 +6116,18 @@ rebuildCharaWeaponSelects();
             Object.entries(R).forEach(([id, k]) => put(id, S.ratio[k]));
         }
 
+        // Escキーで開いているものを閉じる。
+        // モーダルは背景クリックで閉じられるが、キーボードだけでは閉じる手段が無かった。
+        function onGlobalKeydown(e) {
+            if (e.key !== 'Escape') return;
+            const openList = document.querySelector('.custom-sel-list.open');
+            if (openList) { openList.classList.remove('open'); return; }
+            const modal = document.querySelector('.modal-overlay.open');
+            if (!modal) return;
+            if (modal.id === 'backupModal') closeBackupModal();
+            else modal.classList.remove('open');
+        }
+
         function init() {
             migrateCharaStorage();
             const restored = loadState();
@@ -5822,6 +6154,7 @@ rebuildCharaWeaponSelects();
             }
             recalcAll();
             // 入力・選択のあと必ず保存されるように、変更イベントを一括で拾う
+            document.addEventListener('keydown', onGlobalKeydown);
             document.addEventListener('input', scheduleSave, true);
             document.addEventListener('change', scheduleSave, true);
             document.addEventListener('click', scheduleSave, true);
