@@ -82,7 +82,7 @@ Phase 5 は Phase 6 以降の前提。
 5. 死にコード削除: `normalCDF`, `collectRawStatsFields`, `onEchoMain2Key`,
    `onEchoMain`, `onEchoMainKey`, `autoBuffEnabled`, `stat_eff`
 6. 書きかけコメント `}// 項目別` の除去
-7. ファイル名を `index.html` に変更し GitHub Pages 公開
+7. GitHub Pages 公開（ファイル名は既存URLを壊さないため `echo-optimizer-v5.index.html` のまま維持）
 
 ---
 
