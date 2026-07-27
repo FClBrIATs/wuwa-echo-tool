@@ -10,21 +10,23 @@
         rel="stylesheet">
     <style>
         :root {
-            --bg: #f0f4f8;
-            --card: #fff;
-            --border: #dde3ec;
-            --border2: #c4cdd9;
-            --p: #2563eb;
-            --p2: #1d4ed8;
-            --p-light: #eff6ff;
-            --gold: #b45309;
-            --green: #15803d;
-            --red: #dc2626;
-            --orange: #c2410c;
-            --text: #0f172a;
-            --text2: #475569;
-            --text3: #94a3b8;
-            --shadow: 0 1px 3px rgba(15, 23, 42, .07), 0 1px 2px rgba(15, 23, 42, .04);
+            --bg: #0a0b0e;
+            --card: #14161c;
+            --card2: #1b1e26;
+            --border: #2a2e38;
+            --border2: #3a3f4c;
+            --p: #d4af37;
+            --p2: #b8952c;
+            --p-light: rgba(212, 175, 55, .12);
+            --p-rgb: 212, 175, 55;
+            --gold: #d4af37;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --text: #e8e6e1;
+            --text2: #a3a6b0;
+            --text3: #686c78;
+            --shadow: 0 2px 14px rgba(0, 0, 0, .55), 0 0 0 1px rgba(212, 175, 55, .04);
         }
 
         * {
@@ -34,7 +36,11 @@
         }
 
         body {
-            background: var(--bg);
+            background:
+                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(var(--p-rgb), .06), transparent 60%),
+                radial-gradient(ellipse 700px 500px at 100% 10%, rgba(6, 182, 212, .05), transparent 55%),
+                repeating-linear-gradient(0deg, rgba(255, 255, 255, .012) 0px, rgba(255, 255, 255, .012) 1px, transparent 1px, transparent 3px),
+                var(--bg);
             color: var(--text);
             font-family: 'Noto Sans JP', 'IBM Plex Sans', sans-serif;
             font-weight: 300;
@@ -44,7 +50,7 @@
 
         /* NAV */
         .nav {
-            background: #fff;
+            background: var(--card);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
@@ -112,6 +118,7 @@
         .tab-btn.active {
             color: var(--p);
             border-bottom-color: var(--p);
+            text-shadow: 0 0 10px rgba(var(--p-rgb), .5);
         }
 
         /* LAYOUT */
@@ -164,11 +171,23 @@
             }
         }
 
+        /* --- STICKY RESULTS PANEL (PC) --- */
+        @media(min-width:481px) {
+            .results-col {
+                position: sticky;
+                top: 58px;
+                align-self: start;
+                max-height: calc(100vh - 70px);
+                overflow-y: auto;
+            }
+        }
+
         /* CARD */
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-top: 1px solid rgba(var(--p-rgb), .35);
+            border-radius: 4px;
             box-shadow: var(--shadow);
             margin-bottom: 14px;
         }
@@ -179,8 +198,20 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #fafbfd;
-            border-radius: 10px 10px 0 0;
+            background: var(--card2);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .card-head::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--p);
+            opacity: .7;
         }
 
         .card-head h2 {
@@ -190,6 +221,21 @@
             color: var(--p);
             text-transform: uppercase;
             font-family: 'IBM Plex Sans', sans-serif;
+            text-shadow: 0 0 8px rgba(var(--p-rgb), .35);
+            position: relative;
+            padding-left: 10px;
+        }
+
+        .card-head h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--p);
+            box-shadow: 0 0 6px 1px rgba(var(--p-rgb), .8);
         }
 
         .card-body {
@@ -283,7 +329,7 @@
         select,
         textarea {
             width: 100%;
-            background: #f8fafc;
+            background: var(--card2);
             border: 1px solid var(--border2);
             border-radius: 5px;
             padding: 6px 9px;
@@ -296,7 +342,7 @@
 
         select {
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23686c78'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 7px center;
             padding-right: 22px;
@@ -306,7 +352,12 @@
         input:focus,
         select:focus {
             border-color: var(--p);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+            box-shadow: 0 0 0 3px rgba(var(--p-rgb), .18);
+        }
+
+        select option {
+            background: var(--card2);
+            color: var(--text);
         }
 
         .inline2 {
@@ -397,8 +448,8 @@
             font-size: 11px;
             color: var(--green);
             padding: 5px 8px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
+            background: rgba(34, 197, 94, .1);
+            border: 1px solid rgba(34, 197, 94, .3);
             border-radius: 5px;
             min-width: 48px;
             text-align: right;
@@ -442,7 +493,7 @@
             border: 1px solid var(--border);
             border-radius: 4px;
             background: var(--card);
-            color: var(--text1);
+            color: var(--text);
             box-sizing: border-box;
         }
 
@@ -551,7 +602,7 @@
             align-items: center;
             gap: 6px;
             padding: 7px 10px;
-            background: #fafbfd;
+            background: var(--card2);
             border-bottom: 1px solid var(--border);
             border-radius: 8px 8px 0 0;
         }
@@ -634,7 +685,7 @@
             border: 1px solid var(--border2);
             border-radius: 3px;
             cursor: pointer;
-            background: white;
+            background: var(--card);
             color: var(--text2);
             font-family: 'IBM Plex Sans', sans-serif;
             font-weight: 600;
@@ -644,7 +695,8 @@
         .set-btn.active {
             background: var(--p);
             border-color: var(--p);
-            color: #fff;
+            color: #0a0b0e;
+            font-weight: 700;
         }
 
         /* 手動バフ アコーディオン */
@@ -659,7 +711,7 @@
             align-items: center;
             gap: 6px;
             padding: 7px 10px;
-            background: #fafbfd;
+            background: var(--card2);
             border-bottom: 1px solid transparent;
             cursor: pointer;
             font-size: 11px;
@@ -742,7 +794,7 @@
 
         .custom-sel-btn {
             width: 100%;
-            background: #f8fafc;
+            background: var(--card2);
             border: 1px solid var(--border2);
             border-radius: 5px;
             padding: 5px 8px;
@@ -758,7 +810,7 @@
         .custom-sel-btn:focus {
             outline: none;
             border-color: var(--p);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+            box-shadow: 0 0 0 3px rgba(var(--p-rgb), .18);
         }
 
         .custom-sel-btn .caret {
@@ -773,7 +825,7 @@
             top: calc(100% + 2px);
             left: 0;
             right: 0;
-            background: #fff;
+            background: var(--card);
             border: 1px solid var(--border2);
             border-radius: 6px;
             box-shadow: 0 4px 16px rgba(15, 23, 42, .12);
@@ -801,7 +853,7 @@
         }
 
         .custom-sel-option.selected {
-            background: #eff6ff;
+            background: rgba(var(--p-rgb), .18);
             font-weight: 500;
         }
 
@@ -811,7 +863,7 @@
             font-weight: 700;
             color: var(--text3);
             letter-spacing: 1px;
-            background: #f8fafc;
+            background: var(--card2);
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
         }
@@ -825,7 +877,7 @@
         }
 
         .ed-box {
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
             border-radius: 7px;
             padding: 10px;
@@ -849,7 +901,7 @@
         /* MV RANKING */
         .mv-item {
             padding: 9px 11px;
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
             border-radius: 7px;
             margin-bottom: 5px;
@@ -921,7 +973,7 @@
 
         .echo-head {
             padding: 7px 11px;
-            background: #fafbfd;
+            background: var(--card2);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -941,7 +993,7 @@
             flex: 1;
             padding: 3px 6px;
             font-size: 11px;
-            background: #f1f5f9;
+            background: var(--card2);
             border-color: transparent;
         }
 
@@ -1000,7 +1052,7 @@
             padding: 9px 12px;
             border-radius: 7px;
             margin-bottom: 5px;
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
         }
 
@@ -1057,7 +1109,7 @@
             border: 1px solid var(--border2);
             border-radius: 6px;
             cursor: pointer;
-            background: #fff;
+            background: var(--card);
             color: var(--text2);
             transition: all .2s;
             font-family: 'IBM Plex Sans', sans-serif;
@@ -1067,7 +1119,8 @@
         .mode-btn.active {
             background: var(--p);
             border-color: var(--p);
-            color: #fff;
+            color: #0a0b0e;
+            box-shadow: 0 0 12px rgba(var(--p-rgb), .45), inset 0 0 0 1px rgba(255, 255, 255, .15);
         }
 
         /* RATIO VIS */
@@ -1086,23 +1139,23 @@
 
         /* MISC */
         .info-box {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
+            background: rgba(6, 182, 212, .08);
+            border: 1px solid rgba(6, 182, 212, .35);
             border-radius: 6px;
             padding: 9px 11px;
             font-size: 10px;
-            color: #1e40af;
+            color: #67e8f9;
             line-height: 1.6;
             margin-bottom: 10px;
         }
 
         .warn-box {
-            background: #fffbeb;
-            border: 1px solid #fed7aa;
+            background: rgba(245, 158, 11, .1);
+            border: 1px solid rgba(245, 158, 11, .35);
             border-radius: 6px;
             padding: 8px 11px;
             font-size: 10px;
-            color: #92400e;
+            color: #fbbf24;
             line-height: 1.6;
         }
 
@@ -1135,23 +1188,30 @@
 
         .btn-p {
             background: var(--p);
-            color: #fff;
+            color: #0a0b0e;
+            font-weight: 700;
+            box-shadow: 0 0 12px rgba(var(--p-rgb), .4);
         }
 
         .btn-p:hover {
             background: var(--p2);
+            box-shadow: 0 0 18px rgba(var(--p-rgb), .6);
         }
 
         .btn-s {
-            background: #fff;
+            background: var(--card);
             color: var(--text2);
             border: 1px solid var(--border2);
         }
 
         .btn-d {
-            background: #fee2e2;
+            background: rgba(239, 68, 68, .12);
             color: var(--red);
-            border: 1px solid #fca5a5;
+            border: 1px solid rgba(239, 68, 68, .4);
+        }
+
+        .btn-d:hover {
+            background: rgba(239, 68, 68, .22);
         }
 
         .prob-display {
@@ -1170,7 +1230,7 @@
             align-items: center;
             gap: 8px;
             padding: 9px 11px;
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
             border-radius: 7px;
             margin-bottom: 5px;
@@ -1183,7 +1243,7 @@
             border: 1px solid;
             border-radius: 4px;
             cursor: pointer;
-            background: #fff;
+            background: transparent;
             transition: all .15s;
             font-family: 'IBM Plex Sans', sans-serif;
         }
@@ -1204,8 +1264,8 @@
 
         /* HOW-TO */
         .how-to {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
+            background: rgba(6, 182, 212, .07);
+            border: 1px solid rgba(6, 182, 212, .3);
             border-radius: 6px;
             margin-bottom: 10px;
             font-size: 10px;
@@ -1218,7 +1278,7 @@
         details.how-to summary {
             padding: 7px 11px;
             cursor: pointer;
-            color: #0369a1;
+            color: #67e8f9;
             font-weight: 600;
             user-select: none;
             list-style: none;
@@ -1254,9 +1314,9 @@
 
         .how-to-body {
             padding: 8px 12px 10px;
-            color: #0c4a6e;
+            color: #a5f3fc;
             line-height: 1.85;
-            border-top: 1px solid #bae6fd;
+            border-top: 1px solid rgba(6, 182, 212, .25);
         }
 
         /* ============================================================
@@ -1461,11 +1521,109 @@
             }
         }
 
-        /* --- inline2: 300px未満は1列 --- */
-        @media(max-width:320px) {
-            .inline2 {
-                grid-template-columns: 1fr;
-            }
+        /* --- BACKUP MODAL --- */
+        .backup-btn {
+            margin: auto 12px auto 0;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--card);
+            color: var(--text2);
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .backup-btn:hover {
+            color: var(--p);
+            border-color: var(--p);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 86vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-head {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-head h3 {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--text3);
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 14px 16px;
+            overflow-y: auto;
+        }
+
+        .modal-body textarea {
+            width: 100%;
+            height: 160px;
+            font-size: 11px;
+            font-family: monospace;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .modal-msg {
+            font-size: 10px;
+            margin-top: 6px;
+            min-height: 14px;
+        }
+
+        .modal-msg.ok {
+            color: var(--green);
+        }
+
+        .modal-msg.err {
+            color: #dc2626;
         }
     </style>
 </head>
@@ -1480,15 +1638,60 @@
             <button class="tab-btn" onclick="showTab('tab-new',this)">③ 新規判定</button>
             <button class="tab-btn" onclick="showTab('tab-custom',this)">⚙ 登録</button>
         </div>
+        <button class="backup-btn" onclick="openBackupModal()">💾 バックアップ</button>
     </nav>
+
+    <!-- BACKUP MODAL -->
+    <div class="modal-overlay" id="backupModal" onclick="if(event.target===this)closeBackupModal()">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>登録データ バックアップ（JSON）</h3>
+                <button class="modal-close" onclick="closeBackupModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">
+                    登録済みの「キャラ」「武器」「ハーモニー」「音骸セット」をJSONとして書き出し、コピーして保存できます。復元する場合はJSONを貼り付けて「復元」を押してください。
+                </div>
+                <div style="font-size:11px;color:var(--orange);margin-bottom:8px;">
+                    ⚠ ①②③タブに入力中のステータス・装備音骸は対象外です（バックアップされません）。
+                </div>
+                <textarea id="backupText" placeholder="ここにJSONが表示されます／貼り付けます"></textarea>
+                <div class="modal-actions">
+                    <button class="btn" onclick="doExport()" style="padding:6px 12px;font-size:11px;">現在の状態を書き出す</button>
+                    <button class="btn" onclick="doCopy()" style="padding:6px 12px;font-size:11px;">クリップボードにコピー</button>
+                    <button class="btn" onclick="doPaste()" style="padding:6px 12px;font-size:11px;">クリップボードから貼り付け</button>
+                    <button class="btn" onclick="doImport()"
+                        style="padding:6px 12px;font-size:11px;background:var(--p);color:#0a0b0e;font-weight:700;border-color:var(--p2);">この内容で復元する</button>
+                </div>
+                <div class="modal-msg" id="backupMsg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRM DIALOG (confirm()がブロックされる環境向け) -->
+    <div class="modal-overlay" id="confirmModal" onclick="if(event.target===this)document.getElementById('confirmCancelBtn').click()">
+        <div class="modal-box" style="max-width:360px;">
+            <div class="modal-body" style="padding-top:18px;">
+                <div id="confirmMsg" style="font-size:12px;color:var(--text);line-height:1.7;white-space:pre-wrap;">
+                </div>
+                <div class="modal-actions" style="justify-content:flex-end;margin-top:16px;">
+                    <button class="btn" id="confirmCancelBtn"
+                        style="padding:6px 14px;font-size:11px;">キャンセル</button>
+                    <button class="btn btn-p" id="confirmOkBtn" style="padding:6px 14px;font-size:11px;">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- TAB 1 -->
     <div id="tab-stats" class="page active">
         <div class="grid2">
             <div>
                 <div class="card">
-                    <div class="card-head">
+                    <div class="card-head" style="gap:10px;">
                         <h2>参照ステータス</h2>
+                        <button class="btn" onclick="resetStatsTab()"
+                            style="margin-left:auto;padding:4px 10px;font-size:10px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">↺ このタブをリセット</button>
                     </div>
                     <div class="card-body">
                         <details class="how-to">
@@ -1510,7 +1713,7 @@
                         </div>
 
                         <!-- キャラ/武器 選択（項目別のみ表示） -->
-                        <div id="cw_select_block">
+                        <div id="cw_select_block" style="display:none;">
                             <div class="sec-title">キャラ / 武器 選択</div>
                             <div class="stat-row">
                                 <span class="sname">キャラ</span>
@@ -1531,16 +1734,16 @@
                         </div>
 
                         <div class="mode-sw">
-                            <button class="mode-btn active" onclick="setStatMode('atk',this)">攻撃力基準</button>
-                            <button class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
-                            <button class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
+                            <button id="statModeBtn_atk" class="mode-btn active" onclick="setStatMode('atk',this)">攻撃力基準</button>
+                            <button id="statModeBtn_hp" class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
+                            <button id="statModeBtn_def" class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
                         </div>
 
                         <!-- ===== 合計値モード ===== -->
                         <div id="block_total">
                             <div class="stat-row">
                                 <span class="sname" id="lbl_base">基礎攻撃力</span>
-                                <input type="number" step="any" id="inp_base" placeholder="必須"
+                                <input type="number" inputmode="decimal" step="any" id="inp_base" placeholder="必須"
                                     oninput="S.base_stat=this.value;recalcAll();autoSize(this)"
                                     style="border-color:var(--p)">
                             </div>
@@ -1549,22 +1752,25 @@
                                 基礎攻撃力が未入力です。攻撃力%系のスコアが正しく計算されません。</div>
                             <div class="stat-row">
                                 <span class="sname" id="lbl_total">全体攻撃力</span>
-                                <input type="number" step="any" id="inp_total" placeholder="例：2000"
+                                <input type="number" inputmode="decimal" step="any" id="inp_total" placeholder="例：2000"
                                     oninput="S.total_stat=this.value;recalcAll();autoSize(this)">
                             </div>
                             <div class="divider"></div>
                             <div class="stat-row">
                                 <span class="sname">クリ率</span>
-                                <input type="number" step="any" id="inp_cr" placeholder="例: 60"
+                                <input type="number" inputmode="decimal" step="any" id="inp_cr" placeholder="例: 60"
                                     oninput="S.crit_rate=this.value;recalcAll();autoSize(this)">
                                 <span class="unit">%</span>
                             </div>
                             <div class="stat-row">
                                 <span class="sname">クリダメ</span>
-                                <input type="number" step="any" id="inp_cd" placeholder="例: 150"
+                                <input type="number" inputmode="decimal" step="any" id="inp_cd" placeholder="例: 150"
                                     oninput="S.crit_dmg=this.value;recalcAll();autoSize(this)">
                                 <span class="unit">%</span>
                             </div>
+                            <div id="crit_warn" class="warn-box"
+                                style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                                クリ率・クリダメが未入力です。ダメージ計算にクリティカルが反映されません。</div>
                         </div>
 
                         <div class="divider"></div>
@@ -1588,25 +1794,28 @@
                         <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
                                 100%</span>
                         </div>
+                        <div id="ratio_warn" class="warn-box"
+                            style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                            ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
                         <div class="inline2">
                             <div class="field"><label>通常攻撃</label>
-                                <input type="number" min="0" max="100" id="r_n" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
                                     oninput="S.ratio.normal=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>重撃</label>
-                                <input type="number" min="0" max="100" id="r_h" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_h" value="0"
                                     oninput="S.ratio.heavy=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>共鳴スキル</label>
-                                <input type="number" min="0" max="100" id="r_s" value="100"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_s" value="100"
                                     oninput="S.ratio.skill=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>共鳴解放</label>
-                                <input type="number" min="0" max="100" id="r_l" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_l" value="0"
                                     oninput="S.ratio.lib=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>音骸スキル</label>
-                                <input type="number" min="0" max="100" id="r_e" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_e" value="0"
                                     oninput="S.ratio.echo=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                         </div>
@@ -1620,11 +1829,11 @@
                             <!-- 基礎攻撃力 内訳 -->
                             <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>武器</label><input type="number" step="any"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_weapon" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_chara" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_base">合計: 0</div>
@@ -1632,26 +1841,26 @@
                             <!-- 全体攻撃力 内訳 -->
                             <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（武器）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（武器）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_flat_em" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_flat_es" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_total">全体: 0</div>
@@ -1659,22 +1868,22 @@
                             <!-- クリ率 内訳 -->
                             <div class="sec-title">クリ率</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" step="any"
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_cr_w"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cr_w"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_cr_c"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cr_c"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -1683,22 +1892,22 @@
                             <!-- クリダメ 内訳 -->
                             <div class="sec-title">クリダメ</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" step="any"
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_cd_w"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cd_w"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_cd_c"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cd_c"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -1718,30 +1927,30 @@
                         <!-- 合計値モード：従来の1行入力 -->
                         <div id="dmgbuf_total">
                             <div class="stat-row"><span class="sname" style="color:#ef4444">焦熱</span><input
-                                    type="number" step="any" id="inp_dfire" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dfire" placeholder="0"
                                     oninput="S.dmg_fire=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#3b82f6">凝縮</span><input
-                                    type="number" step="any" id="inp_dice" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dice" placeholder="0"
                                     oninput="S.dmg_ice=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#a855f7">電導</span><input
-                                    type="number" step="any" id="inp_dthunder" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dthunder" placeholder="0"
                                     oninput="S.dmg_thunder=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#22c55e">気動</span><input
-                                    type="number" step="any" id="inp_dwind" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dwind" placeholder="0"
                                     oninput="S.dmg_wind=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#eab308">回折</span><input
-                                    type="number" step="any" id="inp_dlight" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dlight" placeholder="0"
                                     oninput="S.dmg_light=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#ec4899">消滅</span><input
-                                    type="number" step="any" id="inp_ddark" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_ddark" placeholder="0"
                                     oninput="S.dmg_dark=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">全属性</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">全属性</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dall" placeholder="0"
                                     oninput="S.dmg_all=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span>
@@ -1755,16 +1964,16 @@
                             <div id="di_attr_rows"></div>
                             <div class="sec-title" style="margin-top:8px;">全属性バフ</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" step="any"
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_dall_w"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_dall_w"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -1776,23 +1985,23 @@
 
                         <!-- 合計値モード -->
                         <div id="skillbuf_total">
-                            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dnormal" placeholder="0"
                                     oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">重撃</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">重撃</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dheavy" placeholder="0"
                                     oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dskill" placeholder="0"
                                     oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dlib" placeholder="0"
                                     oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_decho" placeholder="0"
                                     oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
@@ -1807,7 +2016,7 @@
                 </div>
             </div>
 
-            <div>
+            <div class="results-col">
                 <div class="card">
                     <div class="card-head">
                         <h2>期待ダメージ指数</h2>
@@ -1823,7 +2032,7 @@
                     </div>
                     <div class="card-body">
                         <div class="info-box">
-                            各ステータスが<strong>音骸のサブステで付与される値の中間値分上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。</div>
+                            各ステータスが<strong>音骸のサブステ1枠分の期待値だけ上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。期待値は実際の抽選確率で重み付けした平均です。</div>
                         <div id="mvRanking"></div>
                     </div>
                 </div>
@@ -1862,14 +2071,19 @@
                 </select>
                 <button class="btn" onclick="loadEchoPreset()" style="padding:5px 12px;font-size:11px;">呼び出し</button>
                 <button class="btn" onclick="deleteEchoPreset()"
-                    style="padding:5px 12px;font-size:11px;background:#fee2e2;color:#dc2626;border-color:#fca5a5;">削除</button>
+                    style="padding:5px 12px;font-size:11px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">削除</button>
                 <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
                     <input type="text" id="echoPresetName" placeholder="セット名を入力" style="width:140px;">
                     <button class="btn" onclick="saveEchoPreset()"
-                        style="padding:5px 12px;font-size:11px;background:var(--p);color:#fff;border-color:var(--p2);">保存</button>
+                        style="padding:5px 12px;font-size:11px;background:var(--p);color:#0a0b0e;font-weight:700;border-color:var(--p2);">保存</button>
                 </div>
                 <span id="echoPresetMsg" style="font-size:10px;color:var(--green);"></span>
             </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-title" style="margin:0;">装備音骸 5スロット</div>
+            <button class="btn" onclick="resetEquipTab()"
+                style="padding:4px 10px;font-size:10px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">↺ このタブをリセット</button>
         </div>
         <div class="grid5" id="echoGrid"></div>
     </div>
@@ -1897,7 +2111,7 @@
                         <div class="field"><label>現在レベル</label>
                             <div style="display:flex;align-items:center;gap:4px;">
                                 <button type="button" onclick="stepLevel(-1)"
-                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:#f8fafc;color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
+                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:var(--card2);color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
                                 <select id="newLevel" onchange="buildNewSubs()" style="flex:1;">
                                     <option value="0">+0（0枠）</option>
                                     <option value="5">+5（1枠）</option>
@@ -1907,7 +2121,7 @@
                                     <option value="25">+25（5枠）</option>
                                 </select>
                                 <button type="button" onclick="stepLevel(1)"
-                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:#f8fafc;color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">＋</button>
+                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:var(--card2);color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">＋</button>
                             </div>
                         </div>
                     </div>
@@ -2012,7 +2226,7 @@
                             <div class="sec-title" style="color:var(--p);">2セット効果</div>
                             <div class="cw-grid">
                                 <div class="cw-field"><label>属性ダメバフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2Dmg" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2Dmg" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                             </div>
@@ -2049,43 +2263,43 @@
                             </div>
                             <div class="cw-grid">
                                 <div class="cw-field"><label>攻撃力%</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2Atk" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2Atk" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>HP%</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2HP" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2HP" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>防御力%</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DEF" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DEF" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>クリ率</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2CR" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2CR" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>クリダメ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2CD" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2CD" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>通常攻撃バフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DN" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DN" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>重撃バフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DH" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DH" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>共鳴スキルバフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DS" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DS" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>共鳴解放バフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DL" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DL" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>音骸スキルバフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DE" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DE" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                             </div>
@@ -2094,7 +2308,7 @@
                         <div class="sec-title" id="cSet5Title" style="color:#7c3aed;display:none;">3セット効果</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>属性ダメバフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDmg" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDmg" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                         </div>
@@ -2131,43 +2345,43 @@
                         </div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" id="cAtk" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cAtk" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" id="cHP" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cHP" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>防御力%</label>
-                                <div class="cw-inp-row"><input type="number" id="cDEF" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDEF" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" id="cCR" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cCR" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" id="cCD" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cCD" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>通常攻撃バフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDN" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDN" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>重撃バフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDH" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDH" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴スキルバフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDS" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDS" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴解放バフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDL" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDL" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>音骸スキルバフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDE" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDE" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                         </div>
@@ -2192,88 +2406,88 @@
                                 id="ch_name" placeholder="例：千古の湖水"></div>
                         <div class="sec-title">メインステータス</div>
                         <div class="cw-grid">
-                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk"
+                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" inputmode="decimal" step="any" id="ch_base_atk"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_atk_pct"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_atk_pct"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>攻撃力実数</label><input type="number" step="any" id="ch_flat_atk"
+                            <div class="cw-field"><label>攻撃力実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_atk"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_hp_pct"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_hp_pct"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>HP実数</label><input type="number" step="any" id="ch_flat_hp"
+                            <div class="cw-field"><label>HP実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_hp"
                                     placeholder="0">
                             </div>
                             <div class="cw-field"><label>防御%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_def_pct"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_def_pct"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">クリティカル</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_rate"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_rate"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_dmg"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_dmg"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">属性バフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label style="color:#ef4444">焦熱</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_fire"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#3b82f6">凝縮</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_ice"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#a855f7">電導</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_thunder"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#22c55e">気動</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_wind"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#eab308">回折</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_light"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#ec4899">消滅</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_dark"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">スキル種別ダメバフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_normal"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_normal"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>重撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_heavy"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_heavy"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_skill"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴解放</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_lib"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>音骸スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_echo"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>全属性バフ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_all"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_all"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
@@ -2296,112 +2510,137 @@
                         </details>
                         <div class="cw-field" style="margin-bottom:8px;"><label>名称</label><input type="text"
                                 id="ch_name_c" placeholder="例：今汐"></div>
+                        <div class="sec-title">属性（任意・①タブの使用属性に自動反映）</div>
+                        <input type="hidden" id="ch_attr_c" value="">
+                        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px;" id="chAttrBtns">
+                            <button type="button" class="attr-sel-btn" data-attr="fire" data-color="#ef4444"
+                                style="border-color:#ef4444;color:#ef4444;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('fire',this)">焦熱</button>
+                            <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#3b82f6"
+                                style="border-color:#3b82f6;color:#3b82f6;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('ice',this)">凝縮</button>
+                            <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#a855f7"
+                                style="border-color:#a855f7;color:#a855f7;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('thunder',this)">電導</button>
+                            <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#22c55e"
+                                style="border-color:#22c55e;color:#22c55e;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('wind',this)">気動</button>
+                            <button type="button" class="attr-sel-btn" data-attr="light" data-color="#eab308"
+                                style="border-color:#eab308;color:#eab308;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('light',this)">回折</button>
+                            <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#ec4899"
+                                style="border-color:#ec4899;color:#ec4899;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('dark',this)">消滅</button>
+                            <button type="button" class="attr-sel-btn" data-attr="" data-color="#94a3b8"
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('',this)">未指定</button>
+                        </div>
                         <div class="sec-title">メインステータス</div>
                         <div class="cw-grid">
-                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk_c"
+                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" inputmode="decimal" step="any" id="ch_base_atk_c"
                                     placeholder="0"></div>
-                            <div class="cw-field"><label>基礎HP</label><input type="number" step="any" id="ch_base_hp_c"
+                            <div class="cw-field"><label>基礎HP</label><input type="number" inputmode="decimal" step="any" id="ch_base_hp_c"
                                     placeholder="0"></div>
-                            <div class="cw-field"><label>基礎防御力</label><input type="number" step="any" id="ch_base_def_c"
+                            <div class="cw-field"><label>基礎防御力</label><input type="number" inputmode="decimal" step="any" id="ch_base_def_c"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_atk_pct_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_atk_pct_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>攻撃力実数</label><input type="number" step="any" id="ch_flat_atk_c"
+                            <div class="cw-field"><label>攻撃力実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_atk_c"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_hp_pct_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_hp_pct_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>HP実数</label><input type="number" step="any" id="ch_flat_hp_c"
+                            <div class="cw-field"><label>HP実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_hp_c"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>防御%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_def_pct_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_def_pct_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">クリティカル</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_rate_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_rate_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_dmg_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_dmg_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">属性バフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label style="color:#ef4444">焦熱</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_fire_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#3b82f6">凝縮</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_ice_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#a855f7">電導</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_thunder_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#22c55e">気動</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_wind_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#eab308">回折</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_light_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#ec4899">消滅</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_dark_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">スキル種別ダメバフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_normal_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_normal_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>重撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_heavy_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_heavy_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_skill_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴解放</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_lib_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>音骸スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_echo_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>全属性バフ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_all_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_all_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">ダメージ比率（合計100推奨）</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_normal_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_normal_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>重撃</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_heavy_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_heavy_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>共鳴スキル</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_skill_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_skill_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>共鳴解放</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_lib_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_lib_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>音骸スキル</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_echo_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_echo_c" placeholder="0">
                             </div>
                         </div>
                         <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
@@ -2650,23 +2889,51 @@
         // ================================================================
         // SUB-STATS
         // ================================================================
+        // 出典：鳴潮（めいちょう）wiki 公開のサブステータス抽選確率表
+        //
+        // vals … 実際に出現する値（この配列に無い値はゲーム上存在しない）
+        // w    … 各値の抽選重み。整数で保持し、合計を分母として扱う（丸め誤差ゼロ）
+        //          クリ率・クリダメ            : 合計 300
+        //          その他8段の項目・固定攻撃力・固定防御力 : 合計 103
+        //
+        // サブステの「種類」の抽選は全13種で均等（各 1/13 ≒ 7.6923%）。
+        // 音骸スキルダメージアップはサブステとして存在しないため、ここには含めない
+        // （ステータスとしては別途バフ入力欄で扱う）。
+        const W_CRIT = [70, 70, 70, 24, 24, 24, 9, 9];   // 合計300
+        const W_STD = [7, 8, 21, 25, 18, 15, 6, 3];      // 合計103
         const SUB_STATS = [
-            { key: 'crit_rate', name: 'クリ率', unit: '%', vals: [6.3, 6.9, 7.5, 8.1, 8.7, 9.3, 9.9, 10.5] },
-            { key: 'crit_dmg', name: 'クリダメ', unit: '%', vals: [12.6, 13.8, 15.0, 16.2, 17.4, 18.6, 19.8, 21.0] },
-            { key: 'atk_pct', name: '攻撃力%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'flat_atk', name: '攻撃力実数', unit: '', vals: [30, 35, 40, 45, 50, 55, 60] },
-            { key: 'hp_pct', name: 'HP%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'flat_hp', name: 'HP実数', unit: '', vals: [320, 360, 400, 430, 470, 510, 540, 580], approx: true },
-            { key: 'def_pct', name: '防御%', unit: '%', vals: [8.1, 9.0, 9.9, 10.8, 11.7, 12.6, 13.5, 14.7] },
-            { key: 'flat_def', name: '防御実数', unit: '', vals: [30, 35, 40, 45, 50, 55, 60], approx: true },
-            { key: 'dmg_normal', name: '通常バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_heavy', name: '重撃バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_skill', name: 'スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_lib', name: '解放バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'dmg_echo', name: '音骸スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6] },
-            { key: 'res_eff', name: '共鳴効率', unit: '%', vals: [6.8, 7.6, 8.4, 9.2, 10.0, 10.8, 11.6, 12.4] },
+            { key: 'crit_rate', name: 'クリ率', unit: '%', vals: [6.3, 6.9, 7.5, 8.1, 8.7, 9.3, 9.9, 10.5], w: W_CRIT },
+            { key: 'crit_dmg', name: 'クリダメ', unit: '%', vals: [12.6, 13.8, 15.0, 16.2, 17.4, 18.6, 19.8, 21.0], w: W_CRIT },
+            { key: 'atk_pct', name: '攻撃力%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'flat_atk', name: '攻撃力実数', unit: '', vals: [30, 40, 50, 60], w: [7, 54, 39, 3] },
+            { key: 'hp_pct', name: 'HP%', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'flat_hp', name: 'HP実数', unit: '', vals: [320, 360, 390, 430, 470, 510, 540, 580], w: W_STD },
+            { key: 'def_pct', name: '防御%', unit: '%', vals: [8.1, 9.0, 10.0, 10.9, 11.8, 12.8, 13.8, 14.7], w: W_STD },
+            { key: 'flat_def', name: '防御実数', unit: '', vals: [40, 50, 60, 70], w: [15, 46, 33, 9] },
+            { key: 'dmg_normal', name: '通常バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'dmg_heavy', name: '重撃バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'dmg_skill', name: 'スキルバフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'dmg_lib', name: '解放バフ', unit: '%', vals: [6.4, 7.1, 7.9, 8.6, 9.4, 10.1, 10.9, 11.6], w: W_STD },
+            { key: 'res_eff', name: '共鳴効率', unit: '%', vals: [6.8, 7.6, 8.4, 9.2, 10.0, 10.8, 11.6, 12.4], w: W_STD },
         ];
         const SUB_MAX = Object.fromEntries(SUB_STATS.map(s => [s.key, s.vals[s.vals.length - 1]]));
+
+        // 抽選重みの合計（分母）
+        function wSum(sd) { return sd.w.reduce((a, b) => a + b, 0); }
+        // 重み付き期待値：そのサブステを1枠引いたときの平均値
+        function expectedVal(sd) {
+            if (!sd || !sd.vals.length) return 0;
+            return sd.vals.reduce((a, v, i) => a + v * sd.w[i], 0) / wSum(sd);
+        }
+        // 重みに従って値を1つ抽選する
+        function drawVal(sd) {
+            let r = Math.random() * wSum(sd);
+            for (let i = 0; i < sd.vals.length; i++) {
+                r -= sd.w[i];
+                if (r < 0) return sd.vals[i];
+            }
+            return sd.vals[sd.vals.length - 1];
+        }
 
         // ================================================================
         // STATE
@@ -2961,6 +3228,13 @@
                     if (el) { el.value = S.ratio[k]; autoSize(el); }
                 });
                 updateRatioVis();
+
+                // キャラ登録の属性から①タブの使用属性フィルタを自動反映
+                const inferredAttr = inferCharaAttr(charaEntry);
+                if (inferredAttr) {
+                    const attrBtn = document.querySelector(`#attrSelector .attr-sel-btn[data-attr="${inferredAttr}"]`);
+                    if (attrBtn) setUseAttr(inferredAttr, attrBtn);
+                }
             }
         }
 
@@ -3029,32 +3303,50 @@
             const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
             const dskill_w = dn * rn + dh * rh + ds * rs + dl * rl + de * re;
             const DMG_eff = (da_eff + dskill_w) / 100;
-            const stat_eff = inputMode === 'detail' ? total : (total + base * (
-                (H.atk_pct + CW.atk_pct + EM.atk_pct + ES.atk_pct) // unused in total mode but harmless
-            ) / 100); // 合計値モードでは total がそのまま stat_eff
+            // 項目別モードは内訳から積み上げた total、合計値モードは入力された合計値
+            // （合計値が未入力なら基礎値で代用）
             const stat_eff_final = inputMode === 'detail' ? total : n(S.total_stat) || n(S.base_stat);
 
             const cr_clamped = Math.min(cr_eff, 100); // クリ率は100%上限
-            const crit_factor = 1 + cr_clamped / 100 * (cd_eff / 100 - 1);
+            // クリダメは「クリティカル時の倍率」なので100%未満はあり得ない。
+            // 未入力（0）のまま計算すると crit_factor が1を下回り、
+            // クリ率の限界価値が負になって優先度ランキングが逆転するため下限で止める。
+            const cd_unset = cd_eff < 100;
+            const cd_used = cd_unset ? 100 : cd_eff;
+            const crit_factor = 1 + cr_clamped / 100 * (cd_used / 100 - 1);
             const E = stat_eff_final * (1 + DMG_eff) * crit_factor;
-            // クリ率が100%に達していると追加クリ率の限界効果はゼロ
-            const pCR_marginal = cr_clamped >= 100 ? 0 : stat_eff_final * (1 + DMG_eff) * (cd_eff / 100 - 1) / 100;
+            // クリ率1%あたりの限界価値（100%到達分の頭打ちは mv() 側で処理する）
+            const pCR_unit = stat_eff_final * (1 + DMG_eff) * (cd_used / 100 - 1) / 100;
 
             return {
                 E, stat_eff: stat_eff_final, DMG_eff, crit_factor, base, total: stat_eff_final,
-                cr_eff, cd_eff, da_eff,
+                cr_eff, cd_eff, cd_used, cd_unset, da_eff,
                 pStat_pct: base / 100 * (1 + DMG_eff) * crit_factor,
                 pStat_flat: (1 + DMG_eff) * crit_factor,
                 pDmg: stat_eff_final / 100 * crit_factor,
-                pCR: pCR_marginal,
+                pCR: pCR_unit,
                 pCD: stat_eff_final * (1 + DMG_eff) * (cr_clamped / 100) / 100,
             };
+        }
+
+        // クリ率は100%で頭打ちになるため、実際に効いた分だけを返す。
+        //   included=true  … そのクリ率が既に cr_eff に含まれている（装備中の音骸サブステなど）
+        //                    → 抜いた場合との差分を取る
+        //   included=false … これから追加する（新規音骸の判定・確率計算など）
+        //                    → 上限までの残りしか効かない
+        function effectiveCR(v, cr_eff, included) {
+            const cap = x => Math.min(Math.max(x, 0), 100);
+            return included
+                ? cap(cr_eff) - cap(cr_eff - v)
+                : cap(cr_eff + v) - cap(cr_eff);
         }
 
         const STAT_PCT_KEY = { atk: 'atk_pct', hp: 'hp_pct', def: 'def_pct' };
         const STAT_FLAT_KEY = { atk: 'flat_atk', hp: 'flat_hp', def: 'flat_def' };
 
-        function mv(key, val) {
+        // included: そのサブステが既に現在のステータス合計に含まれているか
+        //           （装備中音骸=true / 新規音骸・確率計算=false）
+        function mv(key, val, included = true) {
             const v = n(val); if (!v) return 0;
             const p = getPartials();
             if (key === STAT_PCT_KEY[statMode]) return p.pStat_pct * v;
@@ -3066,7 +3358,7 @@
             if (key === 'dmg_skill') return p.pDmg * v * (S.ratio.skill / 100);
             if (key === 'dmg_lib') return p.pDmg * v * (S.ratio.lib / 100);
             if (key === 'dmg_echo') return p.pDmg * v * (S.ratio.echo / 100);
-            if (key === 'crit_rate') return p.pCR * v;
+            if (key === 'crit_rate') return p.pCR * effectiveCR(v, p.cr_eff, included);
             if (key === 'crit_dmg') return p.pCD * v;
             return 0;
         }
@@ -3109,7 +3401,7 @@
             useAttr = attr;
             document.querySelectorAll('.attr-sel-btn').forEach(b => {
                 b.classList.remove('active');
-                b.style.background = '#fff';
+                b.style.background = 'transparent';
             });
             if (btn) {
                 btn.classList.add('active');
@@ -3144,6 +3436,13 @@
             const cr = n(S.crit_rate), cd = n(S.crit_dmg);
             setText('note_cr', cr > 0 ? `クリ率: ${cr.toFixed(1)}%` : '');
             setText('note_cd', cd > 0 ? `クリダメ: ${cd.toFixed(1)}%` : '');
+            // クリ率・クリダメ未入力の警告（総合値が入力されている場合のみ）
+            const critMissing = total > 0 && S.crit_rate === '' && S.crit_dmg === '';
+            const critWarn = document.getElementById('crit_warn');
+            if (critWarn) critWarn.style.display = critMissing ? 'block' : 'none';
+            const crInp = document.getElementById('inp_cr'), cdInp = document.getElementById('inp_cd');
+            if (crInp) crInp.style.borderColor = (total > 0 && S.crit_rate === '') ? '#f59e0b' : '';
+            if (cdInp) cdInp.style.borderColor = (total > 0 && S.crit_dmg === '') ? '#f59e0b' : '';
         }
 
         function updateDmgNotes() {
@@ -3168,6 +3467,8 @@
             const total = S.ratio.normal + S.ratio.heavy + S.ratio.skill + S.ratio.lib + S.ratio.echo;
             const tn = document.getElementById('ratio_total_note');
             if (tn) { tn.textContent = ` = ${total}%`; tn.style.color = total === 100 ? 'var(--green)' : 'var(--red)'; }
+            const rw = document.getElementById('ratio_warn');
+            if (rw) rw.style.display = (total !== 100) ? 'block' : 'none';
         }
 
         // ================================================================
@@ -3184,12 +3485,22 @@
     <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#d97706">${p.DMG_eff > 0 ? (p.DMG_eff * 100).toFixed(1) + '%' : ''}</div><div class="ed-label">全体ダメバフ</div></div>
   `;
             const bn = document.getElementById('balanceNote'); if (!bn) return;
+            const box = (col, txt) => `<div style="font-size:10px;color:${col};padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:5px;margin-top:6px;">${txt}</div>`;
             const cr = p.cr_eff, cd = p.cd_eff;
-            if (cr > 0 && cd > 0) {
-                const ratio = cr / cd;
+            if (p.cd_unset && cr > 0) {
+                // クリダメは100%（＝クリティカルしても等倍）を下回れないため、
+                // 未入力のままでは期待ダメージが正しく出せない
+                bn.innerHTML = box('var(--red)', '⚠ クリダメが未入力です。ゲーム内の表示値（基礎150%＋増加分）を入力してください。現在はクリティカル分を計算に含めていません。');
+            } else if (cr > 0 && cd > 0) {
+                // クリダメの「100%」はクリティカルしても等倍という基準点なので、
+                // 実際に増分として効いているのは (cd - 100) の部分。
+                // 1ロールの期待値がクリダメ15.06% : クリ率7.53% ≒ 2:1 なので、
+                // 限界価値が釣り合うのは (cd - 100) = 2 × cr のとき。
+                const cdBonus = cd - 100;
+                const ratio = cdBonus > 0 ? cr / cdBonus : Infinity;
                 const note = ratio > 0.55 ? '⚠ クリ率過多 → クリダメ優先' : ratio < 0.45 ? '⚠ クリダメ過多 → クリ率優先' : '✓ クリ率:クリダメ バランス良好';
                 const col = ratio > 0.55 || ratio < 0.45 ? 'var(--orange)' : 'var(--green)';
-                bn.innerHTML = `<div style="font-size:10px;color:${col};padding:6px 10px;background:#fafbfd;border:1px solid var(--border);border-radius:5px;margin-top:6px;">${note}（CR ${cr.toFixed(1)}% : CD ${cd.toFixed(1)}%）</div>`;
+                bn.innerHTML = box(col, `${note}（CR ${cr.toFixed(1)}% : CD増分 ${cdBonus.toFixed(1)}%　目標比 1:2）`);
             } else bn.innerHTML = '';
         }
 
@@ -3198,40 +3509,38 @@
             const el = document.getElementById('mvRanking'); if (!el) return;
             if (E <= 0) { el.innerHTML = '<div style="color:var(--text3);font-size:11px;">ステータスを入力すると表示されます</div>'; return; }
 
-            // SUB_STATSから中間値を取得するヘルパー
+            // サブステ1枠あたりの期待値（実際の出現確率で重み付け）
             function subMid(key) {
                 const sd = SUB_STATS.find(s => s.key === key);
                 if (!sd) return 5;
-                const v = sd.vals;
-                const mid = v[Math.floor((v.length - 1) / 2)];
-                return mid;
+                return Math.round(expectedVal(sd) * 100) / 100;
             }
 
             const list = [];
 
-            // 攻撃力/HP/防御力%：サブステ中間値
+            // 攻撃力/HP/防御力%：サブステ期待値
             const statPctKey = { atk: 'atk_pct', hp: 'hp_pct', def: 'def_pct' }[statMode];
             const statLabel = { atk: '攻撃力%', hp: 'HP%', def: '防御力%' }[statMode];
             const dStat = subMid(statPctKey);
             const gainStat = p.pStat_pct * dStat / E * 100;
-            list.push({ name: statLabel, gain: gainStat, note: `サブステ中間値 +${dStat}%` });
+            list.push({ name: statLabel, gain: gainStat, note: `サブステ期待値 +${dStat}%` });
 
             // クリ率
             const dCR = subMid('crit_rate');
             const gainCR = p.pCR * dCR / E * 100;
-            list.push({ name: 'クリ率', gain: gainCR, note: `サブステ中間値 +${dCR}% (現在: ${p.cr_eff.toFixed(1)}%)` });
+            list.push({ name: 'クリ率', gain: gainCR, note: `サブステ期待値 +${dCR}% (現在: ${p.cr_eff.toFixed(1)}%)` });
 
             // クリダメ
             const dCD = subMid('crit_dmg');
             const gainCD = p.pCD * dCD / E * 100;
-            list.push({ name: 'クリダメ', gain: gainCD, note: `サブステ中間値 +${dCD}% (現在: ${p.cd_eff.toFixed(1)}%)` });
+            list.push({ name: 'クリダメ', gain: gainCD, note: `サブステ期待値 +${dCD}% (現在: ${p.cd_eff.toFixed(1)}%)` });
 
-            // 属性バフ：サブステに属性バフはないので代表として攻撃力%中間値を流用
+            // 属性バフ：サブステに属性バフはないので代表として攻撃力%の期待値を流用
             const dDA = subMid('atk_pct');
             const gainDA = p.pDmg * dDA / E * 100;
-            list.push({ name: '属性バフ', gain: gainDA, note: `参考値 +${dDA}%`, isAttr: true });
+            list.push({ name: '属性バフ', gain: gainDA, note: `参考値 +${dDA}%（サブステでは出ません）`, isAttr: true });
 
-            // スキル種別ダメバフ：各スキルサブステ中間値
+            // スキル種別ダメバフ：各スキルサブステ期待値
             const rn = S.ratio.normal / 100, rh = S.ratio.heavy / 100, rs = S.ratio.skill / 100;
             const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
             const SKILL_TYPES = [
@@ -3239,14 +3548,17 @@
                 { name: '重撃ダメバフ', r: rh, key: 'dmg_heavy' },
                 { name: '共鳴スキルダメバフ', r: rs, key: 'dmg_skill' },
                 { name: '共鳴解放ダメバフ', r: rl, key: 'dmg_lib' },
-                { name: '音骸スキルダメバフ', r: re, key: 'dmg_echo' },
+                // 音骸スキルダメバフはサブステとして存在しないため、
+                // 属性バフと同様に攻撃力%の期待値を参考値として流用する
+                { name: '音骸スキルダメバフ', r: re, key: 'atk_pct', ref: true },
             ];
             SKILL_TYPES.forEach(sk => {
                 if (sk.r <= 0) return;
                 const dSk = subMid(sk.key);
                 const pSkill = p.stat_eff * sk.r * p.crit_factor / 100;
                 const g = pSkill * dSk / E * 100;
-                list.push({ name: sk.name, gain: g, note: `サブステ中間値 +${dSk}% (比率${(sk.r * 100).toFixed(0)}%)` });
+                const label = sk.ref ? `参考値 +${dSk}%（サブステでは出ません）` : `サブステ期待値 +${dSk}%`;
+                list.push({ name: sk.name, gain: g, note: `${label} (比率${(sk.r * 100).toFixed(0)}%)` });
             });
 
             list.sort((a, b) => b.gain - a.gain);
@@ -3402,7 +3714,7 @@
             const buffGrid = `<div class="h-buff-grid">${BUFF_LABELS.map(([k, lbl]) => `
     <div class="h-buff-row">
       <span class="h-buff-label">${lbl}</span>
-      <input class="h-buff-input" type="number" step="any" value="${n(m[k]) || ''}" placeholder="0"
+      <input class="h-buff-input" type="number" inputmode="decimal" step="any" value="${n(m[k]) || ''}" placeholder="0"
         oninput="S.harmonyManual['${k}']=parseFloat(this.value)||0;recalcAll();autoSize(this)" id="hm_${k}">
       <span class="h-buff-unit">%</span>
     </div>`).join('')}</div>`;
@@ -3569,7 +3881,246 @@
                 if (saved === '1') card.classList.add('collapsed');
                 card.dataset.collapseReady = '1';
             });
-        }// 項目別：属性バフ・スキルバフの内訳行をJS生成
+        }
+
+        // ================================================================
+        // BACKUP (EXPORT / IMPORT)
+        // ================================================================
+        // ================================================================
+        // カスタム確認ダイアログ（サンドボックス環境でconfirm()がブロックされる対策）
+        // ================================================================
+        function confirmDialog(message, onOk) {
+            const modal = document.getElementById('confirmModal');
+            const msgEl = document.getElementById('confirmMsg');
+            const okBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            if (!modal || !msgEl || !okBtn || !cancelBtn) {
+                // フォールバック：万一モーダルが無ければネイティブconfirmを試みる
+                if (window.confirm(message)) onOk();
+                return;
+            }
+            msgEl.textContent = message;
+            modal.classList.add('open');
+            const cleanup = () => {
+                modal.classList.remove('open');
+                okBtn.removeEventListener('click', onOkClick);
+                cancelBtn.removeEventListener('click', onCancelClick);
+            };
+            const onOkClick = () => { cleanup(); onOk(); };
+            const onCancelClick = () => { cleanup(); };
+            okBtn.addEventListener('click', onOkClick);
+            cancelBtn.addEventListener('click', onCancelClick);
+        }
+
+        function openBackupModal() {
+            const modal = document.getElementById('backupModal');
+            if (!modal) return;
+            modal.classList.add('open');
+            setText('backupMsg', '');
+            const msg = document.getElementById('backupMsg'); if (msg) msg.className = 'modal-msg';
+            doExport();
+        }
+
+        function closeBackupModal() {
+            const modal = document.getElementById('backupModal');
+            if (modal) modal.classList.remove('open');
+        }
+
+        function backupMsg(text, isErr) {
+            const el = document.getElementById('backupMsg'); if (!el) return;
+            el.textContent = text;
+            el.className = 'modal-msg ' + (isErr ? 'err' : 'ok');
+        }
+
+        // 登録データ（キャラ / 武器 / ハーモニー / 音骸セット）のバックアップ対象キー
+        const BACKUP_VER = 2;
+        const BACKUP_LS_KEYS = {
+            chara: 'echo_chara_chara',
+            weapon: 'echo_chara_weapon',
+            harmony: 'echo_custom_h',
+            echoPresets: 'ww_echo_presets',
+        };
+
+        function exportState() {
+            const data = {};
+            Object.entries(BACKUP_LS_KEYS).forEach(([label, key]) => {
+                try { data[label] = JSON.parse(localStorage.getItem(key) || 'null'); } catch { data[label] = null; }
+            });
+            return {
+                __app: 'echo-optimizer', __ver: BACKUP_VER, __kind: 'registrations',
+                savedAt: new Date().toISOString(),
+                data,
+            };
+        }
+
+        function doExport() {
+            try {
+                const json = JSON.stringify(exportState(), null, 2);
+                const ta = document.getElementById('backupText');
+                if (ta) ta.value = json;
+                backupMsg('登録データ（キャラ・武器・ハーモニー・音骸セット）を書き出しました。', false);
+            } catch (e) {
+                backupMsg('書き出しに失敗しました: ' + e.message, true);
+            }
+        }
+
+        async function doCopy() {
+            const ta = document.getElementById('backupText'); if (!ta) return;
+            if (!ta.value) doExport();
+            try {
+                await navigator.clipboard.writeText(ta.value);
+                backupMsg('クリップボードにコピーしました。', false);
+            } catch (e) {
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    backupMsg('クリップボードにコピーしました。', false);
+                } catch (e2) {
+                    backupMsg('コピーに失敗しました。テキストを手動で選択してコピーしてください。', true);
+                }
+            }
+        }
+
+        async function doPaste() {
+            try {
+                const text = await navigator.clipboard.readText();
+                const ta = document.getElementById('backupText');
+                if (ta) ta.value = text;
+                backupMsg('クリップボードから貼り付けました。「この内容で復元する」を押すと反映されます。', false);
+            } catch (e) {
+                backupMsg('クリップボードの読み取りに失敗しました。テキストエリアに直接貼り付けてください。', true);
+            }
+        }
+
+        function doImport() {
+            const ta = document.getElementById('backupText'); if (!ta) return;
+            if (!ta.value.trim()) { backupMsg('復元するJSONを入力してください。', true); return; }
+            let obj;
+            try {
+                obj = JSON.parse(ta.value);
+            } catch (e) {
+                backupMsg('JSONの形式が正しくありません。', true);
+                return;
+            }
+            if (!obj || obj.__app !== 'echo-optimizer' || !obj.data) {
+                backupMsg('このツール用のバックアップデータではないようです。', true);
+                return;
+            }
+            // 将来フォーマットを変えたとき、新しいJSONを古いツールで開いても壊れないようにする
+            const ver = Number(obj.__ver) || 1;
+            if (ver > BACKUP_VER) {
+                backupMsg(`より新しいバージョン（v${ver}）のバックアップです。ツールを更新してから復元してください。`, true);
+                return;
+            }
+            confirmDialog('現在登録済みのキャラ・武器・ハーモニー・音骸セットを、貼り付けたデータで上書きします。よろしいですか？', () => {
+                try {
+                    importState(obj);
+                    backupMsg('登録データを復元しました。', false);
+                } catch (e) {
+                    backupMsg('復元中にエラーが発生しました: ' + e.message, true);
+                }
+            });
+        }
+
+        function importState(obj) {
+            const data = obj.data || {};
+            Object.entries(BACKUP_LS_KEYS).forEach(([label, key]) => {
+                const val = data[label];
+                if (val === undefined || val === null) return;
+                // 想定外の型を書き込むと読み出し側のスプレッドで落ちるため配列のみ受け付ける
+                if (!Array.isArray(val)) return;
+                // 古いバックアップには固定プリセットのコピーが含まれている場合があるので取り除く
+                const clean = (label === 'chara' || label === 'weapon')
+                    ? val.filter(e => e && !e._builtin && !String(e.id || '').startsWith('builtin_'))
+                    : val;
+                try { localStorage.setItem(key, JSON.stringify(clean)); } catch { }
+            });
+
+            // 画面表示を再構築
+            if (typeof renderCustomList === 'function') renderCustomList();
+            if (typeof renderCharaList === 'function') renderCharaList();
+            if (typeof rebuildPresetSelect === 'function') rebuildPresetSelect();
+            rebuildCharaWeaponSelects();
+            buildHarmonyPicker();
+            recalcAll();
+        }
+
+        // ================================================================
+        // TAB RESET (セクション別リセット)
+        // ================================================================
+        function resetStatsTab() {
+            confirmDialog('①ステータスタブの入力内容をすべてリセットします。よろしいですか？（登録データ自体は消えません）', () => {
+                const tab = document.getElementById('tab-stats');
+                if (!tab) return;
+
+                // 1. 生の入力欄・セレクトをクリア
+                tab.querySelectorAll('input[type="number" inputmode="decimal"], input[type="text"]').forEach(el => { el.value = ''; });
+                tab.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
+
+                // 2. 状態を初期値に戻す
+                S.base_stat = ''; S.total_stat = '';
+                S.crit_rate = ''; S.crit_dmg = '';
+                ['fire', 'ice', 'thunder', 'wind', 'light', 'dark', 'all',
+                    'normal', 'heavy', 'skill', 'lib', 'echo'].forEach(k => S['dmg_' + k] = '0');
+                S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
+                S.harmony = [
+                    { id: '', setLevel: 5, custom: B() },
+                    { id: '', setLevel: 5, custom: B() },
+                ];
+                S.harmonyManual = B();
+                useAttr = '';
+
+                // 3. 使用属性ボタンの見た目リセット
+                tab.querySelectorAll('.attr-sel-btn').forEach(b => { b.classList.remove('active'); b.style.background = 'transparent'; });
+                const noteAttr = document.getElementById('note_useattr'); if (noteAttr) noteAttr.textContent = '';
+
+                // 4. モード類を初期値（攻撃力基準・合計値入力）へ
+                const atkBtn = document.getElementById('statModeBtn_atk');
+                if (atkBtn) setStatMode('atk', atkBtn);
+                setInputMode('total', null);
+
+                // 5. 再描画
+                buildHarmonyPicker();
+                onCharaWeaponChange();
+                updateRatioVis();
+                recalcAll();
+            });
+        }
+
+        function resetEquipTab() {
+            confirmDialog('②装備音骸タブの入力内容をすべてリセットします。よろしいですか？（保存済みの音骸セットは消えません）', () => {
+                S.echoes = Array.from({ length: 5 }, (_, i) => ({
+                    name: `スロット${i + 1}`,
+                    main: { cost: null, key1: '', val1: 0, key2: '', val2: 0 },
+                    subs: Array.from({ length: 5 }, () => ({ key: '', val: '' }))
+                }));
+                buildEchoGrid();
+                recalcAll();
+            });
+        }
+
+        // ================================================================
+        // キャラ登録：属性選択（①タブの使用属性フィルタへ自動反映するため保存）
+        // ================================================================
+        function setCharaAttr(attr, btn) {
+            const hid = document.getElementById('ch_attr_c'); if (hid) hid.value = attr;
+            document.querySelectorAll('#chAttrBtns .attr-sel-btn').forEach(b => {
+                const active = b === btn;
+                b.classList.toggle('active', active);
+                b.style.background = active ? (b.dataset.color || b.style.borderColor) : 'transparent';
+                b.style.color = active ? '#fff' : (b.dataset.color || b.style.color);
+            });
+        }
+
+        // 属性データを持たない旧登録キャラのフォールバック推定（単一属性ダメバフのみ入っている場合に採用）
+        function inferCharaAttr(entry) {
+            if (!entry) return '';
+            if (entry.attr) return entry.attr;
+            const attrs = ['fire', 'ice', 'thunder', 'wind', 'light', 'dark'];
+            const hit = attrs.filter(a => (entry['dmg_' + a] || 0) > 0);
+            return hit.length === 1 ? hit[0] : '';
+        }
+        // 項目別：属性バフ・スキルバフの内訳行をJS生成
         const ATTR_DETAIL = [
             { key: 'fire', label: '焦熱', color: '#ef4444' },
             { key: 'ice', label: '凝縮', color: '#3b82f6' },
@@ -3594,11 +4145,11 @@
       <div class="detail-attr-section">
         <div class="detail-attr-label" style="color:${a.color}">${a.label}バフ</div>
         <div class="detail-grid">
-          <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_d${a.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_d${a.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_d${a.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>音骸メイン</label><input type="number" step="any" id="di_d${a.key}_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_d${a.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_d${a.key}">合計: 0%</div>
       </div>`).join('');
@@ -3611,11 +4162,11 @@
       <div class="detail-attr-section">
         <div class="detail-attr-label">${s.label}バフ</div>
         <div class="detail-grid">
-          <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_s${s.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_s${s.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_s${s.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>音骸サブ</label><input type="number" step="any" id="di_s${s.key}_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_s${s.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_s${s.key}">合計: 0%</div>
       </div>`).join('');
@@ -3742,7 +4293,14 @@
             try { return JSON.parse(localStorage.getItem(ECHO_PRESET_KEY) || '[]'); } catch (e) { return []; }
         }
         function saveEchoPresets(presets) {
-            localStorage.setItem(ECHO_PRESET_KEY, JSON.stringify(presets));
+            // 他のlocalStorage書き込みと同様、容量超過やプライベートモードでも落ちないようにする
+            try {
+                localStorage.setItem(ECHO_PRESET_KEY, JSON.stringify(presets));
+                return true;
+            } catch (e) {
+                showPresetMsg('保存に失敗しました（ブラウザの保存容量またはプライベートモード）', '#dc2626');
+                return false;
+            }
         }
         function normalizeEcho(echo, idx = 0) {
             const base = S.echoes[idx] || S.echoes[0] || {
@@ -3797,7 +4355,8 @@
             const existing = presets.findIndex(p => p.name === name);
             const data = { name, echoes: JSON.parse(JSON.stringify(S.echoes)) };
             if (existing >= 0) { presets[existing] = data; } else { presets.push(data); }
-            saveEchoPresets(presets);
+            // 保存に失敗した場合は saveEchoPresets 側がメッセージを出すので、成功扱いにしない
+            if (!saveEchoPresets(presets)) return;
             rebuildPresetSelect();
             // 保存したセットを選択状態に
             const newIdx = getEchoPresets().findIndex(p => p.name === name);
@@ -3826,11 +4385,12 @@
             const presets = getEchoPresets();
             if (isNaN(idx) || !presets[idx]) { showPresetMsg('セットを選択してください', '#dc2626'); return; }
             const name = presets[idx].name;
-            if (!confirm(`「${name}」を削除しますか？`)) return;
-            presets.splice(idx, 1);
-            saveEchoPresets(presets);
-            rebuildPresetSelect();
-            showPresetMsg(`「${name}」を削除しました`, '#d97706');
+            confirmDialog(`「${name}」を削除しますか？`, () => {
+                presets.splice(idx, 1);
+                if (!saveEchoPresets(presets)) return;
+                rebuildPresetSelect();
+                showPresetMsg(`「${name}」を削除しました`, '#d97706');
+            });
         }
 
         function showPresetMsg(msg, color = '#15803d') {
@@ -3870,7 +4430,7 @@
     <div class="echo-head">
       <span class="slot-lbl">SLOT ${idx + 1}</span>
       <input type="text" value="${echo.name}" placeholder="音骸名" oninput="S.echoes[${idx}].name=this.value">
-      <span class="echo-score-badge" id="esb_${idx}" style="background:#f1f5f9;color:var(--text3)"></span>
+      <span class="echo-score-badge" id="esb_${idx}" style="background:var(--card2);color:var(--text3)"></span>
     </div>
     <div class="echo-body" id="ebd_${idx}"></div>
   </div>`;
@@ -3989,7 +4549,7 @@
             mrow2.innerHTML = `
     <select style="width:auto;padding:2px 4px;font-size:10px;"
       onchange="onEchoMainCost(${idx},this.value)">${costOpts}</select>
-    <span id="emv_val2_${idx}" style="font-size:10px;color:var(--text2);white-space:nowrap;background:#f1f5f9;padding:2px 6px;border-radius:3px;min-width:60px;display:inline-block;margin-left:16px;">${m2AutoLabel}</span>
+    <span id="emv_val2_${idx}" style="font-size:10px;color:var(--text2);white-space:nowrap;background:var(--card2);padding:2px 6px;border-radius:3px;min-width:60px;display:inline-block;margin-left:16px;">${m2AutoLabel}</span>
   `;
             c.appendChild(mrow2);
 
@@ -4057,13 +4617,6 @@
             if (valEl) valEl.textContent = dispStr;
             recalcAll();
         }
-
-        // onEchoMain2Key: 廃止（コスト選択で自動決定）
-        function onEchoMain2Key(idx, key) { }
-
-        // 後方互換
-        function onEchoMain(idx, field, val) { if (inputMode === 'detail') fillDetailInputs(); recalcAll(); }
-        function onEchoMainKey(idx, key) { recalcAll(); }
 
         function getEchoMainBuff() {
             const t = {
@@ -4221,7 +4774,7 @@
             const val = document.getElementById(`ns_${s}_v`)?.value || '';
             const mvEl = document.getElementById(`ns_${s}_m`); if (!mvEl) return;
             const E = getPartials().E;
-            if (key && val) { const v = mv(key, val); mvEl.textContent = E > 0 ? `+${(v / E * 100).toFixed(2)}%` : ''; mvEl.style.color = v > 0 ? 'var(--p)' : 'var(--text3)'; }
+            if (key && val) { const v = mv(key, val, false); mvEl.textContent = E > 0 ? `+${(v / E * 100).toFixed(2)}%` : ''; mvEl.style.color = v > 0 ? 'var(--p)' : 'var(--text3)'; }
             else { mvEl.textContent = ''; mvEl.style.color = 'var(--text3)'; }
         }
 
@@ -4233,7 +4786,7 @@
                 key: document.getElementById(`ns_${s}_k`)?.value || '',
                 val: document.getElementById(`ns_${s}_v`)?.value || '',
             }));
-            const currentScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val) : 0), 0);
+            const currentScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val, false) : 0), 0);
 
             const cmpIdx = parseInt(document.getElementById('compareSlot')?.value ?? '-1');
             // 比較もサブステのみで統一
@@ -4271,7 +4824,7 @@
             }
             const mainHTML = (m1str || m2str) ? `
     <div style="display:flex;gap:6px;margin-bottom:4px;padding-bottom:5px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-      ${m2str ? `<span style="font-size:10px;color:var(--text2);background:#f1f5f9;padding:2px 6px;border-radius:3px;">${m2str}</span>` : ''}
+      ${m2str ? `<span style="font-size:10px;color:var(--text2);background:var(--card2);padding:2px 6px;border-radius:3px;">${m2str}</span>` : ''}
       ${m1str ? `<span style="font-size:10px;font-weight:700;color:var(--p);">${m1str}</span>` : ''}
     </div>`: '';
             // サブステ行
@@ -4294,7 +4847,7 @@
       <div class="echo-head">
         <span class="slot-lbl">SLOT ${slotNo}</span>
         <span style="font-size:11px;font-weight:500;flex:1;padding:3px 6px;">${targetName || '名前なし'}</span>
-        <span class="echo-score-badge" style="background:#f1f5f9;color:var(--text2);">${fmt(compareScore)}</span>
+        <span class="echo-score-badge" style="background:var(--card2);color:var(--text2);">${fmt(compareScore)}</span>
       </div>
       <div class="echo-body">${mainHTML}${subHTML}</div>
     </div>`;
@@ -4323,7 +4876,7 @@
         🔄 スロット${slotNo}を新規音骸で上書き
       </button>
       <button id="swapCancelBtn" class="btn" onclick="cancelSwap()"
-        style="display:none;font-size:11px;padding:6px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">
+        style="display:none;font-size:11px;padding:6px 10px;background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.4);">
         キャンセル
       </button>
     </div>`;
@@ -4348,8 +4901,24 @@
 
             const E = getPartials().E;
 
-            // サブステ全選択肢をkey別に用意
-            const subPool = SUB_STATS.map(sd => ({ key: sd.key, scores: sd.vals.map(v => mv(sd.key, v)) }));
+            // サブステ全選択肢をkey別に用意（重みも保持し、値の抽選は実際の出現確率に従う）
+            const subPool = SUB_STATS.map(sd => ({
+                key: sd.key,
+                scores: sd.vals.map(v => mv(sd.key, v, false)),
+                w: sd.w,
+                wTotal: wSum(sd),
+                // このサブステを1枠引いたときのスコア期待値（重み付き）
+                mean: sd.vals.reduce((a, v, i) => a + mv(sd.key, v, false) * sd.w[i], 0) / wSum(sd),
+            }));
+            // 重みに従ってスコアを1つ引く
+            function drawScore(s) {
+                let r = Math.random() * s.wTotal;
+                for (let i = 0; i < s.scores.length; i++) {
+                    r -= s.w[i];
+                    if (r < 0) return s.scores[i];
+                }
+                return s.scores[s.scores.length - 1];
+            }
 
             // モンテカルロ：重複なしでn枠引いた合計スコアの分布を推定
             // threshold: この値以上になれば成功とみなす（呼び出し元で用途別に渡す）
@@ -4362,18 +4931,18 @@
                     for (let i = 0; i < slots; i++) {
                         const avail = subPool.filter(s => !used.has(s.key));
                         if (!avail.length) break;
+                        // 種類は全13種から均等抽選、値は実際の出現確率に従って抽選
                         const sd = avail[Math.floor(Math.random() * avail.length)];
                         used.add(sd.key);
-                        total += sd.scores[Math.floor(Math.random() * sd.scores.length)];
+                        total += drawScore(sd);
                     }
                     if (total >= threshold) success++;
                 }
                 return success / TRIALS * 100;
             }
 
-            // 1枠平均（重複なし全組み合わせの平均）
-            const allScores = subPool.flatMap(s => s.scores);
-            const mu = allScores.reduce((a, b) => a + b, 0) / allScores.length;
+            // 1枠平均：種類は均等、値は重み付き期待値
+            const mu = subPool.reduce((a, s) => a + s.mean, 0) / subPool.length;
 
             // 現在の音骸：残りremainSlots枠でneeded（追加スコア）を達成できるか
             const prob = simulate(remainSlots, existingKeys, needed);
@@ -4457,9 +5026,9 @@
                 _swapTargetIdx = targetIdx;
                 const slotName = S.echoes[targetIdx].name || `スロット${targetIdx + 1}`;
                 btn.innerHTML = `⚠️ もう一度押すと「${slotName}」を上書き`;
-                btn.style.background = '#fef3c7';
-                btn.style.color = '#92400e';
-                btn.style.borderColor = '#d97706';
+                btn.style.background = 'rgba(245,158,11,.15)';
+                btn.style.color = '#fbbf24';
+                btn.style.borderColor = 'rgba(245,158,11,.5)';
                 if (cancelBtn) { cancelBtn.style.display = ''; }
                 return;
             }
@@ -4508,9 +5077,9 @@
 
             const slotName = S.echoes[targetIdx].name || `スロット${targetIdx + 1}`;
             btn.innerHTML = '✅ 上書き完了！';
-            btn.style.background = '#dcfce7';
-            btn.style.color = '#15803d';
-            btn.style.borderColor = '#86efac';
+            btn.style.background = 'rgba(34,197,94,.15)';
+            btn.style.color = 'var(--green)';
+            btn.style.borderColor = 'rgba(34,197,94,.5)';
             setTimeout(() => {
                 if (btn) {
                     btn.innerHTML = `🔄 比較先（${slotName}）を新規音骸で上書き`;
@@ -4533,13 +5102,6 @@
                 btn.style.color = 'var(--text2)';
                 btn.style.borderColor = 'var(--border2)';
             }
-        }
-
-        function normalCDF(z) {
-            const t = 1 / (1 + 0.2316419 * Math.abs(z));
-            const p = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
-            const v = 1 - 0.3989422803 * Math.exp(-z * z / 2) * p;
-            return z >= 0 ? v : 1 - v;
         }
 
         // ================================================================
@@ -4569,7 +5131,7 @@
                 grp.querySelectorAll('.attr-sel-btn').forEach(b => {
                     const c = b.dataset.color || '#94a3b8';
                     b.classList.remove('active');
-                    b.style.background = '#fff';
+                    b.style.background = 'transparent';
                     b.style.color = c;
                     b.style.borderColor = c;
                     if (b.dataset.attr === attr) {
@@ -4740,10 +5302,10 @@
             // 合計100を推奨。省略したキーは0扱いになります。
             // 例: ratio: { normal: 0, heavy: 0, skill: 60, lib: 40, echo: 0 }
             //
-            { name: '今汐S0', desc: '全バフ発動時', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 20, dmg_all: 20 ,ratio: {skill: 90, lib: 10}},
-            { name: 'ツバキS0', desc: '全バフ発動時', base_atk: 412, base_hp: 10325, base_def: 1161, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_dark: 15, dmg_normal: 15 ,ratio: {normal: 95,lib: 5}},
-            { name: 'カルテジアS0', desc: '全バフ発動時', base_atk: 312, base_hp: 14800, base_def: 611, crit_rate: 13, crit_dmg: 150, hp_pct: 12, dmg_all: 60, ratio: {normal: 100} },
-            { name: '緋雪S0', desc: '全バフ発動時', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 190, atk_pct: 12, dmg_dark: 15, dmg_normal: 15, ratio: {lib: 100}},
+            { name: '今汐S0', desc: '全バフ発動時', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 20, dmg_all: 20 ,ratio: {skill: 90, lib: 10}},
+            { name: 'ツバキS0', desc: '全バフ発動時', attr: 'dark', base_atk: 412, base_hp: 10325, base_def: 1161, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_dark: 15, dmg_normal: 15 ,ratio: {normal: 95,lib: 5}},
+            { name: 'カルテジアS0', desc: '全バフ発動時', attr: '', base_atk: 312, base_hp: 14800, base_def: 611, crit_rate: 13, crit_dmg: 150, hp_pct: 12, dmg_all: 60, ratio: {normal: 100} },
+            { name: '緋雪S0', desc: '全バフ発動時', attr: 'dark', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 190, atk_pct: 12, dmg_dark: 15, dmg_normal: 15, ratio: {lib: 100}},
             // ▲ここまで▲
         ];
 
@@ -4767,6 +5329,21 @@
             'dmg_wind', 'dmg_light', 'dmg_dark', 'dmg_all', 'dmg_normal', 'dmg_heavy',
             'dmg_skill', 'dmg_lib', 'dmg_echo'];
 
+        // 固定プリセットを除いた「ユーザー登録分のみ」を返す。
+        // 保存時は必ずこちらを使うこと。getCharaEntries() の戻り値をそのまま保存すると
+        // 固定プリセットまでlocalStorageに書き込まれ、登録のたびに増殖する。
+        function getSavedCharaEntries(type) {
+            let saved = [];
+            try { saved = JSON.parse(localStorage.getItem('echo_chara_' + type) || '[]'); } catch { }
+            if (!Array.isArray(saved)) return [];
+            // 過去のバージョンで混入した固定プリセットのコピーを除去（マイグレーション）
+            return saved.filter(e => e && !e._builtin && !String(e.id || '').startsWith('builtin_'));
+        }
+
+        function saveCharaEntries(type, list) {
+            try { localStorage.setItem('echo_chara_' + type, JSON.stringify(list)); } catch { }
+        }
+
         function getCharaEntries(type) {
             // 固定プリセット（コード内のBUILTIN_*配列）をlocalStorage登録分と合算して返す
             const builtin = (type === 'chara' ? BUILTIN_CHARA : BUILTIN_WEAPON).map((e, i) => ({
@@ -4775,9 +5352,18 @@
                 type,
                 _builtin: true,  // 固定プリセットフラグ（削除ボタンを出さないために使用）
             }));
-            let saved = [];
-            try { saved = JSON.parse(localStorage.getItem('echo_chara_' + type) || '[]'); } catch { }
-            return [...builtin, ...saved];
+            return [...builtin, ...getSavedCharaEntries(type)];
+        }
+
+        // 起動時に一度だけ、過去バージョンが書き込んだ固定プリセットのコピーを掃除する
+        function migrateCharaStorage() {
+            ['chara', 'weapon'].forEach(type => {
+                let raw = [];
+                try { raw = JSON.parse(localStorage.getItem('echo_chara_' + type) || '[]'); } catch { return; }
+                if (!Array.isArray(raw)) { saveCharaEntries(type, []); return; }
+                const cleaned = getSavedCharaEntries(type);
+                if (cleaned.length !== raw.length) saveCharaEntries(type, cleaned);
+            });
         }
 
         function addCharaEntry() {
@@ -4788,6 +5374,9 @@
             const name = nameEl ? nameEl.value.trim() : '';
             if (!name) { alert('名称を入力してください'); return; }
             const entry = { id: 'ch_' + Date.now(), name, type: charaType, desc: descEl ? descEl.value || '' : '' };
+            if (charaType === 'chara') {
+                entry.attr = document.getElementById('ch_attr_c')?.value || '';
+            }
             CH_FIELDS.forEach(k => {
                 const el = document.getElementById('ch_' + k + sfx) || document.getElementById('ch_' + k);
                 entry[k] = el ? parseFloat(el.value) || 0 : 0;
@@ -4801,9 +5390,9 @@
                     echo:   parseFloat(document.getElementById('ch_ratio_echo_c')?.value)   || 0,
                 };
             }
-            const list = getCharaEntries(charaType);
+            const list = getSavedCharaEntries(charaType);
             list.push(entry);
-            try { localStorage.setItem('echo_chara_' + charaType, JSON.stringify(list)); } catch { }
+            saveCharaEntries(charaType, list);
             if (nameEl) nameEl.value = '';
             if (descEl) descEl.value = '';
             CH_FIELDS.forEach(k => {
@@ -4814,6 +5403,7 @@
                 const el = document.getElementById('ch_ratio_' + k + '_c');
                 if (el) el.value = '';
             });
+            setCharaAttr('', null);
             renderCharaList();
                         initCollapsibleSections();
                         initCardCollapse();
@@ -4821,8 +5411,8 @@ rebuildCharaWeaponSelects();
         }
 
         function deleteCharaEntry(type, id) {
-            const list = getCharaEntries(type).filter(e => e.id !== id);
-            try { localStorage.setItem('echo_chara_' + type, JSON.stringify(list)); } catch { }
+            const list = getSavedCharaEntries(type).filter(e => e.id !== id);
+            saveCharaEntries(type, list);
             renderCharaList();
                         initCollapsibleSections();
                         initCardCollapse();
@@ -4846,9 +5436,11 @@ rebuildCharaWeaponSelects();
                     ? Object.entries(e.ratio).filter(([, v]) => v > 0).map(([k, v]) => `${ratioLabel[k] || k}:${v}%`)
                     : [];
                 const ratioStr = ratioParts.length ? `［比率 ${ratioParts.join(' ')}］` : '';
+                const attrKey = e.attr || inferCharaAttr(e);
+                const attrStr = attrKey && ATTR[attrKey] ? `<span style="font-size:9px;color:${ATTR[attrKey].color};border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-right:5px;">${ATTR[attrKey].label}</span>` : '';
                 return `<div class="custom-item">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;">${e.name}</div>
+        <div style="font-size:11px;font-weight:500;">${attrStr}${e.name}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　') || 'ステータス未設定'}</div>
         ${ratioStr ? `<div style="font-size:9px;color:var(--p);margin-top:2px;">${ratioStr}</div>` : ''}
         ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${e.desc}</div>` : ''}
@@ -4861,6 +5453,7 @@ rebuildCharaWeaponSelects();
         }
 
         function init() {
+            migrateCharaStorage();
             updateRatioVis();
             buildHarmonyPicker();
             buildEchoGrid();
