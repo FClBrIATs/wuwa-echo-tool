@@ -493,7 +493,7 @@
             border: 1px solid var(--border);
             border-radius: 4px;
             background: var(--card);
-            color: var(--text1);
+            color: var(--text);
             box-sizing: border-box;
         }
 
@@ -1649,8 +1649,11 @@
                 <button class="modal-close" onclick="closeBackupModal()">✕</button>
             </div>
             <div class="modal-body">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">
-                    登録済みの「キャラ」「武器」「ハーモニー」「音骸セット」をJSONとして書き出し、コピーして保存できます。復元する場合はJSONを貼り付けて「復元」を押してください（現在の入力中ステータスは対象外です）。
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">
+                    登録済みの「キャラ」「武器」「ハーモニー」「音骸セット」をJSONとして書き出し、コピーして保存できます。復元する場合はJSONを貼り付けて「復元」を押してください。
+                </div>
+                <div style="font-size:11px;color:var(--orange);margin-bottom:8px;">
+                    ⚠ ①②③タブに入力中のステータス・装備音骸は対象外です（バックアップされません）。
                 </div>
                 <textarea id="backupText" placeholder="ここにJSONが表示されます／貼り付けます"></textarea>
                 <div class="modal-actions">
@@ -1740,7 +1743,7 @@
                         <div id="block_total">
                             <div class="stat-row">
                                 <span class="sname" id="lbl_base">基礎攻撃力</span>
-                                <input type="number" step="any" id="inp_base" placeholder="必須"
+                                <input type="number" inputmode="decimal" step="any" id="inp_base" placeholder="必須"
                                     oninput="S.base_stat=this.value;recalcAll();autoSize(this)"
                                     style="border-color:var(--p)">
                             </div>
@@ -1749,19 +1752,19 @@
                                 基礎攻撃力が未入力です。攻撃力%系のスコアが正しく計算されません。</div>
                             <div class="stat-row">
                                 <span class="sname" id="lbl_total">全体攻撃力</span>
-                                <input type="number" step="any" id="inp_total" placeholder="例：2000"
+                                <input type="number" inputmode="decimal" step="any" id="inp_total" placeholder="例：2000"
                                     oninput="S.total_stat=this.value;recalcAll();autoSize(this)">
                             </div>
                             <div class="divider"></div>
                             <div class="stat-row">
                                 <span class="sname">クリ率</span>
-                                <input type="number" step="any" id="inp_cr" placeholder="例: 60"
+                                <input type="number" inputmode="decimal" step="any" id="inp_cr" placeholder="例: 60"
                                     oninput="S.crit_rate=this.value;recalcAll();autoSize(this)">
                                 <span class="unit">%</span>
                             </div>
                             <div class="stat-row">
                                 <span class="sname">クリダメ</span>
-                                <input type="number" step="any" id="inp_cd" placeholder="例: 150"
+                                <input type="number" inputmode="decimal" step="any" id="inp_cd" placeholder="例: 150"
                                     oninput="S.crit_dmg=this.value;recalcAll();autoSize(this)">
                                 <span class="unit">%</span>
                             </div>
@@ -1796,23 +1799,23 @@
                             ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
                         <div class="inline2">
                             <div class="field"><label>通常攻撃</label>
-                                <input type="number" min="0" max="100" id="r_n" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
                                     oninput="S.ratio.normal=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>重撃</label>
-                                <input type="number" min="0" max="100" id="r_h" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_h" value="0"
                                     oninput="S.ratio.heavy=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>共鳴スキル</label>
-                                <input type="number" min="0" max="100" id="r_s" value="100"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_s" value="100"
                                     oninput="S.ratio.skill=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>共鳴解放</label>
-                                <input type="number" min="0" max="100" id="r_l" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_l" value="0"
                                     oninput="S.ratio.lib=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>音骸スキル</label>
-                                <input type="number" min="0" max="100" id="r_e" value="0"
+                                <input type="number" inputmode="decimal" min="0" max="100" id="r_e" value="0"
                                     oninput="S.ratio.echo=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                         </div>
@@ -1826,11 +1829,11 @@
                             <!-- 基礎攻撃力 内訳 -->
                             <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>武器</label><input type="number" step="any"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_weapon" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_chara" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_base">合計: 0</div>
@@ -1838,26 +1841,26 @@
                             <!-- 全体攻撃力 内訳 -->
                             <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（武器）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（武器）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_pct_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_flat_em" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" step="any"
+                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_flat_es" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_other" placeholder="0" oninput="recalcAll();autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_total">全体: 0</div>
@@ -1865,22 +1868,22 @@
                             <!-- クリ率 内訳 -->
                             <div class="sec-title">クリ率</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" step="any"
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_cr_w"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cr_w"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_cr_c"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cr_c"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -1889,22 +1892,22 @@
                             <!-- クリダメ 内訳 -->
                             <div class="sec-title">クリダメ</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" step="any"
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_cd_w"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cd_w"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_cd_c"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cd_c"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" step="any"
+                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -1924,30 +1927,30 @@
                         <!-- 合計値モード：従来の1行入力 -->
                         <div id="dmgbuf_total">
                             <div class="stat-row"><span class="sname" style="color:#ef4444">焦熱</span><input
-                                    type="number" step="any" id="inp_dfire" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dfire" placeholder="0"
                                     oninput="S.dmg_fire=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#3b82f6">凝縮</span><input
-                                    type="number" step="any" id="inp_dice" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dice" placeholder="0"
                                     oninput="S.dmg_ice=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#a855f7">電導</span><input
-                                    type="number" step="any" id="inp_dthunder" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dthunder" placeholder="0"
                                     oninput="S.dmg_thunder=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#22c55e">気動</span><input
-                                    type="number" step="any" id="inp_dwind" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dwind" placeholder="0"
                                     oninput="S.dmg_wind=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#eab308">回折</span><input
-                                    type="number" step="any" id="inp_dlight" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_dlight" placeholder="0"
                                     oninput="S.dmg_light=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
                             <div class="stat-row"><span class="sname" style="color:#ec4899">消滅</span><input
-                                    type="number" step="any" id="inp_ddark" placeholder="0"
+                                    type="number" inputmode="decimal" step="any" id="inp_ddark" placeholder="0"
                                     oninput="S.dmg_dark=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">全属性</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">全属性</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dall" placeholder="0"
                                     oninput="S.dmg_all=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span>
@@ -1961,16 +1964,16 @@
                             <div id="di_attr_rows"></div>
                             <div class="sec-title" style="margin-top:8px;">全属性バフ</div>
                             <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" step="any"
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_dall_w"
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_dall_w"
                                         placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span>
                                 </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" step="any"
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" step="any"
+                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -1982,23 +1985,23 @@
 
                         <!-- 合計値モード -->
                         <div id="skillbuf_total">
-                            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dnormal" placeholder="0"
                                     oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">重撃</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">重撃</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dheavy" placeholder="0"
                                     oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dskill" placeholder="0"
                                     oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_dlib" placeholder="0"
                                     oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" step="any"
+                            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" inputmode="decimal" step="any"
                                     id="inp_decho" placeholder="0"
                                     oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)"><span
                                     class="unit">%</span></div>
@@ -2029,7 +2032,7 @@
                     </div>
                     <div class="card-body">
                         <div class="info-box">
-                            各ステータスが<strong>音骸のサブステで付与される値の中間値分上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。</div>
+                            各ステータスが<strong>音骸のサブステ1枠分の期待値だけ上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。期待値は実際の抽選確率で重み付けした平均です。</div>
                         <div id="mvRanking"></div>
                     </div>
                 </div>
@@ -2223,7 +2226,7 @@
                             <div class="sec-title" style="color:var(--p);">2セット効果</div>
                             <div class="cw-grid">
                                 <div class="cw-field"><label>属性ダメバフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2Dmg" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2Dmg" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                             </div>
@@ -2260,43 +2263,43 @@
                             </div>
                             <div class="cw-grid">
                                 <div class="cw-field"><label>攻撃力%</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2Atk" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2Atk" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>HP%</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2HP" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2HP" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>防御力%</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DEF" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DEF" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>クリ率</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2CR" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2CR" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>クリダメ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2CD" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2CD" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>通常攻撃バフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DN" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DN" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>重撃バフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DH" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DH" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>共鳴スキルバフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DS" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DS" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>共鳴解放バフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DL" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DL" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                                 <div class="cw-field"><label>音骸スキルバフ</label>
-                                    <div class="cw-inp-row"><input type="number" id="c2DE" step="any"
+                                    <div class="cw-inp-row"><input type="number" inputmode="decimal" id="c2DE" step="any"
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                             </div>
@@ -2305,7 +2308,7 @@
                         <div class="sec-title" id="cSet5Title" style="color:#7c3aed;display:none;">3セット効果</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>属性ダメバフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDmg" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDmg" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                         </div>
@@ -2342,43 +2345,43 @@
                         </div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" id="cAtk" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cAtk" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" id="cHP" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cHP" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>防御力%</label>
-                                <div class="cw-inp-row"><input type="number" id="cDEF" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDEF" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" id="cCR" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cCR" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" id="cCD" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cCD" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>通常攻撃バフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDN" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDN" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>重撃バフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDH" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDH" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴スキルバフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDS" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDS" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴解放バフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDL" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDL" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>音骸スキルバフ</label>
-                                <div class="cw-inp-row"><input type="number" id="cDE" step="any" placeholder="0"><span
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" id="cDE" step="any" placeholder="0"><span
                                         class="unit">%</span></div>
                             </div>
                         </div>
@@ -2403,88 +2406,88 @@
                                 id="ch_name" placeholder="例：千古の湖水"></div>
                         <div class="sec-title">メインステータス</div>
                         <div class="cw-grid">
-                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk"
+                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" inputmode="decimal" step="any" id="ch_base_atk"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_atk_pct"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_atk_pct"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>攻撃力実数</label><input type="number" step="any" id="ch_flat_atk"
+                            <div class="cw-field"><label>攻撃力実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_atk"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_hp_pct"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_hp_pct"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>HP実数</label><input type="number" step="any" id="ch_flat_hp"
+                            <div class="cw-field"><label>HP実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_hp"
                                     placeholder="0">
                             </div>
                             <div class="cw-field"><label>防御%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_def_pct"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_def_pct"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">クリティカル</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_rate"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_rate"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_dmg"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_dmg"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">属性バフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label style="color:#ef4444">焦熱</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_fire"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#3b82f6">凝縮</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_ice"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#a855f7">電導</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_thunder"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#22c55e">気動</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_wind"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#eab308">回折</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_light"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#ec4899">消滅</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_dark"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">スキル種別ダメバフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_normal"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_normal"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>重撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_heavy"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_heavy"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_skill"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴解放</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_lib"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>音骸スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_echo"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>全属性バフ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_all"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_all"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
@@ -2534,110 +2537,110 @@
                         </div>
                         <div class="sec-title">メインステータス</div>
                         <div class="cw-grid">
-                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk_c"
+                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" inputmode="decimal" step="any" id="ch_base_atk_c"
                                     placeholder="0"></div>
-                            <div class="cw-field"><label>基礎HP</label><input type="number" step="any" id="ch_base_hp_c"
+                            <div class="cw-field"><label>基礎HP</label><input type="number" inputmode="decimal" step="any" id="ch_base_hp_c"
                                     placeholder="0"></div>
-                            <div class="cw-field"><label>基礎防御力</label><input type="number" step="any" id="ch_base_def_c"
+                            <div class="cw-field"><label>基礎防御力</label><input type="number" inputmode="decimal" step="any" id="ch_base_def_c"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_atk_pct_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_atk_pct_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>攻撃力実数</label><input type="number" step="any" id="ch_flat_atk_c"
+                            <div class="cw-field"><label>攻撃力実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_atk_c"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_hp_pct_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_hp_pct_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label>HP実数</label><input type="number" step="any" id="ch_flat_hp_c"
+                            <div class="cw-field"><label>HP実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_hp_c"
                                     placeholder="0"></div>
                             <div class="cw-field"><label>防御%</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_def_pct_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_def_pct_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">クリティカル</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_rate_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_rate_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_crit_dmg_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_dmg_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">属性バフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label style="color:#ef4444">焦熱</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_fire_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#3b82f6">凝縮</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_ice_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#a855f7">電導</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_thunder_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#22c55e">気動</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_wind_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#eab308">回折</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_light_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label style="color:#ec4899">消滅</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_dark_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">スキル種別ダメバフ</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_normal_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_normal_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>重撃</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_heavy_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_heavy_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_skill_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_skill_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>共鳴解放</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_lib_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_lib_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>音骸スキル</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_echo_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_echo_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                             <div class="cw-field"><label>全属性バフ</label>
-                                <div class="cw-inp-row"><input type="number" step="any" id="ch_dmg_all_c"
+                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_all_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
                         </div>
                         <div class="sec-title">ダメージ比率（合計100推奨）</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_normal_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_normal_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>重撃</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_heavy_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_heavy_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>共鳴スキル</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_skill_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_skill_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>共鳴解放</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_lib_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_lib_c" placeholder="0">
                             </div>
                             <div class="cw-field"><label>音骸スキル</label>
-                                <input type="number" min="0" max="100" id="ch_ratio_echo_c" placeholder="0">
+                                <input type="number" inputmode="decimal" min="0" max="100" id="ch_ratio_echo_c" placeholder="0">
                             </div>
                         </div>
                         <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
@@ -3300,9 +3303,8 @@
             const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
             const dskill_w = dn * rn + dh * rh + ds * rs + dl * rl + de * re;
             const DMG_eff = (da_eff + dskill_w) / 100;
-            const stat_eff = inputMode === 'detail' ? total : (total + base * (
-                (H.atk_pct + CW.atk_pct + EM.atk_pct + ES.atk_pct) // unused in total mode but harmless
-            ) / 100); // 合計値モードでは total がそのまま stat_eff
+            // 項目別モードは内訳から積み上げた total、合計値モードは入力された合計値
+            // （合計値が未入力なら基礎値で代用）
             const stat_eff_final = inputMode === 'detail' ? total : n(S.total_stat) || n(S.base_stat);
 
             const cr_clamped = Math.min(cr_eff, 100); // クリ率は100%上限
@@ -3712,7 +3714,7 @@
             const buffGrid = `<div class="h-buff-grid">${BUFF_LABELS.map(([k, lbl]) => `
     <div class="h-buff-row">
       <span class="h-buff-label">${lbl}</span>
-      <input class="h-buff-input" type="number" step="any" value="${n(m[k]) || ''}" placeholder="0"
+      <input class="h-buff-input" type="number" inputmode="decimal" step="any" value="${n(m[k]) || ''}" placeholder="0"
         oninput="S.harmonyManual['${k}']=parseFloat(this.value)||0;recalcAll();autoSize(this)" id="hm_${k}">
       <span class="h-buff-unit">%</span>
     </div>`).join('')}</div>`;
@@ -3930,18 +3932,6 @@
             el.className = 'modal-msg ' + (isErr ? 'err' : 'ok');
         }
 
-        function collectRawStatsFields() {
-            const ids = ['inp_base', 'inp_total', 'inp_cr', 'inp_cd', 'r_n', 'r_h', 'r_s', 'r_l', 'r_e',
-                'inp_dfire', 'inp_dice', 'inp_dthunder', 'inp_dwind', 'inp_dlight', 'inp_ddark', 'inp_dall',
-                'inp_dnormal', 'inp_dheavy', 'inp_dskill', 'inp_dlib', 'inp_decho',
-                'sel_chara', 'sel_weapon'];
-            const raw = {};
-            ids.forEach(id => { const el = document.getElementById(id); if (el) raw[id] = el.value; });
-            // 項目別モードの「その他」欄（Sに保存されないDOM専用値）
-            document.querySelectorAll('#tab-stats input[id$="_other"]').forEach(el => { raw[el.id] = el.value; });
-            return raw;
-        }
-
         // 登録データ（キャラ / 武器 / ハーモニー / 音骸セット）のバックアップ対象キー
         const BACKUP_VER = 2;
         const BACKUP_LS_KEYS = {
@@ -4064,7 +4054,7 @@
                 if (!tab) return;
 
                 // 1. 生の入力欄・セレクトをクリア
-                tab.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => { el.value = ''; });
+                tab.querySelectorAll('input[type="number" inputmode="decimal"], input[type="text"]').forEach(el => { el.value = ''; });
                 tab.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
 
                 // 2. 状態を初期値に戻す
@@ -4155,11 +4145,11 @@
       <div class="detail-attr-section">
         <div class="detail-attr-label" style="color:${a.color}">${a.label}バフ</div>
         <div class="detail-grid">
-          <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_d${a.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_d${a.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_d${a.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>音骸メイン</label><input type="number" step="any" id="di_d${a.key}_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_d${a.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_em" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_d${a.key}">合計: 0%</div>
       </div>`).join('');
@@ -4172,11 +4162,11 @@
       <div class="detail-attr-section">
         <div class="detail-attr-label">${s.label}バフ</div>
         <div class="detail-grid">
-          <div class="detail-item"><label>ハーモニー</label><input type="number" step="any" id="di_s${s.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>武器</label><input type="number" step="any" id="di_s${s.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>キャラ</label><input type="number" step="any" id="di_s${s.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>音骸サブ</label><input type="number" step="any" id="di_s${s.key}_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" step="any" id="di_s${s.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_h" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_w" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_c" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_es" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="recalcAll();autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_s${s.key}">合計: 0%</div>
       </div>`).join('');
@@ -4627,13 +4617,6 @@
             if (valEl) valEl.textContent = dispStr;
             recalcAll();
         }
-
-        // onEchoMain2Key: 廃止（コスト選択で自動決定）
-        function onEchoMain2Key(idx, key) { }
-
-        // 後方互換
-        function onEchoMain(idx, field, val) { if (inputMode === 'detail') fillDetailInputs(); recalcAll(); }
-        function onEchoMainKey(idx, key) { recalcAll(); }
 
         function getEchoMainBuff() {
             const t = {
@@ -5119,13 +5102,6 @@
                 btn.style.color = 'var(--text2)';
                 btn.style.borderColor = 'var(--border2)';
             }
-        }
-
-        function normalCDF(z) {
-            const t = 1 / (1 + 0.2316419 * Math.abs(z));
-            const p = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
-            const v = 1 - 0.3989422803 * Math.exp(-z * z / 2) * p;
-            return z >= 0 ? v : 1 - v;
         }
 
         // ================================================================
