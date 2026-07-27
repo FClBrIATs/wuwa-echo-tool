@@ -10,21 +10,23 @@
         rel="stylesheet">
     <style>
         :root {
-            --bg: #f0f4f8;
-            --card: #fff;
-            --border: #dde3ec;
-            --border2: #c4cdd9;
-            --p: #2563eb;
-            --p2: #1d4ed8;
-            --p-light: #eff6ff;
-            --gold: #b45309;
-            --green: #15803d;
-            --red: #dc2626;
-            --orange: #c2410c;
-            --text: #0f172a;
-            --text2: #475569;
-            --text3: #94a3b8;
-            --shadow: 0 1px 3px rgba(15, 23, 42, .07), 0 1px 2px rgba(15, 23, 42, .04);
+            --bg: #0a0b0e;
+            --card: #14161c;
+            --card2: #1b1e26;
+            --border: #2a2e38;
+            --border2: #3a3f4c;
+            --p: #d4af37;
+            --p2: #b8952c;
+            --p-light: rgba(212, 175, 55, .12);
+            --p-rgb: 212, 175, 55;
+            --gold: #d4af37;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --text: #e8e6e1;
+            --text2: #a3a6b0;
+            --text3: #686c78;
+            --shadow: 0 2px 14px rgba(0, 0, 0, .55), 0 0 0 1px rgba(212, 175, 55, .04);
         }
 
         * {
@@ -34,7 +36,11 @@
         }
 
         body {
-            background: var(--bg);
+            background:
+                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(var(--p-rgb), .06), transparent 60%),
+                radial-gradient(ellipse 700px 500px at 100% 10%, rgba(6, 182, 212, .05), transparent 55%),
+                repeating-linear-gradient(0deg, rgba(255, 255, 255, .012) 0px, rgba(255, 255, 255, .012) 1px, transparent 1px, transparent 3px),
+                var(--bg);
             color: var(--text);
             font-family: 'Noto Sans JP', 'IBM Plex Sans', sans-serif;
             font-weight: 300;
@@ -44,7 +50,7 @@
 
         /* NAV */
         .nav {
-            background: #fff;
+            background: var(--card);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
@@ -112,6 +118,7 @@
         .tab-btn.active {
             color: var(--p);
             border-bottom-color: var(--p);
+            text-shadow: 0 0 10px rgba(var(--p-rgb), .5);
         }
 
         /* LAYOUT */
@@ -164,11 +171,23 @@
             }
         }
 
+        /* --- STICKY RESULTS PANEL (PC) --- */
+        @media(min-width:481px) {
+            .results-col {
+                position: sticky;
+                top: 58px;
+                align-self: start;
+                max-height: calc(100vh - 70px);
+                overflow-y: auto;
+            }
+        }
+
         /* CARD */
         .card {
             background: var(--card);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-top: 1px solid rgba(var(--p-rgb), .35);
+            border-radius: 4px;
             box-shadow: var(--shadow);
             margin-bottom: 14px;
         }
@@ -179,8 +198,20 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #fafbfd;
-            border-radius: 10px 10px 0 0;
+            background: var(--card2);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .card-head::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--p);
+            opacity: .7;
         }
 
         .card-head h2 {
@@ -190,6 +221,21 @@
             color: var(--p);
             text-transform: uppercase;
             font-family: 'IBM Plex Sans', sans-serif;
+            text-shadow: 0 0 8px rgba(var(--p-rgb), .35);
+            position: relative;
+            padding-left: 10px;
+        }
+
+        .card-head h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--p);
+            box-shadow: 0 0 6px 1px rgba(var(--p-rgb), .8);
         }
 
         .card-body {
@@ -283,7 +329,7 @@
         select,
         textarea {
             width: 100%;
-            background: #f8fafc;
+            background: var(--card2);
             border: 1px solid var(--border2);
             border-radius: 5px;
             padding: 6px 9px;
@@ -296,7 +342,7 @@
 
         select {
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23686c78'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 7px center;
             padding-right: 22px;
@@ -306,7 +352,12 @@
         input:focus,
         select:focus {
             border-color: var(--p);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+            box-shadow: 0 0 0 3px rgba(var(--p-rgb), .18);
+        }
+
+        select option {
+            background: var(--card2);
+            color: var(--text);
         }
 
         .inline2 {
@@ -397,8 +448,8 @@
             font-size: 11px;
             color: var(--green);
             padding: 5px 8px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
+            background: rgba(34, 197, 94, .1);
+            border: 1px solid rgba(34, 197, 94, .3);
             border-radius: 5px;
             min-width: 48px;
             text-align: right;
@@ -551,7 +602,7 @@
             align-items: center;
             gap: 6px;
             padding: 7px 10px;
-            background: #fafbfd;
+            background: var(--card2);
             border-bottom: 1px solid var(--border);
             border-radius: 8px 8px 0 0;
         }
@@ -634,7 +685,7 @@
             border: 1px solid var(--border2);
             border-radius: 3px;
             cursor: pointer;
-            background: white;
+            background: var(--card);
             color: var(--text2);
             font-family: 'IBM Plex Sans', sans-serif;
             font-weight: 600;
@@ -644,7 +695,8 @@
         .set-btn.active {
             background: var(--p);
             border-color: var(--p);
-            color: #fff;
+            color: #0a0b0e;
+            font-weight: 700;
         }
 
         /* 手動バフ アコーディオン */
@@ -659,7 +711,7 @@
             align-items: center;
             gap: 6px;
             padding: 7px 10px;
-            background: #fafbfd;
+            background: var(--card2);
             border-bottom: 1px solid transparent;
             cursor: pointer;
             font-size: 11px;
@@ -742,7 +794,7 @@
 
         .custom-sel-btn {
             width: 100%;
-            background: #f8fafc;
+            background: var(--card2);
             border: 1px solid var(--border2);
             border-radius: 5px;
             padding: 5px 8px;
@@ -758,7 +810,7 @@
         .custom-sel-btn:focus {
             outline: none;
             border-color: var(--p);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+            box-shadow: 0 0 0 3px rgba(var(--p-rgb), .18);
         }
 
         .custom-sel-btn .caret {
@@ -773,7 +825,7 @@
             top: calc(100% + 2px);
             left: 0;
             right: 0;
-            background: #fff;
+            background: var(--card);
             border: 1px solid var(--border2);
             border-radius: 6px;
             box-shadow: 0 4px 16px rgba(15, 23, 42, .12);
@@ -801,7 +853,7 @@
         }
 
         .custom-sel-option.selected {
-            background: #eff6ff;
+            background: rgba(var(--p-rgb), .18);
             font-weight: 500;
         }
 
@@ -811,7 +863,7 @@
             font-weight: 700;
             color: var(--text3);
             letter-spacing: 1px;
-            background: #f8fafc;
+            background: var(--card2);
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
         }
@@ -825,7 +877,7 @@
         }
 
         .ed-box {
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
             border-radius: 7px;
             padding: 10px;
@@ -849,7 +901,7 @@
         /* MV RANKING */
         .mv-item {
             padding: 9px 11px;
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
             border-radius: 7px;
             margin-bottom: 5px;
@@ -921,7 +973,7 @@
 
         .echo-head {
             padding: 7px 11px;
-            background: #fafbfd;
+            background: var(--card2);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -941,7 +993,7 @@
             flex: 1;
             padding: 3px 6px;
             font-size: 11px;
-            background: #f1f5f9;
+            background: var(--card2);
             border-color: transparent;
         }
 
@@ -1000,7 +1052,7 @@
             padding: 9px 12px;
             border-radius: 7px;
             margin-bottom: 5px;
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
         }
 
@@ -1057,7 +1109,7 @@
             border: 1px solid var(--border2);
             border-radius: 6px;
             cursor: pointer;
-            background: #fff;
+            background: var(--card);
             color: var(--text2);
             transition: all .2s;
             font-family: 'IBM Plex Sans', sans-serif;
@@ -1067,7 +1119,8 @@
         .mode-btn.active {
             background: var(--p);
             border-color: var(--p);
-            color: #fff;
+            color: #0a0b0e;
+            box-shadow: 0 0 12px rgba(var(--p-rgb), .45), inset 0 0 0 1px rgba(255, 255, 255, .15);
         }
 
         /* RATIO VIS */
@@ -1086,23 +1139,23 @@
 
         /* MISC */
         .info-box {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
+            background: rgba(6, 182, 212, .08);
+            border: 1px solid rgba(6, 182, 212, .35);
             border-radius: 6px;
             padding: 9px 11px;
             font-size: 10px;
-            color: #1e40af;
+            color: #67e8f9;
             line-height: 1.6;
             margin-bottom: 10px;
         }
 
         .warn-box {
-            background: #fffbeb;
-            border: 1px solid #fed7aa;
+            background: rgba(245, 158, 11, .1);
+            border: 1px solid rgba(245, 158, 11, .35);
             border-radius: 6px;
             padding: 8px 11px;
             font-size: 10px;
-            color: #92400e;
+            color: #fbbf24;
             line-height: 1.6;
         }
 
@@ -1135,23 +1188,30 @@
 
         .btn-p {
             background: var(--p);
-            color: #fff;
+            color: #0a0b0e;
+            font-weight: 700;
+            box-shadow: 0 0 12px rgba(var(--p-rgb), .4);
         }
 
         .btn-p:hover {
             background: var(--p2);
+            box-shadow: 0 0 18px rgba(var(--p-rgb), .6);
         }
 
         .btn-s {
-            background: #fff;
+            background: var(--card);
             color: var(--text2);
             border: 1px solid var(--border2);
         }
 
         .btn-d {
-            background: #fee2e2;
+            background: rgba(239, 68, 68, .12);
             color: var(--red);
-            border: 1px solid #fca5a5;
+            border: 1px solid rgba(239, 68, 68, .4);
+        }
+
+        .btn-d:hover {
+            background: rgba(239, 68, 68, .22);
         }
 
         .prob-display {
@@ -1170,7 +1230,7 @@
             align-items: center;
             gap: 8px;
             padding: 9px 11px;
-            background: #fafbfd;
+            background: var(--card2);
             border: 1px solid var(--border);
             border-radius: 7px;
             margin-bottom: 5px;
@@ -1183,7 +1243,7 @@
             border: 1px solid;
             border-radius: 4px;
             cursor: pointer;
-            background: #fff;
+            background: transparent;
             transition: all .15s;
             font-family: 'IBM Plex Sans', sans-serif;
         }
@@ -1204,8 +1264,8 @@
 
         /* HOW-TO */
         .how-to {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
+            background: rgba(6, 182, 212, .07);
+            border: 1px solid rgba(6, 182, 212, .3);
             border-radius: 6px;
             margin-bottom: 10px;
             font-size: 10px;
@@ -1218,7 +1278,7 @@
         details.how-to summary {
             padding: 7px 11px;
             cursor: pointer;
-            color: #0369a1;
+            color: #67e8f9;
             font-weight: 600;
             user-select: none;
             list-style: none;
@@ -1254,9 +1314,9 @@
 
         .how-to-body {
             padding: 8px 12px 10px;
-            color: #0c4a6e;
+            color: #a5f3fc;
             line-height: 1.85;
-            border-top: 1px solid #bae6fd;
+            border-top: 1px solid rgba(6, 182, 212, .25);
         }
 
         /* ============================================================
@@ -1461,11 +1521,109 @@
             }
         }
 
-        /* --- inline2: 300px未満は1列 --- */
-        @media(max-width:320px) {
-            .inline2 {
-                grid-template-columns: 1fr;
-            }
+        /* --- BACKUP MODAL --- */
+        .backup-btn {
+            margin: auto 12px auto 0;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--card);
+            color: var(--text2);
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .backup-btn:hover {
+            color: var(--p);
+            border-color: var(--p);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--card);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 86vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-head {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-head h3 {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--text3);
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 14px 16px;
+            overflow-y: auto;
+        }
+
+        .modal-body textarea {
+            width: 100%;
+            height: 160px;
+            font-size: 11px;
+            font-family: monospace;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .modal-msg {
+            font-size: 10px;
+            margin-top: 6px;
+            min-height: 14px;
+        }
+
+        .modal-msg.ok {
+            color: var(--green);
+        }
+
+        .modal-msg.err {
+            color: #dc2626;
         }
     </style>
 </head>
@@ -1480,15 +1638,57 @@
             <button class="tab-btn" onclick="showTab('tab-new',this)">③ 新規判定</button>
             <button class="tab-btn" onclick="showTab('tab-custom',this)">⚙ 登録</button>
         </div>
+        <button class="backup-btn" onclick="openBackupModal()">💾 バックアップ</button>
     </nav>
+
+    <!-- BACKUP MODAL -->
+    <div class="modal-overlay" id="backupModal" onclick="if(event.target===this)closeBackupModal()">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>登録データ バックアップ（JSON）</h3>
+                <button class="modal-close" onclick="closeBackupModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">
+                    登録済みの「キャラ」「武器」「ハーモニー」「音骸セット」をJSONとして書き出し、コピーして保存できます。復元する場合はJSONを貼り付けて「復元」を押してください（現在の入力中ステータスは対象外です）。
+                </div>
+                <textarea id="backupText" placeholder="ここにJSONが表示されます／貼り付けます"></textarea>
+                <div class="modal-actions">
+                    <button class="btn" onclick="doExport()" style="padding:6px 12px;font-size:11px;">現在の状態を書き出す</button>
+                    <button class="btn" onclick="doCopy()" style="padding:6px 12px;font-size:11px;">クリップボードにコピー</button>
+                    <button class="btn" onclick="doPaste()" style="padding:6px 12px;font-size:11px;">クリップボードから貼り付け</button>
+                    <button class="btn" onclick="doImport()"
+                        style="padding:6px 12px;font-size:11px;background:var(--p);color:#0a0b0e;font-weight:700;border-color:var(--p2);">この内容で復元する</button>
+                </div>
+                <div class="modal-msg" id="backupMsg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRM DIALOG (confirm()がブロックされる環境向け) -->
+    <div class="modal-overlay" id="confirmModal" onclick="if(event.target===this)document.getElementById('confirmCancelBtn').click()">
+        <div class="modal-box" style="max-width:360px;">
+            <div class="modal-body" style="padding-top:18px;">
+                <div id="confirmMsg" style="font-size:12px;color:var(--text);line-height:1.7;white-space:pre-wrap;">
+                </div>
+                <div class="modal-actions" style="justify-content:flex-end;margin-top:16px;">
+                    <button class="btn" id="confirmCancelBtn"
+                        style="padding:6px 14px;font-size:11px;">キャンセル</button>
+                    <button class="btn btn-p" id="confirmOkBtn" style="padding:6px 14px;font-size:11px;">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- TAB 1 -->
     <div id="tab-stats" class="page active">
         <div class="grid2">
             <div>
                 <div class="card">
-                    <div class="card-head">
+                    <div class="card-head" style="gap:10px;">
                         <h2>参照ステータス</h2>
+                        <button class="btn" onclick="resetStatsTab()"
+                            style="margin-left:auto;padding:4px 10px;font-size:10px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">↺ このタブをリセット</button>
                     </div>
                     <div class="card-body">
                         <details class="how-to">
@@ -1510,7 +1710,7 @@
                         </div>
 
                         <!-- キャラ/武器 選択（項目別のみ表示） -->
-                        <div id="cw_select_block">
+                        <div id="cw_select_block" style="display:none;">
                             <div class="sec-title">キャラ / 武器 選択</div>
                             <div class="stat-row">
                                 <span class="sname">キャラ</span>
@@ -1531,9 +1731,9 @@
                         </div>
 
                         <div class="mode-sw">
-                            <button class="mode-btn active" onclick="setStatMode('atk',this)">攻撃力基準</button>
-                            <button class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
-                            <button class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
+                            <button id="statModeBtn_atk" class="mode-btn active" onclick="setStatMode('atk',this)">攻撃力基準</button>
+                            <button id="statModeBtn_hp" class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
+                            <button id="statModeBtn_def" class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
                         </div>
 
                         <!-- ===== 合計値モード ===== -->
@@ -1565,6 +1765,9 @@
                                     oninput="S.crit_dmg=this.value;recalcAll();autoSize(this)">
                                 <span class="unit">%</span>
                             </div>
+                            <div id="crit_warn" class="warn-box"
+                                style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                                クリ率・クリダメが未入力です。ダメージ計算にクリティカルが反映されません。</div>
                         </div>
 
                         <div class="divider"></div>
@@ -1588,6 +1791,9 @@
                         <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
                                 100%</span>
                         </div>
+                        <div id="ratio_warn" class="warn-box"
+                            style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                            ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
                         <div class="inline2">
                             <div class="field"><label>通常攻撃</label>
                                 <input type="number" min="0" max="100" id="r_n" value="0"
@@ -1807,7 +2013,7 @@
                 </div>
             </div>
 
-            <div>
+            <div class="results-col">
                 <div class="card">
                     <div class="card-head">
                         <h2>期待ダメージ指数</h2>
@@ -1862,14 +2068,19 @@
                 </select>
                 <button class="btn" onclick="loadEchoPreset()" style="padding:5px 12px;font-size:11px;">呼び出し</button>
                 <button class="btn" onclick="deleteEchoPreset()"
-                    style="padding:5px 12px;font-size:11px;background:#fee2e2;color:#dc2626;border-color:#fca5a5;">削除</button>
+                    style="padding:5px 12px;font-size:11px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">削除</button>
                 <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
                     <input type="text" id="echoPresetName" placeholder="セット名を入力" style="width:140px;">
                     <button class="btn" onclick="saveEchoPreset()"
-                        style="padding:5px 12px;font-size:11px;background:var(--p);color:#fff;border-color:var(--p2);">保存</button>
+                        style="padding:5px 12px;font-size:11px;background:var(--p);color:#0a0b0e;font-weight:700;border-color:var(--p2);">保存</button>
                 </div>
                 <span id="echoPresetMsg" style="font-size:10px;color:var(--green);"></span>
             </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-title" style="margin:0;">装備音骸 5スロット</div>
+            <button class="btn" onclick="resetEquipTab()"
+                style="padding:4px 10px;font-size:10px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">↺ このタブをリセット</button>
         </div>
         <div class="grid5" id="echoGrid"></div>
     </div>
@@ -1897,7 +2108,7 @@
                         <div class="field"><label>現在レベル</label>
                             <div style="display:flex;align-items:center;gap:4px;">
                                 <button type="button" onclick="stepLevel(-1)"
-                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:#f8fafc;color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
+                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:var(--card2);color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
                                 <select id="newLevel" onchange="buildNewSubs()" style="flex:1;">
                                     <option value="0">+0（0枠）</option>
                                     <option value="5">+5（1枠）</option>
@@ -1907,7 +2118,7 @@
                                     <option value="25">+25（5枠）</option>
                                 </select>
                                 <button type="button" onclick="stepLevel(1)"
-                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:#f8fafc;color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">＋</button>
+                                    style="width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:var(--card2);color:var(--text);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;">＋</button>
                             </div>
                         </div>
                     </div>
@@ -2296,6 +2507,31 @@
                         </details>
                         <div class="cw-field" style="margin-bottom:8px;"><label>名称</label><input type="text"
                                 id="ch_name_c" placeholder="例：今汐"></div>
+                        <div class="sec-title">属性（任意・①タブの使用属性に自動反映）</div>
+                        <input type="hidden" id="ch_attr_c" value="">
+                        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px;" id="chAttrBtns">
+                            <button type="button" class="attr-sel-btn" data-attr="fire" data-color="#ef4444"
+                                style="border-color:#ef4444;color:#ef4444;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('fire',this)">焦熱</button>
+                            <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#3b82f6"
+                                style="border-color:#3b82f6;color:#3b82f6;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('ice',this)">凝縮</button>
+                            <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#a855f7"
+                                style="border-color:#a855f7;color:#a855f7;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('thunder',this)">電導</button>
+                            <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#22c55e"
+                                style="border-color:#22c55e;color:#22c55e;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('wind',this)">気動</button>
+                            <button type="button" class="attr-sel-btn" data-attr="light" data-color="#eab308"
+                                style="border-color:#eab308;color:#eab308;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('light',this)">回折</button>
+                            <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#ec4899"
+                                style="border-color:#ec4899;color:#ec4899;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('dark',this)">消滅</button>
+                            <button type="button" class="attr-sel-btn" data-attr="" data-color="#94a3b8"
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setCharaAttr('',this)">未指定</button>
+                        </div>
                         <div class="sec-title">メインステータス</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>基礎攻撃力</label><input type="number" step="any" id="ch_base_atk_c"
@@ -2961,6 +3197,13 @@
                     if (el) { el.value = S.ratio[k]; autoSize(el); }
                 });
                 updateRatioVis();
+
+                // キャラ登録の属性から①タブの使用属性フィルタを自動反映
+                const inferredAttr = inferCharaAttr(charaEntry);
+                if (inferredAttr) {
+                    const attrBtn = document.querySelector(`#attrSelector .attr-sel-btn[data-attr="${inferredAttr}"]`);
+                    if (attrBtn) setUseAttr(inferredAttr, attrBtn);
+                }
             }
         }
 
@@ -3109,7 +3352,7 @@
             useAttr = attr;
             document.querySelectorAll('.attr-sel-btn').forEach(b => {
                 b.classList.remove('active');
-                b.style.background = '#fff';
+                b.style.background = 'transparent';
             });
             if (btn) {
                 btn.classList.add('active');
@@ -3144,6 +3387,13 @@
             const cr = n(S.crit_rate), cd = n(S.crit_dmg);
             setText('note_cr', cr > 0 ? `クリ率: ${cr.toFixed(1)}%` : '');
             setText('note_cd', cd > 0 ? `クリダメ: ${cd.toFixed(1)}%` : '');
+            // クリ率・クリダメ未入力の警告（総合値が入力されている場合のみ）
+            const critMissing = total > 0 && S.crit_rate === '' && S.crit_dmg === '';
+            const critWarn = document.getElementById('crit_warn');
+            if (critWarn) critWarn.style.display = critMissing ? 'block' : 'none';
+            const crInp = document.getElementById('inp_cr'), cdInp = document.getElementById('inp_cd');
+            if (crInp) crInp.style.borderColor = (total > 0 && S.crit_rate === '') ? '#f59e0b' : '';
+            if (cdInp) cdInp.style.borderColor = (total > 0 && S.crit_dmg === '') ? '#f59e0b' : '';
         }
 
         function updateDmgNotes() {
@@ -3168,6 +3418,8 @@
             const total = S.ratio.normal + S.ratio.heavy + S.ratio.skill + S.ratio.lib + S.ratio.echo;
             const tn = document.getElementById('ratio_total_note');
             if (tn) { tn.textContent = ` = ${total}%`; tn.style.color = total === 100 ? 'var(--green)' : 'var(--red)'; }
+            const rw = document.getElementById('ratio_warn');
+            if (rw) rw.style.display = (total !== 100) ? 'block' : 'none';
         }
 
         // ================================================================
@@ -3189,7 +3441,7 @@
                 const ratio = cr / cd;
                 const note = ratio > 0.55 ? '⚠ クリ率過多 → クリダメ優先' : ratio < 0.45 ? '⚠ クリダメ過多 → クリ率優先' : '✓ クリ率:クリダメ バランス良好';
                 const col = ratio > 0.55 || ratio < 0.45 ? 'var(--orange)' : 'var(--green)';
-                bn.innerHTML = `<div style="font-size:10px;color:${col};padding:6px 10px;background:#fafbfd;border:1px solid var(--border);border-radius:5px;margin-top:6px;">${note}（CR ${cr.toFixed(1)}% : CD ${cd.toFixed(1)}%）</div>`;
+                bn.innerHTML = `<div style="font-size:10px;color:${col};padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:5px;margin-top:6px;">${note}（CR ${cr.toFixed(1)}% : CD ${cd.toFixed(1)}%）</div>`;
             } else bn.innerHTML = '';
         }
 
@@ -3569,7 +3821,244 @@
                 if (saved === '1') card.classList.add('collapsed');
                 card.dataset.collapseReady = '1';
             });
-        }// 項目別：属性バフ・スキルバフの内訳行をJS生成
+        }
+
+        // ================================================================
+        // BACKUP (EXPORT / IMPORT)
+        // ================================================================
+        // ================================================================
+        // カスタム確認ダイアログ（サンドボックス環境でconfirm()がブロックされる対策）
+        // ================================================================
+        function confirmDialog(message, onOk) {
+            const modal = document.getElementById('confirmModal');
+            const msgEl = document.getElementById('confirmMsg');
+            const okBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            if (!modal || !msgEl || !okBtn || !cancelBtn) {
+                // フォールバック：万一モーダルが無ければネイティブconfirmを試みる
+                if (window.confirm(message)) onOk();
+                return;
+            }
+            msgEl.textContent = message;
+            modal.classList.add('open');
+            const cleanup = () => {
+                modal.classList.remove('open');
+                okBtn.removeEventListener('click', onOkClick);
+                cancelBtn.removeEventListener('click', onCancelClick);
+            };
+            const onOkClick = () => { cleanup(); onOk(); };
+            const onCancelClick = () => { cleanup(); };
+            okBtn.addEventListener('click', onOkClick);
+            cancelBtn.addEventListener('click', onCancelClick);
+        }
+
+        function openBackupModal() {
+            const modal = document.getElementById('backupModal');
+            if (!modal) return;
+            modal.classList.add('open');
+            setText('backupMsg', '');
+            const msg = document.getElementById('backupMsg'); if (msg) msg.className = 'modal-msg';
+            doExport();
+        }
+
+        function closeBackupModal() {
+            const modal = document.getElementById('backupModal');
+            if (modal) modal.classList.remove('open');
+        }
+
+        function backupMsg(text, isErr) {
+            const el = document.getElementById('backupMsg'); if (!el) return;
+            el.textContent = text;
+            el.className = 'modal-msg ' + (isErr ? 'err' : 'ok');
+        }
+
+        function collectRawStatsFields() {
+            const ids = ['inp_base', 'inp_total', 'inp_cr', 'inp_cd', 'r_n', 'r_h', 'r_s', 'r_l', 'r_e',
+                'inp_dfire', 'inp_dice', 'inp_dthunder', 'inp_dwind', 'inp_dlight', 'inp_ddark', 'inp_dall',
+                'inp_dnormal', 'inp_dheavy', 'inp_dskill', 'inp_dlib', 'inp_decho',
+                'sel_chara', 'sel_weapon'];
+            const raw = {};
+            ids.forEach(id => { const el = document.getElementById(id); if (el) raw[id] = el.value; });
+            // 項目別モードの「その他」欄（Sに保存されないDOM専用値）
+            document.querySelectorAll('#tab-stats input[id$="_other"]').forEach(el => { raw[el.id] = el.value; });
+            return raw;
+        }
+
+        // 登録データ（キャラ / 武器 / ハーモニー / 音骸セット）のバックアップ対象キー
+        const BACKUP_LS_KEYS = {
+            chara: 'echo_chara_chara',
+            weapon: 'echo_chara_weapon',
+            harmony: 'echo_custom_h',
+            echoPresets: 'ww_echo_presets',
+        };
+
+        function exportState() {
+            const data = {};
+            Object.entries(BACKUP_LS_KEYS).forEach(([label, key]) => {
+                try { data[label] = JSON.parse(localStorage.getItem(key) || 'null'); } catch { data[label] = null; }
+            });
+            return {
+                __app: 'echo-optimizer', __ver: 2, __kind: 'registrations',
+                savedAt: new Date().toISOString(),
+                data,
+            };
+        }
+
+        function doExport() {
+            try {
+                const json = JSON.stringify(exportState(), null, 2);
+                const ta = document.getElementById('backupText');
+                if (ta) ta.value = json;
+                backupMsg('登録データ（キャラ・武器・ハーモニー・音骸セット）を書き出しました。', false);
+            } catch (e) {
+                backupMsg('書き出しに失敗しました: ' + e.message, true);
+            }
+        }
+
+        async function doCopy() {
+            const ta = document.getElementById('backupText'); if (!ta) return;
+            if (!ta.value) doExport();
+            try {
+                await navigator.clipboard.writeText(ta.value);
+                backupMsg('クリップボードにコピーしました。', false);
+            } catch (e) {
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    backupMsg('クリップボードにコピーしました。', false);
+                } catch (e2) {
+                    backupMsg('コピーに失敗しました。テキストを手動で選択してコピーしてください。', true);
+                }
+            }
+        }
+
+        async function doPaste() {
+            try {
+                const text = await navigator.clipboard.readText();
+                const ta = document.getElementById('backupText');
+                if (ta) ta.value = text;
+                backupMsg('クリップボードから貼り付けました。「この内容で復元する」を押すと反映されます。', false);
+            } catch (e) {
+                backupMsg('クリップボードの読み取りに失敗しました。テキストエリアに直接貼り付けてください。', true);
+            }
+        }
+
+        function doImport() {
+            const ta = document.getElementById('backupText'); if (!ta) return;
+            if (!ta.value.trim()) { backupMsg('復元するJSONを入力してください。', true); return; }
+            let obj;
+            try {
+                obj = JSON.parse(ta.value);
+            } catch (e) {
+                backupMsg('JSONの形式が正しくありません。', true);
+                return;
+            }
+            if (!obj || obj.__app !== 'echo-optimizer' || !obj.data) {
+                backupMsg('このツール用のバックアップデータではないようです。', true);
+                return;
+            }
+            confirmDialog('現在登録済みのキャラ・武器・ハーモニー・音骸セットを、貼り付けたデータで上書きします。よろしいですか？', () => {
+                try {
+                    importState(obj);
+                    backupMsg('登録データを復元しました。', false);
+                } catch (e) {
+                    backupMsg('復元中にエラーが発生しました: ' + e.message, true);
+                }
+            });
+        }
+
+        function importState(obj) {
+            const data = obj.data || {};
+            Object.entries(BACKUP_LS_KEYS).forEach(([label, key]) => {
+                if (data[label] === undefined || data[label] === null) return;
+                try { localStorage.setItem(key, JSON.stringify(data[label])); } catch { }
+            });
+
+            // 画面表示を再構築
+            if (typeof renderCustomList === 'function') renderCustomList();
+            if (typeof renderCharaList === 'function') renderCharaList();
+            if (typeof rebuildPresetSelect === 'function') rebuildPresetSelect();
+            rebuildCharaWeaponSelects();
+            buildHarmonyPicker();
+            recalcAll();
+        }// 項目別
+
+        // ================================================================
+        // TAB RESET (セクション別リセット)
+        // ================================================================
+        function resetStatsTab() {
+            confirmDialog('①ステータスタブの入力内容をすべてリセットします。よろしいですか？（登録データ自体は消えません）', () => {
+                const tab = document.getElementById('tab-stats');
+                if (!tab) return;
+
+                // 1. 生の入力欄・セレクトをクリア
+                tab.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => { el.value = ''; });
+                tab.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
+
+                // 2. 状態を初期値に戻す
+                S.base_stat = ''; S.total_stat = '';
+                S.crit_rate = ''; S.crit_dmg = '';
+                ['fire', 'ice', 'thunder', 'wind', 'light', 'dark', 'all',
+                    'normal', 'heavy', 'skill', 'lib', 'echo'].forEach(k => S['dmg_' + k] = '0');
+                S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
+                S.harmony = [
+                    { id: '', setLevel: 5, custom: B() },
+                    { id: '', setLevel: 5, custom: B() },
+                ];
+                S.harmonyManual = B();
+                useAttr = '';
+
+                // 3. 使用属性ボタンの見た目リセット
+                tab.querySelectorAll('.attr-sel-btn').forEach(b => { b.classList.remove('active'); b.style.background = 'transparent'; });
+                const noteAttr = document.getElementById('note_useattr'); if (noteAttr) noteAttr.textContent = '';
+
+                // 4. モード類を初期値（攻撃力基準・合計値入力）へ
+                const atkBtn = document.getElementById('statModeBtn_atk');
+                if (atkBtn) setStatMode('atk', atkBtn);
+                setInputMode('total', null);
+
+                // 5. 再描画
+                buildHarmonyPicker();
+                onCharaWeaponChange();
+                updateRatioVis();
+                recalcAll();
+            });
+        }
+
+        function resetEquipTab() {
+            confirmDialog('②装備音骸タブの入力内容をすべてリセットします。よろしいですか？（保存済みの音骸セットは消えません）', () => {
+                S.echoes = Array.from({ length: 5 }, (_, i) => ({
+                    name: `スロット${i + 1}`,
+                    main: { cost: null, key1: '', val1: 0, key2: '', val2: 0 },
+                    subs: Array.from({ length: 5 }, () => ({ key: '', val: '' }))
+                }));
+                buildEchoGrid();
+                recalcAll();
+            });
+        }
+
+        // ================================================================
+        // キャラ登録：属性選択（①タブの使用属性フィルタへ自動反映するため保存）
+        // ================================================================
+        function setCharaAttr(attr, btn) {
+            const hid = document.getElementById('ch_attr_c'); if (hid) hid.value = attr;
+            document.querySelectorAll('#chAttrBtns .attr-sel-btn').forEach(b => {
+                const active = b === btn;
+                b.classList.toggle('active', active);
+                b.style.background = active ? (b.dataset.color || b.style.borderColor) : 'transparent';
+                b.style.color = active ? '#fff' : (b.dataset.color || b.style.color);
+            });
+        }
+
+        // 属性データを持たない旧登録キャラのフォールバック推定（単一属性ダメバフのみ入っている場合に採用）
+        function inferCharaAttr(entry) {
+            if (!entry) return '';
+            if (entry.attr) return entry.attr;
+            const attrs = ['fire', 'ice', 'thunder', 'wind', 'light', 'dark'];
+            const hit = attrs.filter(a => (entry['dmg_' + a] || 0) > 0);
+            return hit.length === 1 ? hit[0] : '';
+        }
+        // 項目別：属性バフ・スキルバフの内訳行をJS生成
         const ATTR_DETAIL = [
             { key: 'fire', label: '焦熱', color: '#ef4444' },
             { key: 'ice', label: '凝縮', color: '#3b82f6' },
@@ -3826,11 +4315,12 @@
             const presets = getEchoPresets();
             if (isNaN(idx) || !presets[idx]) { showPresetMsg('セットを選択してください', '#dc2626'); return; }
             const name = presets[idx].name;
-            if (!confirm(`「${name}」を削除しますか？`)) return;
-            presets.splice(idx, 1);
-            saveEchoPresets(presets);
-            rebuildPresetSelect();
-            showPresetMsg(`「${name}」を削除しました`, '#d97706');
+            confirmDialog(`「${name}」を削除しますか？`, () => {
+                presets.splice(idx, 1);
+                saveEchoPresets(presets);
+                rebuildPresetSelect();
+                showPresetMsg(`「${name}」を削除しました`, '#d97706');
+            });
         }
 
         function showPresetMsg(msg, color = '#15803d') {
@@ -3870,7 +4360,7 @@
     <div class="echo-head">
       <span class="slot-lbl">SLOT ${idx + 1}</span>
       <input type="text" value="${echo.name}" placeholder="音骸名" oninput="S.echoes[${idx}].name=this.value">
-      <span class="echo-score-badge" id="esb_${idx}" style="background:#f1f5f9;color:var(--text3)"></span>
+      <span class="echo-score-badge" id="esb_${idx}" style="background:var(--card2);color:var(--text3)"></span>
     </div>
     <div class="echo-body" id="ebd_${idx}"></div>
   </div>`;
@@ -3989,7 +4479,7 @@
             mrow2.innerHTML = `
     <select style="width:auto;padding:2px 4px;font-size:10px;"
       onchange="onEchoMainCost(${idx},this.value)">${costOpts}</select>
-    <span id="emv_val2_${idx}" style="font-size:10px;color:var(--text2);white-space:nowrap;background:#f1f5f9;padding:2px 6px;border-radius:3px;min-width:60px;display:inline-block;margin-left:16px;">${m2AutoLabel}</span>
+    <span id="emv_val2_${idx}" style="font-size:10px;color:var(--text2);white-space:nowrap;background:var(--card2);padding:2px 6px;border-radius:3px;min-width:60px;display:inline-block;margin-left:16px;">${m2AutoLabel}</span>
   `;
             c.appendChild(mrow2);
 
@@ -4271,7 +4761,7 @@
             }
             const mainHTML = (m1str || m2str) ? `
     <div style="display:flex;gap:6px;margin-bottom:4px;padding-bottom:5px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-      ${m2str ? `<span style="font-size:10px;color:var(--text2);background:#f1f5f9;padding:2px 6px;border-radius:3px;">${m2str}</span>` : ''}
+      ${m2str ? `<span style="font-size:10px;color:var(--text2);background:var(--card2);padding:2px 6px;border-radius:3px;">${m2str}</span>` : ''}
       ${m1str ? `<span style="font-size:10px;font-weight:700;color:var(--p);">${m1str}</span>` : ''}
     </div>`: '';
             // サブステ行
@@ -4294,7 +4784,7 @@
       <div class="echo-head">
         <span class="slot-lbl">SLOT ${slotNo}</span>
         <span style="font-size:11px;font-weight:500;flex:1;padding:3px 6px;">${targetName || '名前なし'}</span>
-        <span class="echo-score-badge" style="background:#f1f5f9;color:var(--text2);">${fmt(compareScore)}</span>
+        <span class="echo-score-badge" style="background:var(--card2);color:var(--text2);">${fmt(compareScore)}</span>
       </div>
       <div class="echo-body">${mainHTML}${subHTML}</div>
     </div>`;
@@ -4323,7 +4813,7 @@
         🔄 スロット${slotNo}を新規音骸で上書き
       </button>
       <button id="swapCancelBtn" class="btn" onclick="cancelSwap()"
-        style="display:none;font-size:11px;padding:6px 10px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">
+        style="display:none;font-size:11px;padding:6px 10px;background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.4);">
         キャンセル
       </button>
     </div>`;
@@ -4457,9 +4947,9 @@
                 _swapTargetIdx = targetIdx;
                 const slotName = S.echoes[targetIdx].name || `スロット${targetIdx + 1}`;
                 btn.innerHTML = `⚠️ もう一度押すと「${slotName}」を上書き`;
-                btn.style.background = '#fef3c7';
-                btn.style.color = '#92400e';
-                btn.style.borderColor = '#d97706';
+                btn.style.background = 'rgba(245,158,11,.15)';
+                btn.style.color = '#fbbf24';
+                btn.style.borderColor = 'rgba(245,158,11,.5)';
                 if (cancelBtn) { cancelBtn.style.display = ''; }
                 return;
             }
@@ -4508,9 +4998,9 @@
 
             const slotName = S.echoes[targetIdx].name || `スロット${targetIdx + 1}`;
             btn.innerHTML = '✅ 上書き完了！';
-            btn.style.background = '#dcfce7';
-            btn.style.color = '#15803d';
-            btn.style.borderColor = '#86efac';
+            btn.style.background = 'rgba(34,197,94,.15)';
+            btn.style.color = 'var(--green)';
+            btn.style.borderColor = 'rgba(34,197,94,.5)';
             setTimeout(() => {
                 if (btn) {
                     btn.innerHTML = `🔄 比較先（${slotName}）を新規音骸で上書き`;
@@ -4569,7 +5059,7 @@
                 grp.querySelectorAll('.attr-sel-btn').forEach(b => {
                     const c = b.dataset.color || '#94a3b8';
                     b.classList.remove('active');
-                    b.style.background = '#fff';
+                    b.style.background = 'transparent';
                     b.style.color = c;
                     b.style.borderColor = c;
                     if (b.dataset.attr === attr) {
@@ -4740,10 +5230,10 @@
             // 合計100を推奨。省略したキーは0扱いになります。
             // 例: ratio: { normal: 0, heavy: 0, skill: 60, lib: 40, echo: 0 }
             //
-            { name: '今汐S0', desc: '全バフ発動時', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 20, dmg_all: 20 ,ratio: {skill: 90, lib: 10}},
-            { name: 'ツバキS0', desc: '全バフ発動時', base_atk: 412, base_hp: 10325, base_def: 1161, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_dark: 15, dmg_normal: 15 ,ratio: {normal: 95,lib: 5}},
-            { name: 'カルテジアS0', desc: '全バフ発動時', base_atk: 312, base_hp: 14800, base_def: 611, crit_rate: 13, crit_dmg: 150, hp_pct: 12, dmg_all: 60, ratio: {normal: 100} },
-            { name: '緋雪S0', desc: '全バフ発動時', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 190, atk_pct: 12, dmg_dark: 15, dmg_normal: 15, ratio: {lib: 100}},
+            { name: '今汐S0', desc: '全バフ発動時', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 20, dmg_all: 20 ,ratio: {skill: 90, lib: 10}},
+            { name: 'ツバキS0', desc: '全バフ発動時', attr: 'dark', base_atk: 412, base_hp: 10325, base_def: 1161, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_dark: 15, dmg_normal: 15 ,ratio: {normal: 95,lib: 5}},
+            { name: 'カルテジアS0', desc: '全バフ発動時', attr: '', base_atk: 312, base_hp: 14800, base_def: 611, crit_rate: 13, crit_dmg: 150, hp_pct: 12, dmg_all: 60, ratio: {normal: 100} },
+            { name: '緋雪S0', desc: '全バフ発動時', attr: 'dark', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 190, atk_pct: 12, dmg_dark: 15, dmg_normal: 15, ratio: {lib: 100}},
             // ▲ここまで▲
         ];
 
@@ -4788,6 +5278,9 @@
             const name = nameEl ? nameEl.value.trim() : '';
             if (!name) { alert('名称を入力してください'); return; }
             const entry = { id: 'ch_' + Date.now(), name, type: charaType, desc: descEl ? descEl.value || '' : '' };
+            if (charaType === 'chara') {
+                entry.attr = document.getElementById('ch_attr_c')?.value || '';
+            }
             CH_FIELDS.forEach(k => {
                 const el = document.getElementById('ch_' + k + sfx) || document.getElementById('ch_' + k);
                 entry[k] = el ? parseFloat(el.value) || 0 : 0;
@@ -4814,6 +5307,7 @@
                 const el = document.getElementById('ch_ratio_' + k + '_c');
                 if (el) el.value = '';
             });
+            setCharaAttr('', null);
             renderCharaList();
                         initCollapsibleSections();
                         initCardCollapse();
@@ -4846,9 +5340,11 @@ rebuildCharaWeaponSelects();
                     ? Object.entries(e.ratio).filter(([, v]) => v > 0).map(([k, v]) => `${ratioLabel[k] || k}:${v}%`)
                     : [];
                 const ratioStr = ratioParts.length ? `［比率 ${ratioParts.join(' ')}］` : '';
+                const attrKey = e.attr || inferCharaAttr(e);
+                const attrStr = attrKey && ATTR[attrKey] ? `<span style="font-size:9px;color:${ATTR[attrKey].color};border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-right:5px;">${ATTR[attrKey].label}</span>` : '';
                 return `<div class="custom-item">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;">${e.name}</div>
+        <div style="font-size:11px;font-weight:500;">${attrStr}${e.name}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　') || 'ステータス未設定'}</div>
         ${ratioStr ? `<div style="font-size:9px;color:var(--p);margin-top:2px;">${ratioStr}</div>` : ''}
         ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${e.desc}</div>` : ''}
