@@ -79,10 +79,14 @@
 
 ```
 echo-optimizer-v5.index.html   # ツール本体（単一ファイル）
+index.html                     # 本体への転送ページ（GitHub Pages のトップ用）
 README.md
 PHASES.md                      # 改修フェーズ計画
 LICENSE
 ```
+
+ダウンロードして使う場合は `echo-optimizer-v5.index.html` だけで動作します。
+`index.html` は GitHub Pages のトップにアクセスした際に本体へ転送するためだけのファイルです。
 
 ---
 
