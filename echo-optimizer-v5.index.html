@@ -2041,7 +2041,7 @@
                     </div>
                     <div class="card-body">
                         <div class="info-box">
-                            各ステータスが<strong>音骸のサブステ1枠分の期待値だけ上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。期待値は実際の抽選確率で重み付けした平均です。</div>
+                            各ステータスが<strong>音骸のサブステ1枠分の期待値だけ上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。期待値は実際の抽選確率で重み付けした平均です。<br>※ 音骸のスコアは<strong>そのスロットを空にしたときに失われる期待ダメージ</strong>で測っています。クリ率とクリダメの相乗効果を含むため、各サブステの値を単純に足した数値より小さくなります。</div>
                         <div id="mvRanking"></div>
                     </div>
                 </div>
@@ -3382,7 +3382,103 @@
             if (key === 'crit_dmg') return p.pCD * v;
             return 0;
         }
+        // ================================================================
+        // 厳密差分によるスコア計算
+        // ================================================================
+        // 各サブステの限界価値を単純に足し上げると、クリ率×クリダメの積の項を
+        // 取りこぼして強い音骸ほど過大評価になる（最大ロールで約+19%）。
+        // ズレが一様でないためスロット間の順位が入れ替わりうるので、
+        // 「そのスロットを空にしたときとの期待ダメージ差」で測る。
+        //
+        // 合計値モードは入力された合計値に音骸分が既に含まれている前提なので、
+        // スロットを空にするには合計から差し引く必要がある。
+        // 項目別モードは音骸サブステが積み上げ計算に入っているため、
+        // スロットの中身を差し替えるだけでよい。
+
+        // サブステ群が合計値モードの各入力に与えている寄与
+        function totalModeContribution(subs) {
+            const d = { total: 0, cr: 0, cd: 0, dmg: {} };
+            const base = n(S.base_stat);
+            subs.forEach(sub => {
+                if (!sub || !sub.key || sub.val === '') return;
+                const v = n(sub.val);
+                if (sub.key === 'crit_rate') d.cr += v;
+                else if (sub.key === 'crit_dmg') d.cd += v;
+                else if (sub.key === STAT_PCT_KEY[statMode]) d.total += base * v / 100;
+                else if (sub.key === STAT_FLAT_KEY[statMode]) d.total += v;
+                else if (sub.key.startsWith('dmg_')) d.dmg[sub.key] = (d.dmg[sub.key] || 0) + v;
+            });
+            return d;
+        }
+
+        // 指定スロットのサブステを差し替えた状態での期待ダメージ指数。
+        // 状態は必ず元に戻す。
+        function eWithSlotSubs(idx, subs) {
+            const echo = S.echoes[idx];
+            if (!echo) return getPartials().E;
+            const bakSubs = echo.subs;
+            const bak = { total: S.total_stat, cr: S.crit_rate, cd: S.crit_dmg, dmg: {} };
+            Object.keys(S).forEach(k => { if (k.startsWith('dmg_')) bak.dmg[k] = S[k]; });
+            try {
+                if (inputMode === 'total') {
+                    // 旧サブステの寄与を引き、新サブステの寄与を足す
+                    const before = totalModeContribution(bakSubs);
+                    const after = totalModeContribution(subs);
+                    S.total_stat = String(n(S.total_stat) - before.total + after.total);
+                    S.crit_rate = String(n(S.crit_rate) - before.cr + after.cr);
+                    S.crit_dmg = String(n(S.crit_dmg) - before.cd + after.cd);
+                    new Set([...Object.keys(before.dmg), ...Object.keys(after.dmg)]).forEach(k => {
+                        S[k] = String(n(S[k]) - (before.dmg[k] || 0) + (after.dmg[k] || 0));
+                    });
+                }
+                echo.subs = subs;
+                return getPartials().E;
+            } finally {
+                echo.subs = bakSubs;
+                S.total_stat = bak.total; S.crit_rate = bak.cr; S.crit_dmg = bak.cd;
+                Object.keys(bak.dmg).forEach(k => { S[k] = bak.dmg[k]; });
+            }
+        }
+
+        const EMPTY_SUBS = () => Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+
+        // スロットのスコア＝そのスロットを空にしたときに失われる期待ダメージ
+        function echoScoreAt(idx) {
+            const cur = getPartials().E;
+            return cur - eWithSlotSubs(idx, EMPTY_SUBS());
+        }
+
+        // サブステ1枠分の寄与＝それだけを抜いたときに失われる期待ダメージ
+        function subScoreAt(idx, si) {
+            const echo = S.echoes[idx];
+            if (!echo || !echo.subs[si] || !echo.subs[si].key || echo.subs[si].val === '') return 0;
+            const without = echo.subs.map((s, i) => i === si ? { key: '', val: '' } : s);
+            return getPartials().E - eWithSlotSubs(idx, without);
+        }
+
+        // スロット内の各サブステの寄与を、合計がスロットのスコアに一致するよう按分して返す。
+        // 個別の差分をそのまま足してもスロット全体の差分にはならない（相乗効果のぶん過大になる）。
+        // 画面では個別値とバッジの数字が突き合わされるので、比率を保ったまま合計を揃える。
+        function subScoresAt(idx) {
+            const echo = S.echoes[idx];
+            if (!echo) return [0, 0, 0, 0, 0];
+            const raw = echo.subs.map((_, si) => subScoreAt(idx, si));
+            const rawSum = raw.reduce((a, b) => a + b, 0);
+            if (!rawSum) return raw;
+            const k = echoScoreAt(idx) / rawSum;
+            return raw.map(v => v * k);
+        }
+
+        // 任意のサブステ群を「比較先スロットに載せたとき」のスコア。
+        // ②タブの装備音骸と③タブの新規音骸を同じ土俵で比較するために使う。
+        function scoreSubsOnSlot(idx, subs) {
+            return eWithSlotSubs(idx, subs) - eWithSlotSubs(idx, EMPTY_SUBS());
+        }
+
         function echoScore(echo) {
+            const idx = S.echoes.indexOf(echo);
+            if (idx >= 0) return echoScoreAt(idx);
+            // 状態に載っていない音骸は厳密差分が定義できないため従来どおり合算する
             return echo.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0);
         }
         function mvColor(v, mx) { const r = v / (mx || 1); return r > .7 ? '#15803d' : r > .4 ? '#2563eb' : r > .2 ? '#d97706' : '#dc2626'; }
@@ -4695,7 +4791,7 @@
 
             // Sub MV labels
             for (let i = 0; i < 5; i++) {
-                const subMVs = S.echoes[i].subs.map(s => s.key && s.val !== '' ? mv(s.key, s.val) : 0);
+                const subMVs = subScoresAt(i);
                 const mx = Math.max(...subMVs, .0001);
                 for (let s = 0; s < 5; s++) {
                     const el = document.getElementById(`emv_${i}_${s}`); if (!el) continue;
@@ -4816,17 +4912,16 @@
                 key: document.getElementById(`ns_${s}_k`)?.value || '',
                 val: document.getElementById(`ns_${s}_v`)?.value || '',
             }));
-            const currentScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val, false) : 0), 0);
-
             const cmpIdx = parseInt(document.getElementById('compareSlot')?.value ?? '-1');
-            // 比較もサブステのみで統一
-            const scores = S.echoes.map((e, i) => ({
-                idx: i,
-                score: e.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0)
-            }));
+            const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScoreAt(i) }));
             const sorted = [...scores].sort((a, b) => a.score - b.score);
             const targetIdx = cmpIdx >= 0 ? cmpIdx : sorted[0].idx;
+            // 新規音骸と比較先スロットを同じ土俵に載せる。
+            // どちらも「比較先スロットを空にした状態」からの増分として測るので、
+            // 片方だけ別の測り方になって比較が成立しない、という事態を避けられる。
             const compareScore = scores[targetIdx].score;
+            const padded = Array.from({ length: 5 }, (_, i) => subs[i] || { key: '', val: '' });
+            const currentScore = scoreSubsOnSlot(targetIdx, padded);
             const targetName = S.echoes[targetIdx].name;
             const slotNo = targetIdx + 1;
 
@@ -4858,13 +4953,13 @@
       ${m1str ? `<span style="font-size:10px;font-weight:700;color:var(--p);">${m1str}</span>` : ''}
     </div>`: '';
             // サブステ行
+            const targetSubScores = subScoresAt(targetIdx);
             const subHTML = te.subs.map(s => {
                 if (!s.key || s.val === '') return `<div class="sub-row"><span style="color:var(--text3);font-size:10px;">　</span></div>`;
                 const sd = SUB_STATS.find(x => x.key === s.key);
                 const label = sd ? sd.name : s.key;
-                const score = mv(s.key, s.val);
-                const P = getPartials();
-                const mvPct = P.E > 0 ? (score / P.E * 100).toFixed(2) + '%' : (score * 10000).toFixed(0);
+                const score = targetSubScores[te.subs.indexOf(s)] || 0;
+                const mvPct = E > 0 ? (score / E * 100).toFixed(2) + '%' : (score * 10000).toFixed(0);
                 return `<div class="sub-row">
       <span class="sname" style="width:auto;min-width:5em;">${label}</span>
       <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;flex:1;">${s.val}${sd?.unit || ''}</span>
@@ -4911,12 +5006,12 @@
       </button>
     </div>`;
 
-            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), compareScore);
+            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), compareScore, targetIdx, padded);
         }
 
         // fullNeeded: 未強化音骸（全5枠）が目標に届くために必要な合計スコア = compareScore
         // needed:     現在の音骸が残りremainSlots枠で必要な追加スコア = compareScore - currentScore
-        function updateProbability(remainSlots, needed, existingKeys = [], fullNeeded = null) {
+        function updateProbability(remainSlots, needed, existingKeys = [], fullNeeded = null, slotIdx = 0, existingSubs = null) {
             const d = document.getElementById('probResult'); if (!d) return;
             if (remainSlots <= 0) {
                 d.innerHTML = needed <= 0 ?
@@ -4931,15 +5026,25 @@
 
             const E = getPartials().E;
 
-            // サブステ全選択肢をkey別に用意（重みも保持し、値の抽選は実際の出現確率に従う）
-            const subPool = SUB_STATS.map(sd => ({
-                key: sd.key,
-                scores: sd.vals.map(v => mv(sd.key, v, false)),
-                w: sd.w,
-                wTotal: wSum(sd),
-                // このサブステを1枠引いたときのスコア期待値（重み付き）
-                mean: sd.vals.reduce((a, v, i) => a + mv(sd.key, v, false) * sd.w[i], 0) / wSum(sd),
-            }));
+            // サブステ全選択肢をkey別に用意。
+            // 合格ライン（needed）が「比較先スロットに載せたときの増分」で測られているので、
+            // 抽選候補のスコアも同じ土俵で測る。そうしないと閾値と単位が噛み合わない。
+            const baseSubs = existingSubs || EMPTY_SUBS();
+            const poolBase = eWithSlotSubs(slotIdx, baseSubs);
+            const freeSlot = baseSubs.findIndex(x => !x.key);
+            const scoreOne = (key, val) => {
+                if (freeSlot < 0) return 0;
+                const trial = baseSubs.map((x, i) => i === freeSlot ? { key, val: String(val) } : x);
+                return eWithSlotSubs(slotIdx, trial) - poolBase;
+            };
+            const subPool = SUB_STATS.map(sd => {
+                const scores = sd.vals.map(v => scoreOne(sd.key, v));
+                return {
+                    key: sd.key, scores, w: sd.w, wTotal: wSum(sd),
+                    // このサブステを1枠引いたときのスコア期待値（重み付き）
+                    mean: scores.reduce((a, sc, i) => a + sc * sd.w[i], 0) / wSum(sd),
+                };
+            });
             // 重みに従ってスコアを1つ引く
             function drawScore(s) {
                 let r = Math.random() * s.wTotal;

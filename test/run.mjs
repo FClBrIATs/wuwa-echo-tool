@@ -354,4 +354,64 @@ await withPage(async page => {
     checkTrue('入力後に保存が走る', saved && saved.S && saved.S.total_stat === '3000');
 });
 
+// ── 厳密差分によるスコア ──────────────────────────────
+suite('スコアが厳密差分で計算される');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        const strong = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '11.6' }, { key: 'flat_atk', val: '60' }];
+        S.echoes[0].subs = JSON.parse(JSON.stringify(strong));
+        S.echoes[1].subs = [{ key: 'crit_rate', val: '6.9' }, { key: 'flat_hp', val: '360' },
+        { key: 'def_pct', val: '9.0' }, { key: 'atk_pct', val: '7.1' }, { key: 'res_eff', val: '7.6' }];
+        buildEchoGrid(); recalcAll();
+        const linear = e => e.subs.reduce((a, x) => a + (x.key && x.val !== '' ? mv(x.key, x.val) : 0), 0);
+        const empty = Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+        return {
+            厳密が線形より小さい: echoScoreAt(0) < linear(S.echoes[0]),
+            過大評価の割合: +((linear(S.echoes[0]) - echoScoreAt(0)) / echoScoreAt(0) * 100).toFixed(1),
+            // スロットを空にすればスコアは0
+            空スロットは0: echoScoreAt(4),
+            // 個別の按分値の合計がスロットのスコアに一致する
+            個別合計: +subScoresAt(0).reduce((a, x) => a + x, 0).toFixed(6),
+            スロット合計: +echoScoreAt(0).toFixed(6),
+            // ②と③が同じ土俵に載っている
+            同一サブステなら同スコア: Math.abs(scoreSubsOnSlot(0, JSON.parse(JSON.stringify(strong))) - echoScoreAt(0)) < 1e-9,
+            // 状態は計算後に元へ戻っている
+            状態が復元される: JSON.stringify(S.echoes[0].subs) === JSON.stringify(strong)
+                && S.total_stat === '2600' && S.crit_rate === '68' && S.crit_dmg === '245',
+            比較用に空にしても壊れない: eWithSlotSubs(0, empty) > 0,
+        };
+    }, BUILD);
+    checkTrue('線形近似より小さい値になる', r.厳密が線形より小さい);
+    checkTrue('最大ロールでの過大評価が10%以上あった', r.過大評価の割合 > 10);
+    check('空スロットのスコアは0', r.空スロットは0, 0);
+    check('サブステ個別の合計がスロットのスコアに一致', r.個別合計, r.スロット合計);
+    checkTrue('同じサブステなら②と③で同じスコアになる', r.同一サブステなら同スコア);
+    checkTrue('スコア計算のあと状態が元に戻っている', r.状態が復元される);
+    checkTrue('スロットを空にした計算が成立する', r.比較用に空にしても壊れない);
+});
+
+suite('項目別モードでも厳密差分が成立する');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        setInputMode('detail', null);
+        S.other = { base: '500', cr: '40', cd: '190' };
+        S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        recalcAll();
+        const empty = Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+        const exact = getPartials().E - eWithSlotSubs(0, empty);
+        return {
+            一致: Math.abs(echoScoreAt(0) - exact) < 1e-9,
+            正の値: echoScoreAt(0) > 0,
+            その他が保たれる: S.other.cr === '40',
+        };
+    });
+    checkTrue('スロットのスコアが期待ダメージ差と一致', r.一致);
+    checkTrue('スコアが正の値になる', r.正の値);
+    checkTrue('計算後に「その他」入力が保たれる', r.その他が保たれる);
+});
+
 await finish();
