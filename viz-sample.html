@@ -1,0 +1,202 @@
+<title>音骸厳選 可視化サンプル</title>
+<style>
+:root{
+  --bg:#0a0b0e; --card:#14161c; --card2:#1b1e26; --border:#2a2e38; --border2:#3a3f4c;
+  --text:#e8e6e1; --text2:#a3a6b0; --text3:#686c78;
+  --g1:#7a6226; --g2:#9c7d2c; --g3:#bd9a35; --g4:#d9b944; --g5:#f0d670;
+  --accent:#d4af37; --mark:#5eead4; --dim:#3a3f4c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  font-size:14px;line-height:1.7;padding:28px 20px 60px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:19px;letter-spacing:.06em;color:var(--accent);margin:0 0 4px}
+.sub{font-size:12px;color:var(--text3);margin:0 0 26px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:18px}
+h2{font-size:14px;margin:0 0 3px;color:var(--text)}
+h2 .num{color:var(--accent);font-weight:400;margin-right:7px}
+.lede{font-size:12px;color:var(--text2);margin:0 0 18px}
+.scroll{overflow-x:auto}
+figure{margin:0}
+figcaption{font-size:11px;color:var(--text3);margin-top:10px}
+table{border-collapse:collapse;font-size:12px;width:100%;min-width:520px}
+th,td{padding:6px 9px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+th{color:var(--text3);font-weight:500;font-size:11px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+tbody tr:last-child td{border-bottom:none}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.hero{font-size:46px;font-weight:600;line-height:1.05;color:var(--accent);font-variant-numeric:tabular-nums}
+.herolabel{font-size:11px;color:var(--text3);margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:13px 15px}
+.kpi .v{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:10.5px;color:var(--text3);margin-top:1px}
+.note{font-size:11.5px;color:var(--text3);background:var(--card2);border-left:2px solid var(--border2);
+  padding:9px 13px;border-radius:0 5px 5px 0;margin-top:14px}
+.tip{position:fixed;pointer-events:none;background:#000;border:1px solid var(--border2);border-radius:6px;
+  padding:7px 10px;font-size:11.5px;opacity:0;transition:opacity .12s;z-index:99;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.6)}
+.tip.on{opacity:1}
+.tip b{color:var(--accent)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text2);margin-bottom:12px;align-items:center}
+.sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.ramp{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text3)}
+.ramp i{display:block;width:20px;height:10px;border-radius:2px}
+rect,circle,path{shape-rendering:auto}
+.gridline{stroke:var(--border);stroke-width:1}
+.axis{fill:var(--text3);font-size:10px}
+.axname{fill:var(--text3);font-size:10.5px}
+@media (max-width:620px){ body{padding:18px 12px 50px} .card{padding:16px 14px} .hero{font-size:38px} }
+</style>
+<div class="wrap">
+<h1>音骸厳選 可視化サンプル</h1>
+<p class="sub">攻撃力2600 / クリ率68% / クリダメ245% / 共鳴スキル100% のビルドで、実際の抽選確率から40,000件を生成した結果です。数値はすべてツール本体の計算式で算出しています。</p>
+<div class="card">
+<h2><span class="num">1</span>厳選難易度 — 目標スコアは何個に1個か</h2>
+<p class="lede">音骸を1個拾って5枠すべて開放したとき、目標スコアに届く確率です。この表が「どこで満足すべきか」の目安になります。</p>
+<div class="kpis">
+  <div class="kpi"><div class="v mono" style="color:var(--g5)">8.42%</div><div class="l">中央値（半分はこれ以下）</div></div>
+  <div class="kpi"><div class="v mono" style="color:var(--g4)">16.53%</div><div class="l">上位10%のライン</div></div>
+  <div class="kpi"><div class="v mono" style="color:var(--g3)">23.22%</div><div class="l">上位1%のライン</div></div>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>目標スコア</th><th>到達確率</th><th>期待個数</th><th></th></tr></thead>
+<tbody><tr><td class="mono">5% 以上</td>
+      <td class="mono">76.83%</td>
+      <td class="mono" style="color:var(--accent)">1 / 1</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:100.0%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+<tr><td class="mono">10% 以上</td>
+      <td class="mono">40.32%</td>
+      <td class="mono" style="color:var(--accent)">1 / 2</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:84.9%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+<tr><td class="mono">15% 以上</td>
+      <td class="mono">16.25%</td>
+      <td class="mono" style="color:var(--accent)">1 / 6</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:63.4%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+<tr><td class="mono">20% 以上</td>
+      <td class="mono">3.12%</td>
+      <td class="mono" style="color:var(--accent)">1 / 32</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:37.4%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+<tr><td class="mono">25% 以上</td>
+      <td class="mono">0.33%</td>
+      <td class="mono" style="color:var(--accent)">1 / 301</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:18.3%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+<tr><td class="mono">30% 以上</td>
+      <td class="mono">0.01%</td>
+      <td class="mono" style="color:var(--accent)">1 / 10,000</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:6.0%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+<tr><td class="mono">35% 以上</td>
+      <td class="mono">0.00%</td>
+      <td class="mono" style="color:var(--accent)">1 / 10,000 未満</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:0.0%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+<tr><td class="mono">40% 以上</td>
+      <td class="mono">0.00%</td>
+      <td class="mono" style="color:var(--accent)">1 / 10,000 未満</td>
+      <td style="width:46%;min-width:150px"><div style="background:var(--dim);height:7px;border-radius:4px;overflow:hidden">
+      <div style="width:0.0%;height:100%;background:var(--g4);border-radius:4px"></div></div></td></tr>
+</tbody></table></div>
+<div class="note">20%を超えたあたりから急激に難しくなります。<b style="color:var(--text2)">25%は301個に1個</b>、30%は10,000個引いても出るか分からない水準です。バーは対数目盛です。</div>
+</div>
+<div class="card">
+<h2><span class="num">2</span>スコア分布と手持ちの位置</h2>
+<p class="lede">ランダムな音骸1個のスコア分布です。点線が現在の装備で、山のどこに立っているかが分かります。</p>
+<div class="legend">
+  <span class="ramp">低 <i style="background:var(--g1)"></i><i style="background:var(--g2)"></i><i style="background:var(--g3)"></i><i style="background:var(--g4)"></i><i style="background:var(--g5)"></i> 高</span>
+  <span><span class="sw" style="background:var(--mark)"></span>現在の装備スロット</span>
+</div>
+<div class="scroll"><figure><svg viewBox="0 0 980 300" width="100%" style="min-width:640px;display:block" role="img" aria-label="音骸スコアの分布">
+<line class="gridline" x1="44" y1="256.0" x2="964" y2="256.0"/><text class="axis" x="37" y="259.0" text-anchor="end">0.0%</text><line class="gridline" x1="44" y1="197.0" x2="964" y2="197.0"/><text class="axis" x="37" y="200.0" text-anchor="end">2.1%</text><line class="gridline" x1="44" y1="138.0" x2="964" y2="138.0"/><text class="axis" x="37" y="141.0" text-anchor="end">4.2%</text><line class="gridline" x1="44" y1="79.0" x2="964" y2="79.0"/><text class="axis" x="37" y="82.0" text-anchor="end">6.4%</text><line class="gridline" x1="44" y1="20.0" x2="964" y2="20.0"/><text class="axis" x="37" y="23.0" text-anchor="end">8.5%</text><rect class="bar" x="44.8" y="139.6" width="18.1" height="116.4" rx="2" fill="var(--g1)" data-x="0" data-p="4.183"/><rect class="bar" x="64.5" y="116.5" width="18.1" height="139.5" rx="2" fill="var(--g1)" data-x="0.8" data-p="5.01"/><rect class="bar" x="84.2" y="93.4" width="18.1" height="162.6" rx="2" fill="var(--g1)" data-x="1.6" data-p="5.84"/><rect class="bar" x="103.8" y="207.3" width="18.1" height="48.7" rx="2" fill="var(--g1)" data-x="2.4" data-p="1.748"/><rect class="bar" x="123.5" y="190.1" width="18.1" height="65.9" rx="2" fill="var(--g1)" data-x="3.2" data-p="2.368"/><rect class="bar" x="143.2" y="144.0" width="18.1" height="112.0" rx="2" fill="var(--g1)" data-x="4" data-p="4.025"/><rect class="bar" x="162.9" y="129.9" width="18.1" height="126.1" rx="2" fill="var(--g1)" data-x="4.8" data-p="4.53"/><rect class="bar" x="182.5" y="92.9" width="18.1" height="163.1" rx="2" fill="var(--g1)" data-x="5.6" data-p="5.86"/><rect class="bar" x="202.2" y="20.0" width="18.1" height="236.0" rx="2" fill="var(--g1)" data-x="6.4" data-p="8.478"/><rect class="bar" x="221.9" y="98.1" width="18.1" height="157.9" rx="2" fill="var(--g1)" data-x="7.2" data-p="5.672"/><rect class="bar" x="241.6" y="100.6" width="18.1" height="155.4" rx="2" fill="var(--g2)" data-x="8" data-p="5.582"/><rect class="bar" x="261.2" y="133.8" width="18.1" height="122.2" rx="2" fill="var(--g2)" data-x="8.8" data-p="4.39"/><rect class="bar" x="280.9" y="115.7" width="18.1" height="140.3" rx="2" fill="var(--g2)" data-x="9.6" data-p="5.04"/><rect class="bar" x="300.6" y="156.1" width="18.1" height="99.9" rx="2" fill="var(--g2)" data-x="10.4" data-p="3.587"/><rect class="bar" x="320.3" y="141.9" width="18.1" height="114.1" rx="2" fill="var(--g2)" data-x="11.2" data-p="4.1"/><rect class="bar" x="339.9" y="154.3" width="18.1" height="101.7" rx="2" fill="var(--g2)" data-x="12" data-p="3.655"/><rect class="bar" x="359.6" y="144.6" width="18.1" height="111.4" rx="2" fill="var(--g2)" data-x="12.8" data-p="4.002"/><rect class="bar" x="379.3" y="163.9" width="18.1" height="92.1" rx="2" fill="var(--g2)" data-x="13.6" data-p="3.31"/><rect class="bar" x="399.0" y="158.7" width="18.1" height="97.3" rx="2" fill="var(--g2)" data-x="14.4" data-p="3.495"/><rect class="bar" x="418.6" y="168.8" width="18.1" height="87.2" rx="2" fill="var(--g3)" data-x="15.2" data-p="3.132"/><rect class="bar" x="438.3" y="176.2" width="18.1" height="79.8" rx="2" fill="var(--g3)" data-x="16" data-p="2.865"/><rect class="bar" x="458.0" y="192.8" width="18.1" height="63.2" rx="2" fill="var(--g3)" data-x="16.8" data-p="2.27"/><rect class="bar" x="477.7" y="212.0" width="18.1" height="44.0" rx="2" fill="var(--g3)" data-x="17.6" data-p="1.582"/><rect class="bar" x="497.3" y="221.1" width="18.1" height="34.9" rx="2" fill="var(--g3)" data-x="18.4" data-p="1.255"/><rect class="bar" x="517.0" y="230.9" width="18.1" height="25.1" rx="2" fill="var(--g3)" data-x="19.2" data-p="0.9"/><rect class="bar" x="536.7" y="239.4" width="18.1" height="16.6" rx="2" fill="var(--g3)" data-x="20" data-p="0.598"/><rect class="bar" x="556.4" y="240.3" width="18.1" height="15.7" rx="2" fill="var(--g3)" data-x="20.8" data-p="0.563"/><rect class="bar" x="576.0" y="241.1" width="18.1" height="14.9" rx="2" fill="var(--g3)" data-x="21.6" data-p="0.537"/><rect class="bar" x="595.7" y="244.7" width="18.1" height="11.3" rx="2" fill="var(--g3)" data-x="22.4" data-p="0.407"/><rect class="bar" x="615.4" y="246.1" width="18.1" height="9.9" rx="2" fill="var(--g4)" data-x="23.2" data-p="0.355"/><rect class="bar" x="635.1" y="248.2" width="18.1" height="7.8" rx="2" fill="var(--g4)" data-x="24" data-p="0.282"/><rect class="bar" x="654.7" y="251.0" width="18.1" height="5.0" rx="2" fill="var(--g4)" data-x="24.8" data-p="0.18"/><rect class="bar" x="674.4" y="253.6" width="18.1" height="2.4" rx="2" fill="var(--g4)" data-x="25.6" data-p="0.085"/><rect class="bar" x="694.1" y="254.5" width="18.1" height="1.5" rx="2" fill="var(--g4)" data-x="26.4" data-p="0.055"/><rect class="bar" x="713.8" y="255.0" width="18.1" height="1.0" rx="2" fill="var(--g4)" data-x="27.2" data-p="0.037"/><rect class="bar" x="733.4" y="255.8" width="18.1" height="0.2" rx="2" fill="var(--g4)" data-x="28" data-p="0.007"/><rect class="bar" x="753.1" y="255.9" width="18.1" height="0.1" rx="2" fill="var(--g4)" data-x="28.8" data-p="0.003"/><rect class="bar" x="772.8" y="255.9" width="18.1" height="0.1" rx="2" fill="var(--g4)" data-x="29.6" data-p="0.003"/><rect class="bar" x="792.5" y="255.9" width="18.1" height="0.1" rx="2" fill="var(--g5)" data-x="30.4" data-p="0.005"/><rect class="bar" x="812.1" y="255.9" width="18.1" height="0.1" rx="2" fill="var(--g5)" data-x="31.2" data-p="0.003"/><g class="mk" data-n="スロット1" data-s="35.29" data-pc="0.0">
+      <line x1="911.9" y1="18" x2="911.9" y2="256" stroke="var(--mark)" stroke-width="2" stroke-dasharray="3 3"/>
+      <circle cx="911.9" cy="14" r="4.5" fill="var(--mark)" stroke="var(--card)" stroke-width="2"/></g><g class="mk" data-n="スロット2" data-s="16.3" data-pc="11.0">
+      <line x1="444.9" y1="18" x2="444.9" y2="256" stroke="var(--mark)" stroke-width="2" stroke-dasharray="3 3"/>
+      <circle cx="444.9" cy="14" r="4.5" fill="var(--mark)" stroke="var(--card)" stroke-width="2"/></g><g class="mk" data-n="スロット3" data-s="16.29" data-pc="11.0">
+      <line x1="444.6" y1="18" x2="444.6" y2="256" stroke="var(--mark)" stroke-width="2" stroke-dasharray="3 3"/>
+      <circle cx="444.6" cy="14" r="4.5" fill="var(--mark)" stroke="var(--card)" stroke-width="2"/></g><g class="mk" data-n="スロット4" data-s="6.34" data-pc="68.0">
+      <line x1="199.9" y1="18" x2="199.9" y2="256" stroke="var(--mark)" stroke-width="2" stroke-dasharray="3 3"/>
+      <circle cx="199.9" cy="14" r="4.5" fill="var(--mark)" stroke="var(--card)" stroke-width="2"/></g><g class="mk" data-n="スロット5" data-s="1.23" data-pc="95.5">
+      <line x1="74.3" y1="18" x2="74.3" y2="256" stroke="var(--mark)" stroke-width="2" stroke-dasharray="3 3"/>
+      <circle cx="74.3" cy="14" r="4.5" fill="var(--mark)" stroke="var(--card)" stroke-width="2"/></g><text class="axis" x="44.0" y="272" text-anchor="middle">0%</text><text class="axis" x="142.4" y="272" text-anchor="middle">4%</text><text class="axis" x="240.8" y="272" text-anchor="middle">8%</text><text class="axis" x="339.1" y="272" text-anchor="middle">12%</text><text class="axis" x="437.5" y="272" text-anchor="middle">16%</text><text class="axis" x="535.9" y="272" text-anchor="middle">20%</text><text class="axis" x="634.3" y="272" text-anchor="middle">24%</text><text class="axis" x="732.6" y="272" text-anchor="middle">28%</text><text class="axis" x="831.0" y="272" text-anchor="middle">32%</text><text class="axis" x="929.4" y="272" text-anchor="middle">36%</text>
+<text class="axname" x="44" y="294">スコア（期待ダメージ比）</text>
+<text class="axname" x="964" y="294" text-anchor="end">縦軸＝出現割合</text>
+</svg><figcaption>棒にカーソルを合わせると出現割合、マーカーで各スロットの順位が出ます。</figcaption></figure></div>
+</div>
+<div class="card">
+<h2><span class="num">3</span>スロット別の価値と入れ替え難易度</h2>
+<p class="lede">「上位◯%」は、ランダムに拾った音骸がこのスロットを超える確率の裏返しです。上位1%のスロットを引き直すのは現実的ではありません。</p>
+<div class="scroll"><table>
+<thead><tr><th>スロット</th><th>スコア</th><th>順位</th><th></th><th style="text-align:left">サブステ</th></tr></thead>
+<tbody><tr><td>スロット1</td>
+      <td class="mono" style="color:var(--g5)">35.29%</td>
+      <td class="mono">上位 0.0%</td>
+      <td style="width:34%;min-width:130px"><div style="background:var(--dim);height:8px;border-radius:4px;overflow:hidden">
+        <div style="width:100.0%;height:100%;background:var(--g5);border-radius:4px"></div></div></td>
+      <td style="font-size:10.5px;color:var(--text3);text-align:left">クリダメ 21.0% / クリ率 10.5% / 攻撃力% 11.6% / スキルバフ 11.6% / 攻撃力実数 60</td></tr>
+<tr><td>スロット2</td>
+      <td class="mono" style="color:var(--g4)">16.30%</td>
+      <td class="mono">上位 11.0%</td>
+      <td style="width:34%;min-width:130px"><div style="background:var(--dim);height:8px;border-radius:4px;overflow:hidden">
+        <div style="width:46.2%;height:100%;background:var(--g4);border-radius:4px"></div></div></td>
+      <td style="font-size:10.5px;color:var(--text3);text-align:left">クリダメ 16.2% / クリ率 8.1% / 攻撃力% 9.4% / 攻撃力実数 50 / 共鳴効率 8.4%</td></tr>
+<tr><td>スロット3</td>
+      <td class="mono" style="color:var(--g4)">16.29%</td>
+      <td class="mono">上位 11.0%</td>
+      <td style="width:34%;min-width:130px"><div style="background:var(--dim);height:8px;border-radius:4px;overflow:hidden">
+        <div style="width:46.2%;height:100%;background:var(--g4);border-radius:4px"></div></div></td>
+      <td style="font-size:10.5px;color:var(--text3);text-align:left">クリ率 7.5% / 攻撃力% 7.9% / スキルバフ 8.6% / HP実数 360 / 防御% 9.0%</td></tr>
+<tr><td>スロット4</td>
+      <td class="mono" style="color:var(--g2)">6.34%</td>
+      <td class="mono">上位 68.0%</td>
+      <td style="width:34%;min-width:130px"><div style="background:var(--dim);height:8px;border-radius:4px;overflow:hidden">
+        <div style="width:18.0%;height:100%;background:var(--g2);border-radius:4px"></div></div></td>
+      <td style="font-size:10.5px;color:var(--text3);text-align:left">クリダメ 13.8% / 攻撃力実数 40 / HP% 7.1% / 防御% 8.1% / 共鳴効率 7.6%</td></tr>
+<tr><td>スロット5</td>
+      <td class="mono" style="color:var(--g1)">1.23%</td>
+      <td class="mono">上位 95.5%</td>
+      <td style="width:34%;min-width:130px"><div style="background:var(--dim);height:8px;border-radius:4px;overflow:hidden">
+        <div style="width:3.5%;height:100%;background:var(--g1);border-radius:4px"></div></div></td>
+      <td style="font-size:10.5px;color:var(--text3);text-align:left">攻撃力% 6.4% / HP実数 320 / 防御% 9.9% / 共鳴効率 6.8% / 防御実数 40</td></tr>
+</tbody></table></div>
+<div class="note">スロット5は上位95.5%（＝下から4.5%）なので、<b style="color:var(--text2)">拾った音骸のほとんどが上回ります</b>。逆にスロット1は事実上の上限で、更新はほぼ不可能です。</div>
+</div>
+<div class="card">
+<h2><span class="num">4</span>サブステ1枠あたりの価値</h2>
+<p class="lede">種別×強化段階ごとの、期待ダメージへの寄与（％）です。どのロールが「当たり」かが一目で分かります。</p>
+<div class="scroll"><figure><svg viewBox="0 0 576 164" width="576" style="max-width:100%;min-width:576px;display:block" role="img" aria-label="サブステ種別ごとの価値">
+<text class="axis" x="133.0" y="18" text-anchor="middle">1段</text><text class="axis" x="191.0" y="18" text-anchor="middle">2段</text><text class="axis" x="249.0" y="18" text-anchor="middle">3段</text><text class="axis" x="307.0" y="18" text-anchor="middle">4段</text><text class="axis" x="365.0" y="18" text-anchor="middle">5段</text><text class="axis" x="423.0" y="18" text-anchor="middle">6段</text><text class="axis" x="481.0" y="18" text-anchor="middle">7段</text><text class="axis" x="539.0" y="18" text-anchor="middle">8段</text><text class="axis" x="94" y="42.5" text-anchor="end">クリ率</text><text class="axis" x="94" y="68.5" text-anchor="end">クリダメ</text><text class="axis" x="94" y="94.5" text-anchor="end">攻撃力%</text><text class="axis" x="94" y="120.5" text-anchor="end">攻撃力実数</text><text class="axis" x="94" y="146.5" text-anchor="end">スキルバフ</text><rect class="cell" x="105" y="27" width="56" height="24" rx="3" fill="var(--g2)" opacity="0.57" data-n="クリ率" data-v="6.3%" data-p="4.6" data-w="23.33"/><text x="133.0" y="42.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">4.60</text><rect class="cell" x="163" y="27" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.59" data-n="クリ率" data-v="6.9%" data-p="5.038" data-w="23.33"/><text x="191.0" y="42.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">5.04</text><rect class="cell" x="221" y="27" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.62" data-n="クリ率" data-v="7.5%" data-p="5.476" data-w="23.33"/><text x="249.0" y="42.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">5.48</text><rect class="cell" x="279" y="27" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.65" data-n="クリ率" data-v="8.1%" data-p="5.914" data-w="8"/><text x="307.0" y="42.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">5.91</text><rect class="cell" x="337" y="27" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.67" data-n="クリ率" data-v="8.7%" data-p="6.352" data-w="8"/><text x="365.0" y="42.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">6.35</text><rect class="cell" x="395" y="27" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.70" data-n="クリ率" data-v="9.3%" data-p="6.79" data-w="8"/><text x="423.0" y="42.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">6.79</text><rect class="cell" x="453" y="27" width="56" height="24" rx="3" fill="var(--g4)" opacity="0.73" data-n="クリ率" data-v="9.9%" data-p="7.228" data-w="3"/><text x="481.0" y="42.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">7.23</text><rect class="cell" x="511" y="27" width="56" height="24" rx="3" fill="var(--g4)" opacity="0.76" data-n="クリ率" data-v="10.5%" data-p="7.666" data-w="3"/><text x="539.0" y="42.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">7.67</text><rect class="cell" x="105" y="53" width="56" height="24" rx="3" fill="var(--g2)" opacity="0.55" data-n="クリダメ" data-v="12.6%" data-p="4.314" data-w="23.33"/><text x="133.0" y="68.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">4.31</text><rect class="cell" x="163" y="53" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.57" data-n="クリダメ" data-v="13.8%" data-p="4.725" data-w="23.33"/><text x="191.0" y="68.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">4.72</text><rect class="cell" x="221" y="53" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.60" data-n="クリダメ" data-v="15%" data-p="5.136" data-w="23.33"/><text x="249.0" y="68.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">5.14</text><rect class="cell" x="279" y="53" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.62" data-n="クリダメ" data-v="16.2%" data-p="5.547" data-w="8"/><text x="307.0" y="68.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">5.55</text><rect class="cell" x="337" y="53" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.65" data-n="クリダメ" data-v="17.4%" data-p="5.958" data-w="8"/><text x="365.0" y="68.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">5.96</text><rect class="cell" x="395" y="53" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.68" data-n="クリダメ" data-v="18.6%" data-p="6.369" data-w="8"/><text x="423.0" y="68.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">6.37</text><rect class="cell" x="453" y="53" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.70" data-n="クリダメ" data-v="19.8%" data-p="6.779" data-w="3"/><text x="481.0" y="68.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">6.78</text><rect class="cell" x="511" y="53" width="56" height="24" rx="3" fill="var(--g4)" opacity="0.73" data-n="クリダメ" data-v="21%" data-p="7.19" data-w="3"/><text x="539.0" y="68.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">7.19</text><rect class="cell" x="105" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.36" data-n="攻撃力%" data-v="6.4%" data-p="1.231" data-w="6.8"/><text x="133.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.23</text><rect class="cell" x="163" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.36" data-n="攻撃力%" data-v="7.1%" data-p="1.365" data-w="7.77"/><text x="191.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.36</text><rect class="cell" x="221" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.37" data-n="攻撃力%" data-v="7.9%" data-p="1.519" data-w="20.39"/><text x="249.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.52</text><rect class="cell" x="279" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.38" data-n="攻撃力%" data-v="8.6%" data-p="1.654" data-w="24.27"/><text x="307.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.65</text><rect class="cell" x="337" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.39" data-n="攻撃力%" data-v="9.4%" data-p="1.808" data-w="17.48"/><text x="365.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.81</text><rect class="cell" x="395" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.40" data-n="攻撃力%" data-v="10.1%" data-p="1.942" data-w="14.56"/><text x="423.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.94</text><rect class="cell" x="453" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.41" data-n="攻撃力%" data-v="10.9%" data-p="2.096" data-w="5.83"/><text x="481.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">2.10</text><rect class="cell" x="511" y="79" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.42" data-n="攻撃力%" data-v="11.6%" data-p="2.231" data-w="2.91"/><text x="539.0" y="94.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">2.23</text><rect class="cell" x="105" y="105" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.35" data-n="攻撃力実数" data-v="30" data-p="1.154" data-w="6.8"/><text x="133.0" y="120.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.15</text><rect class="cell" x="163" y="105" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.38" data-n="攻撃力実数" data-v="40" data-p="1.538" data-w="52.43"/><text x="191.0" y="120.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.54</text><rect class="cell" x="221" y="105" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.40" data-n="攻撃力実数" data-v="50" data-p="1.923" data-w="37.86"/><text x="249.0" y="120.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">1.92</text><rect class="cell" x="279" y="105" width="56" height="24" rx="3" fill="var(--g1)" opacity="0.42" data-n="攻撃力実数" data-v="60" data-p="2.308" data-w="2.91"/><text x="307.0" y="120.5" text-anchor="middle" font-size="9.5" fill="var(--text2)" class="mono" style="pointer-events:none">2.31</text><rect class="cell" x="105" y="131" width="56" height="24" rx="3" fill="var(--g3)" opacity="0.68" data-n="スキルバフ" data-v="6.4%" data-p="6.4" data-w="6.8"/><text x="133.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">6.40</text><rect class="cell" x="163" y="131" width="56" height="24" rx="3" fill="var(--g4)" opacity="0.72" data-n="スキルバフ" data-v="7.1%" data-p="7.1" data-w="7.77"/><text x="191.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">7.10</text><rect class="cell" x="221" y="131" width="56" height="24" rx="3" fill="var(--g4)" opacity="0.77" data-n="スキルバフ" data-v="7.9%" data-p="7.9" data-w="20.39"/><text x="249.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">7.90</text><rect class="cell" x="279" y="131" width="56" height="24" rx="3" fill="var(--g4)" opacity="0.81" data-n="スキルバフ" data-v="8.6%" data-p="8.6" data-w="24.27"/><text x="307.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">8.60</text><rect class="cell" x="337" y="131" width="56" height="24" rx="3" fill="var(--g5)" opacity="0.86" data-n="スキルバフ" data-v="9.4%" data-p="9.4" data-w="17.48"/><text x="365.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">9.40</text><rect class="cell" x="395" y="131" width="56" height="24" rx="3" fill="var(--g5)" opacity="0.91" data-n="スキルバフ" data-v="10.1%" data-p="10.1" data-w="14.56"/><text x="423.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">10.10</text><rect class="cell" x="453" y="131" width="56" height="24" rx="3" fill="var(--g5)" opacity="0.96" data-n="スキルバフ" data-v="10.9%" data-p="10.9" data-w="5.83"/><text x="481.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">10.90</text><rect class="cell" x="511" y="131" width="56" height="24" rx="3" fill="var(--g5)" opacity="1.00" data-n="スキルバフ" data-v="11.6%" data-p="11.6" data-w="2.91"/><text x="539.0" y="146.5" text-anchor="middle" font-size="9.5" fill="#0a0b0e" class="mono" style="pointer-events:none">11.60</text>
+</svg><figcaption>左端が最低ロール、右端が最高ロール。セルの数字は期待ダメージ比（％）です。</figcaption></figure></div>
+<div class="note">このビルドでは <b style="color:var(--text2)">HP%, HP実数, 防御%, 防御実数, 通常バフ, 重撃バフ, 解放バフ, 共鳴効率</b> の8種が価値0です。13種のうち8種が無駄枠になるため、有効なサブステだけを引き当てる難しさがそのまま厳選難易度になっています。</div>
+</div>
+<div class="card" style="background:var(--card2)">
+<h2>サンプルについて</h2>
+<p class="lede" style="margin:0 0 10px">数値はすべてツール本体の <code style="color:var(--accent)">eWithSlotSubs()</code> による厳密差分で計算しており、既存のスコア表示と一致します。</p>
+<p class="lede" style="margin:0"><b style="color:var(--text2)">実装状況</b>：3（スロット別の価値と入れ替え難易度）は②装備音骸タブに実装済みです。2（分布と合格ライン）は形を変えて③新規判定タブに実装しました。1（厳選難易度表）と4（サブステ価値）は未実装で、この文書は検討記録として残しています。</p>
+</div>
+</div>
+<div class="tip" id="tip"></div>
+<script>
+const tip=document.getElementById('tip');
+function show(e,html){tip.innerHTML=html;tip.classList.add('on');move(e);}
+function move(e){const p=12;let x=e.clientX+p,y=e.clientY+p;
+  const r=tip.getBoundingClientRect();
+  if(x+r.width>innerWidth-8)x=e.clientX-r.width-p;
+  if(y+r.height>innerHeight-8)y=e.clientY-r.height-p;
+  tip.style.left=x+'px';tip.style.top=y+'px';}
+function hide(){tip.classList.remove('on');}
+document.querySelectorAll('.bar').forEach(el=>{
+  el.addEventListener('mouseenter',e=>show(e,`スコア <b>${el.dataset.x}%</b> 付近<br>出現割合 <b>${el.dataset.p}%</b>`));
+  el.addEventListener('mousemove',move); el.addEventListener('mouseleave',hide);});
+document.querySelectorAll('.mk').forEach(el=>{
+  el.addEventListener('mouseenter',e=>show(e,`<b>${el.dataset.n}</b><br>スコア ${el.dataset.s}% ／ 上位 ${el.dataset.pc}%`));
+  el.addEventListener('mousemove',move); el.addEventListener('mouseleave',hide);});
+document.querySelectorAll('.cell').forEach(el=>{
+  el.addEventListener('mouseenter',e=>show(e,`<b>${el.dataset.n} ${el.dataset.v}</b><br>寄与 ${el.dataset.p}% ／ この段が出る確率 ${el.dataset.w}%`));
+  el.addEventListener('mousemove',move); el.addEventListener('mouseleave',hide);});
+</script>

@@ -283,7 +283,8 @@ await withPage(async page => {
         const vs = document.getElementById('ns_0_v'); vs.value = '12.6'; onNewVal(0);
         document.getElementById('compareSlot').value = '0'; runJudge();
         o.判定結果あり = !!document.getElementById('judgeResult').textContent.trim();
-        o.確率表示あり = document.querySelectorAll('#probResult .prob-val').length;
+        o.分布図あり = document.querySelectorAll('#probResult svg').length;
+        o.比較行 = (document.getElementById('probResult').textContent.match(/育て/g) || []).length;
         // セット保存 → リセット → 呼び出し
         document.getElementById('echoPresetName').value = 'テスト'; saveEchoPreset();
         resetEquipTab(); document.getElementById('confirmOkBtn').click();
@@ -294,7 +295,8 @@ await withPage(async page => {
     }, BUILD);
     checkTrue('期待ダメージ指数が算出される', r.E > 0);
     checkTrue('新規判定が結果を出す', r.判定結果あり);
-    check('確率が2つ表示される', r.確率表示あり, 2);
+    check('分布図が描画される', r.分布図あり, 1);
+    check('継続と新規の2案が並ぶ', r.比較行, 2);
     check('リセットでスコアが0になる', r.リセット後, 0);
     checkTrue('保存したセットを呼び戻せる', r.復元後 > 0);
 });
@@ -352,6 +354,202 @@ await withPage(async page => {
     await page.waitForTimeout(700);
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ww_echo_state') || 'null'));
     checkTrue('入力後に保存が走る', saved && saved.S && saved.S.total_stat === '3000');
+});
+
+// ── 厳密差分によるスコア ──────────────────────────────
+suite('スコアが厳密差分で計算される');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        const strong = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '11.6' }, { key: 'flat_atk', val: '60' }];
+        S.echoes[0].subs = JSON.parse(JSON.stringify(strong));
+        S.echoes[1].subs = [{ key: 'crit_rate', val: '6.9' }, { key: 'flat_hp', val: '360' },
+        { key: 'def_pct', val: '9.0' }, { key: 'atk_pct', val: '7.1' }, { key: 'res_eff', val: '7.6' }];
+        buildEchoGrid(); recalcAll();
+        const linear = e => e.subs.reduce((a, x) => a + (x.key && x.val !== '' ? mv(x.key, x.val) : 0), 0);
+        const empty = Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+        return {
+            厳密が線形より小さい: echoScoreAt(0) < linear(S.echoes[0]),
+            過大評価の割合: +((linear(S.echoes[0]) - echoScoreAt(0)) / echoScoreAt(0) * 100).toFixed(1),
+            // スロットを空にすればスコアは0
+            空スロットは0: echoScoreAt(4),
+            // 個別の按分値の合計がスロットのスコアに一致する
+            個別合計: +subScoresAt(0).reduce((a, x) => a + x, 0).toFixed(6),
+            スロット合計: +echoScoreAt(0).toFixed(6),
+            // ②と③が同じ土俵に載っている
+            同一サブステなら同スコア: Math.abs(scoreSubsOnSlot(0, JSON.parse(JSON.stringify(strong))) - echoScoreAt(0)) < 1e-9,
+            // 状態は計算後に元へ戻っている
+            状態が復元される: JSON.stringify(S.echoes[0].subs) === JSON.stringify(strong)
+                && S.total_stat === '2600' && S.crit_rate === '68' && S.crit_dmg === '245',
+            比較用に空にしても壊れない: eWithSlotSubs(0, empty) > 0,
+        };
+    }, BUILD);
+    checkTrue('線形近似より小さい値になる', r.厳密が線形より小さい);
+    checkTrue('最大ロールでの過大評価が10%以上あった', r.過大評価の割合 > 10);
+    check('空スロットのスコアは0', r.空スロットは0, 0);
+    check('サブステ個別の合計がスロットのスコアに一致', r.個別合計, r.スロット合計);
+    checkTrue('同じサブステなら②と③で同じスコアになる', r.同一サブステなら同スコア);
+    checkTrue('スコア計算のあと状態が元に戻っている', r.状態が復元される);
+    checkTrue('スロットを空にした計算が成立する', r.比較用に空にしても壊れない);
+});
+
+suite('項目別モードでも厳密差分が成立する');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        setInputMode('detail', null);
+        S.other = { base: '500', cr: '40', cd: '190' };
+        S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        recalcAll();
+        const empty = Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+        const exact = getPartials().E - eWithSlotSubs(0, empty);
+        return {
+            一致: Math.abs(echoScoreAt(0) - exact) < 1e-9,
+            正の値: echoScoreAt(0) > 0,
+            その他が保たれる: S.other.cr === '40',
+        };
+    });
+    checkTrue('スロットのスコアが期待ダメージ差と一致', r.一致);
+    checkTrue('スコアが正の値になる', r.正の値);
+    checkTrue('計算後に「その他」入力が保たれる', r.その他が保たれる);
+});
+
+// ── 入れ替え難易度 ────────────────────────────────────
+suite('スロットの入れ替え難易度（上位◯%）');
+await withPage(async page => {
+    await page.evaluate(b => {
+        eval(b);
+        // 強い順に並べた5スロット
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '11.6' }, { key: 'flat_atk', val: '60' }];
+        S.echoes[1].subs = [{ key: 'crit_dmg', val: '16.2' }, { key: 'crit_rate', val: '8.1' },
+        { key: 'atk_pct', val: '9.4' }, { key: 'flat_atk', val: '50' }, { key: 'res_eff', val: '8.4' }];
+        S.echoes[2].subs = [{ key: 'crit_rate', val: '7.5' }, { key: 'atk_pct', val: '7.9' },
+        { key: 'dmg_skill', val: '8.6' }, { key: 'flat_hp', val: '360' }, { key: 'def_pct', val: '9.0' }];
+        S.echoes[3].subs = [{ key: 'crit_dmg', val: '13.8' }, { key: 'flat_atk', val: '40' },
+        { key: 'hp_pct', val: '7.1' }, { key: 'def_pct', val: '8.1' }, { key: 'res_eff', val: '7.6' }];
+        S.echoes[4].subs = [{ key: 'atk_pct', val: '6.4' }, { key: 'flat_hp', val: '320' },
+        { key: 'def_pct', val: '9.9' }, { key: 'res_eff', val: '6.8' }, { key: 'flat_def', val: '40' }];
+        buildEchoGrid(); recalcAll();
+    }, BUILD);
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => {
+        const d = getDistributions();
+        const tops = S.echoes.map((_, i) => slotTopPercent(i, d));
+        const scores = S.echoes.map((_, i) => echoScoreAt(i));
+        // 同じ入力で作り直しても同じ値になること
+        distCache = { sig: null, byslot: null };
+        const again = S.echoes.map((_, i) => slotTopPercent(i, getDistributions()));
+        return {
+            tops, scores, again,
+            順位表示: [...document.querySelectorAll('.rank-row')].map(x => x.textContent.replace(/\s+/g, ' ').trim()),
+            分布の件数: d[0].length,
+        };
+    });
+    // スコアが高いスロットほど「上位」に来る（＝入れ替えが難しい）
+    const asc = r.scores.map((s, i) => ({ s, t: r.tops[i] })).sort((a, b) => a.s - b.s);
+    checkTrue('スコアが高いほど上位%が小さくなる', asc.every((x, i) => i === 0 || x.t <= asc[i - 1].t));
+    checkTrue('最強スロットは上位1%未満', r.tops[0] < 1);
+    checkTrue('最弱スロットは大半の音骸に負ける', r.tops[4] > 80);
+    check('固定シードなので再計算しても同じ値', r.again, r.tops);
+    check('標本数', r.分布の件数, 2000);
+    checkTrue('ランキングに上位%が表示される', r.順位表示.every(t => t.includes('上位') || t.includes('未入力')));
+});
+
+suite('確率と順位が毎回同じ値になる');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[3].subs = [{ key: 'atk_pct', val: '7.9' }, { key: 'flat_atk', val: '40' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        buildEchoGrid(); recalcAll();
+        document.getElementById('newLevel').value = '5'; buildNewSubs();
+        const k = document.getElementById('ns_0_k'); k.value = 'flat_hp'; onNewKey(0);
+        const v = document.getElementById('ns_0_v'); v.value = '320'; onNewVal(0);
+        document.getElementById('compareSlot').value = '3';
+        const runs = [];
+        for (let i = 0; i < 5; i++) { runJudge(); runs.push(document.getElementById('probResult').innerHTML); }
+        return { runs: runs.map(x => (x.match(/dc-val[^>]*>([\d.]+)%/) || [])[1]), ばらつきなし: new Set(runs).size === 1 };
+    }, BUILD);
+    // 以前はモンテカルロの乱数が毎回変わり、同じ入力でも±0.5ptほど揺れていた
+    checkTrue('同じ入力なら確率が完全に一致する', r.ばらつきなし);
+    checkTrue('確率が表示されている', /\d/.test(r.runs[0] || ''));
+});
+
+// ── 新規判定の分布図 ──────────────────────────────────
+suite('新規音骸の最終スコア分布');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '16.2' }, { key: 'crit_rate', val: '8.1' },
+        { key: 'atk_pct', val: '9.4' }, { key: 'flat_atk', val: '50' }, { key: 'res_eff', val: '8.4' }];
+        buildEchoGrid(); recalcAll();
+        document.getElementById('newLevel').value = '10'; buildNewSubs();
+        [['crit_dmg', '15'], ['crit_rate', '8.1']].forEach(([k, v], i) => {
+            const ks = document.getElementById(`ns_${i}_k`); ks.value = k; onNewKey(i);
+            const vs = document.getElementById(`ns_${i}_v`); vs.value = v; onNewVal(i);
+        });
+        document.getElementById('compareSlot').value = '0';
+        const t0 = performance.now(); runJudge(); const ms = performance.now() - t0;
+
+        const box = document.getElementById('probResult');
+        const runs = [];
+        for (let i = 0; i < 3; i++) { runJudge(); runs.push(box.innerHTML); }
+
+        // 標本の性質を直接確認する
+        const E = getPartials().E;
+        const fixed = [{ key: 'crit_dmg', val: '15' }, { key: 'crit_rate', val: '8.1' }];
+        const cont = sampleFinalScores(0, fixed, 0x1F123BB5);
+        const fresh = sampleFinalScores(0, [], 0x2C9E7A31);
+        const line = echoScoreAt(0);
+        return {
+            ms: Math.round(ms),
+            図がある: box.querySelectorAll('svg').length,
+            決定的: new Set(runs).size === 1,
+            昇順: cont[0] <= cont[cont.length - 1] && fresh[0] <= fresh[fresh.length - 1],
+            標本数: cont.length,
+            // 2枠を良ロールで固定しているぶん、+0からより下限が高い
+            固定枠の下限が高い: cont[0] > fresh[0],
+            継続の勝率: +shareAtLeast(cont, line).toFixed(1),
+            新規の勝率: +shareAtLeast(fresh, line).toFixed(1),
+            合格ラインが表示される: box.textContent.includes('合格ライン'),
+            推奨が出る: /有利です|大差ありません/.test(box.textContent),
+        };
+    }, BUILD);
+    check('分布図が描画される', r.図がある, 1);
+    check('標本数', r.標本数, 2000);
+    checkTrue('標本が昇順に並んでいる', r.昇順);
+    checkTrue('良い枠を確保済みなら下限が上がる', r.固定枠の下限が高い);
+    checkTrue('継続のほうが勝率が高い（良ロール2枠を確保済みのため）', r.継続の勝率 > r.新規の勝率);
+    checkTrue('合格ラインが表示される', r.合格ラインが表示される);
+    checkTrue('どちらが有利かの判断が出る', r.推奨が出る);
+    checkTrue('同じ入力なら描画結果まで完全に一致する', r.決定的);
+    checkTrue('判定が1秒以内に終わる', r.ms < 1000);
+});
+
+suite('全枠開放済みの新規音骸');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[0].subs = [{ key: 'atk_pct', val: '7.9' }, { key: 'flat_atk', val: '40' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        buildEchoGrid(); recalcAll();
+        // +25 は5枠すべて開放済みなので、伸びしろが無い
+        document.getElementById('newLevel').value = '25'; buildNewSubs();
+        [['crit_dmg', '21'], ['crit_rate', '10.5'], ['atk_pct', '11.6'], ['dmg_skill', '11.6'], ['flat_atk', '60']]
+            .forEach(([k, v], i) => {
+                const ks = document.getElementById(`ns_${i}_k`); if (!ks) return; ks.value = k; onNewKey(i);
+                const vs = document.getElementById(`ns_${i}_v`); if (vs) { vs.value = v; onNewVal(i); }
+            });
+        document.getElementById('compareSlot').value = '0';
+        runJudge();
+        const box = document.getElementById('probResult');
+        return { 図がある: box.querySelectorAll('svg').length, 本文: box.textContent.replace(/\s+/g, ' ').trim() };
+    }, BUILD);
+    check('全枠開放済みでも図が出る', r.図がある, 1);
+    checkTrue('伸びしろが無い旨が読み取れる', r.本文.includes('全枠開放済み'));
 });
 
 await finish();

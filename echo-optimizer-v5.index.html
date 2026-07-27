@@ -27,6 +27,13 @@
             --text2: #a3a6b0;
             --text3: #686c78;
             --shadow: 0 2px 14px rgba(0, 0, 0, .55), 0 0 0 1px rgba(212, 175, 55, .04);
+            /* 入れ替え難易度の段階表示（暗い順→明るい順、最暗でも背景比3:1を確保） */
+            --g3x: #bd9a35;
+            --g4x: #d9b944;
+            --g5x: #f0d670;
+            /* 分布図：合格ラインに届かない部分と、ライン自体 */
+            --dc-dim: #3a3f4c;
+            --dc-line: #5eead4;
         }
 
         * {
@@ -1083,6 +1090,22 @@
             font-weight: 500;
         }
 
+        /* 分布図（新規判定タブ） */
+        .scrollx {
+            overflow-x: auto;
+        }
+
+        .dc-lbl {
+            fill: var(--text3);
+            font-size: 10px;
+        }
+
+        .dc-val {
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+        }
+
         .rank-detail {
             font-size: 10px;
             color: var(--text2);
@@ -2041,7 +2064,7 @@
                     </div>
                     <div class="card-body">
                         <div class="info-box">
-                            各ステータスが<strong>音骸のサブステ1枠分の期待値だけ上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。期待値は実際の抽選確率で重み付けした平均です。</div>
+                            各ステータスが<strong>音骸のサブステ1枠分の期待値だけ上昇</strong>したときの期待ダメージ上昇率。現在のステータスから自動計算。期待値は実際の抽選確率で重み付けした平均です。<br>※ 音骸のスコアは<strong>そのスロットを空にしたときに失われる期待ダメージ</strong>で測っています。クリ率とクリダメの相乗効果を含むため、各サブステの値を単純に足した数値より小さくなります。</div>
                         <div id="mvRanking"></div>
                     </div>
                 </div>
@@ -2927,6 +2950,19 @@
         ];
         const SUB_MAX = Object.fromEntries(SUB_STATS.map(s => [s.key, s.vals[s.vals.length - 1]]));
 
+        // 抽選用の乱数。同じビルドなら毎回同じ順位・同じ確率が出ないと、
+        // 画面を見るたびに数字が揺れて判断の妨げになるため固定シードで回す。
+        let rngState = 0;
+        function seedRng(v) { rngState = v >>> 0; }
+        function rng() {
+            // mulberry32
+            rngState = (rngState + 0x6D2B79F5) >>> 0;
+            let t = rngState;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        }
+
         // 抽選重みの合計（分母）
         function wSum(sd) { return sd.w.reduce((a, b) => a + b, 0); }
         // 重み付き期待値：そのサブステを1枠引いたときの平均値
@@ -2934,9 +2970,9 @@
             if (!sd || !sd.vals.length) return 0;
             return sd.vals.reduce((a, v, i) => a + v * sd.w[i], 0) / wSum(sd);
         }
-        // 重みに従って値を1つ抽選する
+        // 重みに従って値を1つ抽選する（乱数は固定シードの rng を使う）
         function drawVal(sd) {
-            let r = Math.random() * wSum(sd);
+            let r = rng() * wSum(sd);
             for (let i = 0; i < sd.vals.length; i++) {
                 r -= sd.w[i];
                 if (r < 0) return sd.vals[i];
@@ -3382,7 +3418,166 @@
             if (key === 'crit_dmg') return p.pCD * v;
             return 0;
         }
+        // ================================================================
+        // 厳密差分によるスコア計算
+        // ================================================================
+        // 各サブステの限界価値を単純に足し上げると、クリ率×クリダメの積の項を
+        // 取りこぼして強い音骸ほど過大評価になる（最大ロールで約+19%）。
+        // ズレが一様でないためスロット間の順位が入れ替わりうるので、
+        // 「そのスロットを空にしたときとの期待ダメージ差」で測る。
+        //
+        // 合計値モードは入力された合計値に音骸分が既に含まれている前提なので、
+        // スロットを空にするには合計から差し引く必要がある。
+        // 項目別モードは音骸サブステが積み上げ計算に入っているため、
+        // スロットの中身を差し替えるだけでよい。
+
+        // サブステ群が合計値モードの各入力に与えている寄与
+        function totalModeContribution(subs) {
+            const d = { total: 0, cr: 0, cd: 0, dmg: {} };
+            const base = n(S.base_stat);
+            subs.forEach(sub => {
+                if (!sub || !sub.key || sub.val === '') return;
+                const v = n(sub.val);
+                if (sub.key === 'crit_rate') d.cr += v;
+                else if (sub.key === 'crit_dmg') d.cd += v;
+                else if (sub.key === STAT_PCT_KEY[statMode]) d.total += base * v / 100;
+                else if (sub.key === STAT_FLAT_KEY[statMode]) d.total += v;
+                else if (sub.key.startsWith('dmg_')) d.dmg[sub.key] = (d.dmg[sub.key] || 0) + v;
+            });
+            return d;
+        }
+
+        // 指定スロットのサブステを差し替えた状態での期待ダメージ指数。
+        // 状態は必ず元に戻す。
+        function eWithSlotSubs(idx, subs) {
+            const echo = S.echoes[idx];
+            if (!echo) return getPartials().E;
+            const bakSubs = echo.subs;
+            const bak = { total: S.total_stat, cr: S.crit_rate, cd: S.crit_dmg, dmg: {} };
+            Object.keys(S).forEach(k => { if (k.startsWith('dmg_')) bak.dmg[k] = S[k]; });
+            try {
+                if (inputMode === 'total') {
+                    // 旧サブステの寄与を引き、新サブステの寄与を足す
+                    const before = totalModeContribution(bakSubs);
+                    const after = totalModeContribution(subs);
+                    S.total_stat = String(n(S.total_stat) - before.total + after.total);
+                    S.crit_rate = String(n(S.crit_rate) - before.cr + after.cr);
+                    S.crit_dmg = String(n(S.crit_dmg) - before.cd + after.cd);
+                    new Set([...Object.keys(before.dmg), ...Object.keys(after.dmg)]).forEach(k => {
+                        S[k] = String(n(S[k]) - (before.dmg[k] || 0) + (after.dmg[k] || 0));
+                    });
+                }
+                echo.subs = subs;
+                return getPartials().E;
+            } finally {
+                echo.subs = bakSubs;
+                S.total_stat = bak.total; S.crit_rate = bak.cr; S.crit_dmg = bak.cd;
+                Object.keys(bak.dmg).forEach(k => { S[k] = bak.dmg[k]; });
+            }
+        }
+
+        const EMPTY_SUBS = () => Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+
+        // スロットのスコア＝そのスロットを空にしたときに失われる期待ダメージ
+        function echoScoreAt(idx) {
+            const cur = getPartials().E;
+            return cur - eWithSlotSubs(idx, EMPTY_SUBS());
+        }
+
+        // サブステ1枠分の寄与＝それだけを抜いたときに失われる期待ダメージ
+        function subScoreAt(idx, si) {
+            const echo = S.echoes[idx];
+            if (!echo || !echo.subs[si] || !echo.subs[si].key || echo.subs[si].val === '') return 0;
+            const without = echo.subs.map((s, i) => i === si ? { key: '', val: '' } : s);
+            return getPartials().E - eWithSlotSubs(idx, without);
+        }
+
+        // スロット内の各サブステの寄与を、合計がスロットのスコアに一致するよう按分して返す。
+        // 個別の差分をそのまま足してもスロット全体の差分にはならない（相乗効果のぶん過大になる）。
+        // 画面では個別値とバッジの数字が突き合わされるので、比率を保ったまま合計を揃える。
+        function subScoresAt(idx) {
+            const echo = S.echoes[idx];
+            if (!echo) return [0, 0, 0, 0, 0];
+            const raw = echo.subs.map((_, si) => subScoreAt(idx, si));
+            const rawSum = raw.reduce((a, b) => a + b, 0);
+            if (!rawSum) return raw;
+            const k = echoScoreAt(idx) / rawSum;
+            return raw.map(v => v * k);
+        }
+
+        // ================================================================
+        // スロットの入れ替え難易度（上位◯%）
+        // ================================================================
+        // ランダムに拾った音骸1個のスコア分布を標本から作り、
+        // 手持ちのスロットがその中で何位に当たるかを出す。
+        // 「引き直せば上振れするのか、もう十分なのか」を判断するための材料。
+
+        // ランダムな音骸1個ぶんのサブステ5枠（種類は重複なしで均等抽選）
+        function drawRandomSubs() {
+            const used = new Set(); const out = [];
+            for (let i = 0; i < 5; i++) {
+                const avail = SUB_STATS.filter(x => !used.has(x.key));
+                const sd = avail[Math.floor(rng() * avail.length)];
+                used.add(sd.key);
+                out.push({ key: sd.key, val: String(drawVal(sd)) });
+            }
+            return out;
+        }
+
+        const DIST_SAMPLES = 2000;
+        let distCache = { sig: null, byslot: null };
+
+        // 分布はビルドが変わると変わる。作り直しの要否を判定するための署名。
+        function buildSignature() {
+            return JSON.stringify([
+                statMode, useAttr, inputMode, S.ratio,
+                S.base_stat, S.total_stat, S.crit_rate, S.crit_dmg,
+                Object.keys(S).filter(k => k.startsWith('dmg_')).map(k => S[k]),
+                S.other, S.harmony, S.harmonyManual,
+                S.echoes.map(e => [e.main, e.subs]),
+            ]);
+        }
+
+        // 各スロットについて「そこにランダムな音骸を入れたときのスコア」の標本を作る。
+        // 基準（そのスロットを空にした状態）はスロットごとに違うので、分布もスロットごとに作る。
+        function computeDistributions() {
+            const byslot = [];
+            for (let idx = 0; idx < S.echoes.length; idx++) {
+                seedRng(0x9E3779B9 + idx); // スロットごとに固定。実行のたびに同じ標本になる
+                const base = eWithSlotSubs(idx, EMPTY_SUBS());
+                const arr = new Float64Array(DIST_SAMPLES);
+                for (let i = 0; i < DIST_SAMPLES; i++) arr[i] = eWithSlotSubs(idx, drawRandomSubs()) - base;
+                arr.sort();
+                byslot.push(arr);
+            }
+            return byslot;
+        }
+
+        function getDistributions() {
+            const sig = buildSignature();
+            if (distCache.sig !== sig) distCache = { sig, byslot: computeDistributions() };
+            return distCache.byslot;
+        }
+
+        // このスロットを上回る音骸を引ける確率（％）。小さいほど入れ替えが難しい。
+        function slotTopPercent(idx, dist) {
+            const arr = dist[idx]; if (!arr || !arr.length) return null;
+            const score = echoScoreAt(idx);
+            let lo = 0, hi = arr.length;
+            while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < score) lo = m + 1; else hi = m; }
+            return (arr.length - lo) / arr.length * 100;
+        }
+
+        // 任意のサブステ群を「比較先スロットに載せたとき」のスコア。
+        // ②タブの装備音骸と③タブの新規音骸を同じ土俵で比較するために使う。
+        function scoreSubsOnSlot(idx, subs) {
+            return eWithSlotSubs(idx, subs) - eWithSlotSubs(idx, EMPTY_SUBS());
+        }
+
         function echoScore(echo) {
+            const idx = S.echoes.indexOf(echo);
+            if (idx >= 0) return echoScoreAt(idx);
+            // 状態に載っていない音骸は厳密差分が定義できないため従来どおり合算する
             return echo.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0);
         }
         function mvColor(v, mx) { const r = v / (mx || 1); return r > .7 ? '#15803d' : r > .4 ? '#2563eb' : r > .2 ? '#d97706' : '#dc2626'; }
@@ -4676,6 +4871,7 @@
         function onEchoVal(ei, si, val) { S.echoes[ei].subs[si].val = val; if (inputMode === 'detail') fillDetailInputs(); recalcAll(); }
 
         function updateEchoScores() {
+            scheduleDistribution();
             const E = getPartials().E;
             const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScore(e) }));
             const maxScore = Math.max(...scores.map(s => s.score), .0001);
@@ -4695,7 +4891,7 @@
 
             // Sub MV labels
             for (let i = 0; i < 5; i++) {
-                const subMVs = S.echoes[i].subs.map(s => s.key && s.val !== '' ? mv(s.key, s.val) : 0);
+                const subMVs = subScoresAt(i);
                 const mx = Math.max(...subMVs, .0001);
                 for (let s = 0; s < 5; s++) {
                     const el = document.getElementById(`emv_${i}_${s}`); if (!el) continue;
@@ -4709,6 +4905,31 @@
             updateRanking(scores, sorted, E);
         }
 
+        // 「上位◯%」の表示。分布がまだ計算できていない間は何も出さない。
+        function topLabel(top, untouched) {
+            if (untouched || top == null) return '';
+            const txt = top < 1 ? '上位 1%未満' : top > 99 ? '下位 1%未満' : `上位 ${top.toFixed(0)}%`;
+            // 引き直しても上振れしにくいスロットほど明るく出す
+            const col = top < 5 ? 'var(--g5x)' : top < 20 ? 'var(--g4x)' : top < 50 ? 'var(--g3x)' : 'var(--text3)';
+            return `　<span style="color:${col}">${txt}</span>`;
+        }
+
+        // ランキングに出す「上位◯%」。分布の計算は重いので、
+        // 入力のたびには回さず、手が止まってから反映する。
+        let rankTopPct = [null, null, null, null, null];
+        let distTimer = null;
+        function scheduleDistribution() {
+            clearTimeout(distTimer);
+            distTimer = setTimeout(() => {
+                const hasData = S.echoes.some(e => e.subs.some(x => x.key && x.val !== ''));
+                if (!hasData || getPartials().E <= 0) { rankTopPct = [null, null, null, null, null]; return; }
+                const dist = getDistributions();
+                rankTopPct = S.echoes.map((_, i) => slotTopPercent(i, dist));
+                const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScoreAt(i) }));
+                updateRanking(scores, [...scores].sort((a, b) => a.score - b.score), getPartials().E);
+            }, 300);
+        }
+
         function updateRanking(scores, sorted, E) {
             const body = document.getElementById('rankBody'); if (!body) return;
             const hasData = S.echoes.some(e => e.subs.some(s => s.key && s.val !== ''));
@@ -4719,6 +4940,7 @@
                 const col = rank === 0 ? 'var(--red)' : rank === 1 ? 'var(--orange)' : rank === 2 ? 'var(--gold)' : 'var(--text3)';
                 const disp = E > 0 ? (s.score / E * 100).toFixed(2) + '%' : (s.score * 10000).toFixed(0);
                 const echo = S.echoes[s.idx];
+                const top = rankTopPct[s.idx];
                 // 未入力のサブステは「不要なので省略した」＝価値0として計上する仕様。
                 // ただしコストもメインステもサブステも一切触っていないスロットは
                 // 単に未着手なので、順位や計算は変えずに印だけ付けて区別できるようにする。
@@ -4730,7 +4952,7 @@
       <span class="rank-num" style="color:${col}">${rank + 1}</span>
       <div class="rank-info">
         <div class="rank-name">${esc(echo.name)}${tag}</div>
-        <div class="rank-detail">スコア ${disp}　（最強比 ${(pctR * 100).toFixed(0)}%）${rank === 0 && !untouched ? '　← 最優先で更新' : ''}</div>
+        <div class="rank-detail">スコア ${disp}　（最強比 ${(pctR * 100).toFixed(0)}%）${topLabel(top, untouched)}${rank === 0 && !untouched ? '　← 最優先で更新' : ''}</div>
         <div class="prio-bar"><div class="prio-fill" style="width:${pctR * 100}%;background:${col}"></div></div>
       </div>
     </div>`;
@@ -4816,17 +5038,16 @@
                 key: document.getElementById(`ns_${s}_k`)?.value || '',
                 val: document.getElementById(`ns_${s}_v`)?.value || '',
             }));
-            const currentScore = subs.reduce((t, s) => t + (s.key && s.val ? mv(s.key, s.val, false) : 0), 0);
-
             const cmpIdx = parseInt(document.getElementById('compareSlot')?.value ?? '-1');
-            // 比較もサブステのみで統一
-            const scores = S.echoes.map((e, i) => ({
-                idx: i,
-                score: e.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0)
-            }));
+            const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScoreAt(i) }));
             const sorted = [...scores].sort((a, b) => a.score - b.score);
             const targetIdx = cmpIdx >= 0 ? cmpIdx : sorted[0].idx;
+            // 新規音骸と比較先スロットを同じ土俵に載せる。
+            // どちらも「比較先スロットを空にした状態」からの増分として測るので、
+            // 片方だけ別の測り方になって比較が成立しない、という事態を避けられる。
             const compareScore = scores[targetIdx].score;
+            const padded = Array.from({ length: 5 }, (_, i) => subs[i] || { key: '', val: '' });
+            const currentScore = scoreSubsOnSlot(targetIdx, padded);
             const targetName = S.echoes[targetIdx].name;
             const slotNo = targetIdx + 1;
 
@@ -4858,13 +5079,13 @@
       ${m1str ? `<span style="font-size:10px;font-weight:700;color:var(--p);">${m1str}</span>` : ''}
     </div>`: '';
             // サブステ行
+            const targetSubScores = subScoresAt(targetIdx);
             const subHTML = te.subs.map(s => {
                 if (!s.key || s.val === '') return `<div class="sub-row"><span style="color:var(--text3);font-size:10px;">　</span></div>`;
                 const sd = SUB_STATS.find(x => x.key === s.key);
                 const label = sd ? sd.name : s.key;
-                const score = mv(s.key, s.val);
-                const P = getPartials();
-                const mvPct = P.E > 0 ? (score / P.E * 100).toFixed(2) + '%' : (score * 10000).toFixed(0);
+                const score = targetSubScores[te.subs.indexOf(s)] || 0;
+                const mvPct = E > 0 ? (score / E * 100).toFixed(2) + '%' : (score * 10000).toFixed(0);
                 return `<div class="sub-row">
       <span class="sname" style="width:auto;min-width:5em;">${label}</span>
       <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;flex:1;">${s.val}${sd?.unit || ''}</span>
@@ -4911,110 +5132,141 @@
       </button>
     </div>`;
 
-            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), compareScore);
+            updateProbability(remainSlots, needed, subs.map(s => s.key).filter(Boolean), compareScore, targetIdx, padded);
         }
 
-        // fullNeeded: 未強化音骸（全5枠）が目標に届くために必要な合計スコア = compareScore
-        // needed:     現在の音骸が残りremainSlots枠で必要な追加スコア = compareScore - currentScore
-        function updateProbability(remainSlots, needed, existingKeys = [], fullNeeded = null) {
-            const d = document.getElementById('probResult'); if (!d) return;
-            if (remainSlots <= 0) {
-                d.innerHTML = needed <= 0 ?
-                    '<div class="info-box">全スロット開放済み。交換ライン超えています！</div>' :
-                    '<div class="warn-box">全スロット開放済み。交換ラインに届いていません。</div>';
-                return;
-            }
-            if (needed <= 0) { d.innerHTML = '<div class="info-box">既に交換ラインを超えています。</div>'; return; }
+        // ================================================================
+        // 新規音骸：最終スコアの分布と合格ライン
+        // ================================================================
+        // 確率の数字だけでは「惜しいのか、望みが薄いのか」が分からない。
+        // 育て切ったときの最終スコアの分布に合格ラインを重ねて、
+        // 山のどのあたりに線が引かれているかを見せる。
+        //
+        // 標本は限界価値の足し上げではなく、実際にサブステを載せて期待ダメージ差を
+        // 測る（②タブのスコアと同じ計算）。確率と図が同じ数字から出るので食い違わない。
+        const JUDGE_SAMPLES = 2000;
 
-            // fullNeeded が渡されなかった場合は needed にフォールバック（後方互換）
-            const neededForNew = fullNeeded != null ? fullNeeded : needed;
-
-            const E = getPartials().E;
-
-            // サブステ全選択肢をkey別に用意（重みも保持し、値の抽選は実際の出現確率に従う）
-            const subPool = SUB_STATS.map(sd => ({
-                key: sd.key,
-                scores: sd.vals.map(v => mv(sd.key, v, false)),
-                w: sd.w,
-                wTotal: wSum(sd),
-                // このサブステを1枠引いたときのスコア期待値（重み付き）
-                mean: sd.vals.reduce((a, v, i) => a + mv(sd.key, v, false) * sd.w[i], 0) / wSum(sd),
-            }));
-            // 重みに従ってスコアを1つ引く
-            function drawScore(s) {
-                let r = Math.random() * s.wTotal;
-                for (let i = 0; i < s.scores.length; i++) {
-                    r -= s.w[i];
-                    if (r < 0) return s.scores[i];
+        // 空き枠をランダムに埋めたときの最終スコアを標本化する
+        function sampleFinalScores(slotIdx, fixedSubs, seed) {
+            seedRng(seed);
+            const base = eWithSlotSubs(slotIdx, EMPTY_SUBS());
+            const locked = fixedSubs.filter(x => x.key);
+            const holes = 5 - locked.length;
+            const out = new Float64Array(JUDGE_SAMPLES);
+            for (let t = 0; t < JUDGE_SAMPLES; t++) {
+                const used = new Set(locked.map(x => x.key));
+                const subs = locked.slice();
+                for (let i = 0; i < holes; i++) {
+                    const avail = SUB_STATS.filter(x => !used.has(x.key));
+                    if (!avail.length) break;
+                    const sd = avail[Math.floor(rng() * avail.length)];
+                    used.add(sd.key);
+                    subs.push({ key: sd.key, val: String(drawVal(sd)) });
                 }
-                return s.scores[s.scores.length - 1];
+                while (subs.length < 5) subs.push({ key: '', val: '' });
+                out[t] = eWithSlotSubs(slotIdx, subs) - base;
             }
+            out.sort();
+            return out;
+        }
 
-            // モンテカルロ：重複なしでn枠引いた合計スコアの分布を推定
-            // threshold: この値以上になれば成功とみなす（呼び出し元で用途別に渡す）
-            const TRIALS = 20000;
-            function simulate(slots, lockedKeys, threshold) {
-                let success = 0;
-                for (let t = 0; t < TRIALS; t++) {
-                    const used = new Set(lockedKeys);
-                    let total = 0;
-                    for (let i = 0; i < slots; i++) {
-                        const avail = subPool.filter(s => !used.has(s.key));
-                        if (!avail.length) break;
-                        // 種類は全13種から均等抽選、値は実際の出現確率に従って抽選
-                        const sd = avail[Math.floor(Math.random() * avail.length)];
-                        used.add(sd.key);
-                        total += drawScore(sd);
+        function shareAtLeast(sorted, threshold) {
+            let lo = 0, hi = sorted.length;
+            while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] < threshold) lo = m + 1; else hi = m; }
+            return (sorted.length - lo) / sorted.length * 100;
+        }
+
+        // 2つの分布を上下に並べ、共通のx軸に合格ラインを通す
+        function distChart(rows, line, E) {
+            const W = 700, RH = 74, PL = 178, PR = 16, PT = 32, PB = 26;
+            const all = rows.flatMap(r => r.data ? [r.data[r.data.length - 1]] : [r.point]);
+            const xmax = Math.max(Math.max(...all), line) * 1.08 / E * 100;
+            const iw = W - PL - PR;
+            const H = PT + rows.length * RH + PB;
+            const xOf = v => PL + Math.min(v, xmax) / xmax * iw;
+            const BINS = 34;
+            let out = '';
+            rows.forEach((r, ri) => {
+                const y0 = PT + ri * RH, h = RH - 20;
+                out += `<text x="${PL - 10}" y="${y0 + h / 2 - 3}" text-anchor="end" class="dc-lbl">${r.label}</text>`;
+                out += `<text x="${PL - 10}" y="${y0 + h / 2 + 10}" text-anchor="end" class="dc-val" fill="${r.color}">${r.prob.toFixed(1)}%</text>`;
+                if (r.data) {
+                    const counts = new Array(BINS).fill(0);
+                    for (let i = 0; i < r.data.length; i++) {
+                        const v = r.data[i] / E * 100;
+                        counts[Math.max(0, Math.min(BINS - 1, Math.floor(v / xmax * BINS)))]++;
                     }
-                    if (total >= threshold) success++;
+                    const cmax = Math.max(...counts, 1);
+                    const bw = iw / BINS;
+                    counts.forEach((c, i) => {
+                        if (!c) return;
+                        const bh = c / cmax * h;
+                        const x = PL + i * bw;
+                        const mid = (i + 0.5) / BINS * xmax;
+                        const pass = mid * E / 100 >= line;
+                        out += `<rect x="${(x + 0.6).toFixed(1)}" y="${(y0 + h - bh).toFixed(1)}" width="${Math.max(bw - 1.2, 1).toFixed(1)}" height="${bh.toFixed(1)}" rx="1.5" fill="${pass ? 'var(--g4x)' : 'var(--dc-dim)'}"/>`;
+                    });
+                } else {
+                    // 全枠開放済み：ばらつきが無いので1本の棒で位置だけ示す
+                    const x = xOf(r.point / E * 100);
+                    out += `<rect x="${(x - 2).toFixed(1)}" y="${y0}" width="4" height="${h}" rx="2" fill="${r.point >= line ? 'var(--g4x)' : 'var(--dc-dim)'}"/>`;
                 }
-                return success / TRIALS * 100;
+                out += `<line x1="${PL}" y1="${y0 + h}" x2="${W - PR}" y2="${y0 + h}" stroke="var(--border)" stroke-width="1"/>`;
+            });
+            // 合格ライン
+            const lx = xOf(line / E * 100);
+            out += `<line x1="${lx.toFixed(1)}" y1="${PT - 6}" x2="${lx.toFixed(1)}" y2="${PT + rows.length * RH - 20}" stroke="var(--dc-line)" stroke-width="2" stroke-dasharray="4 3"/>`;
+            out += `<text x="${lx.toFixed(1)}" y="${PT - 12}" text-anchor="middle" class="dc-lbl" fill="var(--dc-line)">合格ライン ${(line / E * 100).toFixed(2)}%</text>`;
+            for (let i = 0; i <= 4; i++) {
+                const v = xmax * i / 4;
+                out += `<text x="${(PL + iw * i / 4).toFixed(1)}" y="${H - 8}" text-anchor="middle" class="dc-lbl">${v.toFixed(1)}%</text>`;
             }
+            return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:520px;display:block" role="img"
+                aria-label="最終スコアの分布と合格ライン">${out}</svg>`;
+        }
 
-            // 1枠平均：種類は均等、値は重み付き期待値
-            const mu = subPool.reduce((a, s) => a + s.mean, 0) / subPool.length;
+        // needed:  現在の音骸が残り枠で必要な追加スコア（0以下なら既に超えている）
+        // compare: 比較先スロットのスコア＝合格ライン
+        function updateProbability(remainSlots, needed, existingKeys = [], compare = null, slotIdx = 0, existingSubs = null) {
+            const d = document.getElementById('probResult'); if (!d) return;
+            const E = getPartials().E;
+            const line = compare != null ? compare : needed;
+            if (E <= 0) { d.innerHTML = ''; return; }
 
-            // 現在の音骸：残りremainSlots枠でneeded（追加スコア）を達成できるか
-            const prob = simulate(remainSlots, existingKeys, needed);
-            // 未強化音骸（+0）：全5枠でneededForNew（= compareScore、サブステ0からの合計）を達成できるか
-            const prob5 = simulate(5, [], neededForNew);
+            const fixed = (existingSubs || EMPTY_SUBS()).filter(x => x.key);
+            const curScore = scoreSubsOnSlot(slotIdx, (existingSubs || EMPTY_SUBS()).slice());
 
-            const col = prob > 60 ? '#15803d' : prob > 30 ? '#d97706' : '#dc2626';
-            const col5 = prob5 > 60 ? '#15803d' : prob5 > 30 ? '#d97706' : '#dc2626';
+            // 現在の音骸を育て切った場合
+            const cont = remainSlots > 0
+                ? { data: sampleFinalScores(slotIdx, fixed, 0x1F123BB5) }
+                : { point: curScore };
+            const contProb = cont.data ? shareAtLeast(cont.data, line) : (curScore >= line ? 100 : 0);
+            // 新しい音骸を+0から育てた場合
+            const fresh = sampleFinalScores(slotIdx, [], 0x2C9E7A31);
+            const freshProb = shareAtLeast(fresh, line);
 
-            const diff = prob - prob5;
-            let rec, recCls;
-            if (diff >= 5) {
-                rec = '✅ 強化継続を推奨 — 現在の音骸の方が期待値が高い';
-                recCls = 'info-box';
-            } else if (diff <= -5) {
-                rec = '🔄 新規音骸の厳選を推奨 — 新規の方が期待値が高い';
-                recCls = 'warn-box';
-            } else {
-                rec = '⚖️ 差がわずか — どちらでも大差なし';
-                recCls = 'info-box';
-            }
+            const colOf = v => v > 60 ? 'var(--green)' : v > 30 ? 'var(--orange)' : 'var(--red)';
+            const rows = [
+                { label: remainSlots > 0 ? `この音骸を育て切る（残${remainSlots}枠）` : 'この音骸（全枠開放済み）', ...cont, prob: contProb, color: colOf(contProb) },
+                { label: '新しい音骸を+0から育てる', data: fresh, prob: freshProb, color: colOf(freshProb) },
+            ];
 
-            const fmtPct = v => E > 0 ? `${(v / E * 100).toFixed(2)}%` : (v * 10000).toFixed(0);
+            const diff = contProb - freshProb;
+            const rec = diff >= 5 ? { t: '✅ この音骸の強化を続けるほうが有利です', c: 'info-box' }
+                : diff <= -5 ? { t: '🔄 新しい音骸を厳選するほうが有利です', c: 'warn-box' }
+                    : { t: '⚖️ どちらも大差ありません', c: 'info-box' };
+
+            const median = fresh[Math.floor(fresh.length / 2)];
+            const oneIn = freshProb > 0 ? Math.round(100 / freshProb) : null;
 
             d.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-      <div class="ed-box">
-        <div class="prob-val" style="color:${col};font-size:28px;">${prob.toFixed(1)}%</div>
-        <div class="ed-label">現在の音骸<br>（残${remainSlots}枠）</div>
-      </div>
-      <div class="ed-box">
-        <div class="prob-val" style="color:${col5};font-size:28px;">${prob5.toFixed(1)}%</div>
-        <div class="ed-label">新規音骸 +0<br>（全5枠）</div>
-      </div>
-    </div>
-    <div class="${recCls}" style="margin-bottom:10px;">${rec}</div>
+    <div class="${rec.c}" style="margin-bottom:10px;">${rec.t}</div>
+    <div class="scrollx">${distChart(rows, line, E)}</div>
     <div class="divider"></div>
     <div style="font-size:10px;color:var(--text2);line-height:1.9;">
-      1枠平均期待スコア：<b>${fmtPct(mu)}</b><br>
-      必要1枠平均（現在）：<b>${fmtPct(needed / remainSlots)}</b><br>
-      必要1枠平均（新規）：<b>${fmtPct(neededForNew / 5)}</b><br>
-      <span style="font-size:9px;color:var(--text3)">※ 重複なしモンテカルロ法（${TRIALS.toLocaleString()}試行）による推定</span>
+      合格ラインを超える音骸は <b>${oneIn ? `${oneIn}個に1個` : '1万個に1個未満'}</b><br>
+      新規音骸の最終スコア中央値：<b>${(median / E * 100).toFixed(2)}%</b><br>
+      <span style="font-size:9px;color:var(--text3)">※ 各${JUDGE_SAMPLES.toLocaleString()}件の標本による推定。棒が明るい部分が合格ラインを超えた割合です。</span>
     </div>`;
         }
 
