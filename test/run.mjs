@@ -184,7 +184,7 @@ await withPage(async page => {
         return {
             省略スロットのスコア: echoScore(S.echoes[1]),
             未着手判定: S.echoes.map(e => isEchoUntouched(e)),
-            順位表示: [...document.querySelectorAll('.rank-row')].map(x => x.textContent.replace(/\s+/g, ' ').trim()),
+            順位表示: [...document.querySelectorAll('.rk-table tbody tr')].map(x => x.textContent.replace(/\s+/g, ' ').trim()),
         };
     }, BUILD);
     checkTrue('省略した枠があってもスコアは計上される', r.省略スロットのスコア > 0);
@@ -444,7 +444,7 @@ await withPage(async page => {
         const again = S.echoes.map((_, i) => slotTopPercent(i, getDistributions()));
         return {
             tops, scores, again,
-            順位表示: [...document.querySelectorAll('.rank-row')].map(x => x.textContent.replace(/\s+/g, ' ').trim()),
+            順位表示: [...document.querySelectorAll('.rk-table tbody tr')].map(x => x.textContent.replace(/\s+/g, ' ').trim()),
             分布の件数: d[0].length,
         };
     });
@@ -552,32 +552,46 @@ await withPage(async page => {
     checkTrue('伸びしろが無い旨が読み取れる', r.本文.includes('全枠開放済み'));
 });
 
-// ── 厳選難易度表 ──────────────────────────────────────
-suite('厳選難易度表');
+// ── 装備音骸ランキング（表形式） ────────────────────────
+suite('ランキングが表形式で出る');
 await withPage(async page => {
     await page.evaluate(b => {
         eval(b);
         S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
         { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '11.6' }, { key: 'flat_atk', val: '60' }];
-        S.echoes[1].subs = [{ key: 'atk_pct', val: '6.4' }, { key: 'flat_hp', val: '320' },
-        { key: 'def_pct', val: '9.9' }, { key: 'res_eff', val: '6.8' }, { key: 'flat_def', val: '40' }];
+        // 価値0のサブステ（HP・防御・共鳴効率）だけのスロット
+        S.echoes[1].subs = [{ key: 'flat_hp', val: '320' }, { key: 'def_pct', val: '9.9' },
+        { key: 'res_eff', val: '6.8' }, { key: 'flat_def', val: '40' }, { key: 'hp_pct', val: '7.1' }];
         buildEchoGrid(); recalcAll();
     }, BUILD);
     await page.waitForTimeout(900);
     const r = await page.evaluate(() => {
-        const el = document.getElementById('difficultyBody');
-        const probs = [...el.querySelectorAll('tbody tr')].map(tr => parseFloat(tr.children[1].textContent) || 0);
+        const rows = [...document.querySelectorAll('.rk-table tbody tr')];
+        const idx = rows.findIndex(tr => tr.querySelector('.rk-name').textContent.includes('スロット1'));
+        const weak = rows.findIndex(tr => tr.querySelector('.rk-name').textContent.includes('スロット2'));
         return {
-            行数: probs.length, probs,
-            本文: el.textContent.replace(/\s+/g, ' ').trim(),
-            基準が入力済みスロット: !el.textContent.includes('スロット3') && !el.textContent.includes('スロット4'),
+            行数: rows.length,
+            列数: rows[0].children.length,
+            サブステが出る: rows[idx].querySelectorAll('.rk-sub').length,
+            価値0が灰色: rows[weak].querySelectorAll('.rk-sub.dead').length,
+            強スロットに灰色は無い: rows[idx].querySelectorAll('.rk-sub.dead').length,
+            最優先は1つだけ: document.querySelectorAll('.rk-first').length,
+            最優先が未入力でない: !rows.find(tr => tr.querySelector('.rk-first'))?.textContent.includes('未入力'),
+            未入力は難易度が横棒: rows.filter(tr => tr.textContent.includes('未入力'))
+                .every(tr => tr.querySelector('.rk-top').textContent.trim() === '—'),
+            難易度カードが無い: !document.getElementById('difficultyBody'),
         };
     });
-    checkTrue('目標ごとの行が並ぶ', r.行数 >= 4);
-    checkTrue('目標が上がるほど確率が下がる', r.probs.every((p, i) => i === 0 || p <= r.probs[i - 1]));
-    checkTrue('期待個数が表示される', r.本文.includes('個に1個'));
-    checkTrue('中央値と上位ラインが出る', r.本文.includes('中央値') && r.本文.includes('上位1%'));
-    checkTrue('基準は入力済みの最弱スロット', r.基準が入力済みスロット);
+    check('5スロットぶんの行', r.行数, 5);
+    check('6列（順位・名前・スコア・難易度・バー・サブステ）', r.列数, 6);
+    check('サブステが行内に並ぶ', r.サブステが出る, 5);
+    // このビルドでは HP・防御・共鳴効率はスコアに寄与しない
+    check('価値0のサブステが灰色になる', r.価値0が灰色, 5);
+    check('有効なサブステは灰色にならない', r.強スロットに灰色は無い, 0);
+    check('「最優先」は1箇所だけ', r.最優先は1つだけ, 1);
+    checkTrue('「最優先」は入力済みのスロットに付く', r.最優先が未入力でない);
+    checkTrue('未入力スロットの難易度は表示しない', r.未入力は難易度が横棒);
+    checkTrue('厳選難易度カードは無い', r.難易度カードが無い);
 });
 
 // ── 登録データの編集 ──────────────────────────────────
