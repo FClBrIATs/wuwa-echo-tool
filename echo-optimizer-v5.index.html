@@ -1062,36 +1062,6 @@
             flex-shrink: 1;
         }
 
-        /* RANKING */
-        .rank-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 12px;
-            border-radius: 7px;
-            margin-bottom: 5px;
-            background: var(--card2);
-            border: 1px solid var(--border);
-        }
-
-        .rank-num {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 18px;
-            font-weight: 700;
-            width: 26px;
-            flex-shrink: 0;
-        }
-
-        .rank-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .rank-name {
-            font-size: 11px;
-            font-weight: 500;
-        }
-
         .custom-item.editing {
             border-color: var(--p);
             background: var(--p-light);
@@ -1104,91 +1074,114 @@
             border-radius: 3px;
         }
 
-        /* 厳選難易度表 */
-        .dt-kpis {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .dt-kpi {
-            background: var(--card2);
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            padding: 9px 11px;
-        }
-
-        .dt-kpi-v {
-            font-size: 19px;
-            font-weight: 600;
-            color: var(--p);
-            font-family: 'IBM Plex Mono', ui-monospace, monospace;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .dt-kpi-l {
-            font-size: 9.5px;
-            color: var(--text3);
-            margin-top: 1px;
-        }
-
-        .dt-table {
+        /* 装備音骸ランキング（表形式） */
+        .rk-table {
             border-collapse: collapse;
             width: 100%;
-            min-width: 400px;
+            min-width: 620px;
             font-size: 11px;
         }
 
-        .dt-table th {
+        .rk-table th {
             font-size: 10px;
             color: var(--text3);
             font-weight: 500;
-            text-align: right;
+            text-align: left;
             padding: 4px 8px;
             border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
 
-        .dt-table th:first-child {
-            text-align: left;
-        }
-
-        .dt-table td {
-            padding: 5px 8px;
+        .rk-table td {
+            padding: 7px 8px;
             border-bottom: 1px solid var(--border);
-            white-space: nowrap;
+            vertical-align: middle;
         }
 
-        .dt-table tbody tr:last-child td {
+        .rk-table tbody tr:last-child td {
             border-bottom: none;
         }
 
-        .dt-k {
-            color: var(--text2);
+        .rk-num {
+            width: 1.6em;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
         }
 
-        .dt-v {
+        .rk-name {
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .rk-tag {
+            font-size: 9px;
+            color: var(--text3);
+            border: 1px solid var(--border2);
+            border-radius: 3px;
+            padding: 1px 5px;
+            margin-left: 6px;
+        }
+
+        .rk-first {
+            font-size: 9.5px;
+            color: var(--red);
+            margin-left: 6px;
+        }
+
+        .rk-score,
+        .rk-top {
             text-align: right;
+            white-space: nowrap;
             font-family: 'IBM Plex Mono', ui-monospace, monospace;
             font-variant-numeric: tabular-nums;
         }
 
-        .dt-bar {
-            width: 42%;
-            min-width: 110px;
+        .rk-top {
+            color: var(--text2);
+            font-size: 10.5px;
         }
 
-        .dt-track {
+        .rk-barcell {
+            width: 22%;
+            min-width: 90px;
+        }
+
+        .rk-track {
             background: var(--dc-dim);
             height: 6px;
             border-radius: 3px;
             overflow: hidden;
         }
 
-        .dt-fill {
+        .rk-fill {
             height: 100%;
             border-radius: 3px;
+            transition: width .3s;
+        }
+
+        .rk-subs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            max-width: 340px;
+        }
+
+        .rk-sub {
+            font-size: 9.5px;
+            color: var(--text2);
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 1px 5px;
+            white-space: nowrap;
+        }
+
+        .rk-sub.dead {
+            color: var(--text3);
+            border-style: dashed;
+            opacity: .6;
         }
 
         .note-sm {
@@ -1212,26 +1205,6 @@
             font-size: 12px;
             font-weight: 600;
             font-family: 'IBM Plex Mono', ui-monospace, monospace;
-        }
-
-        .rank-detail {
-            font-size: 10px;
-            color: var(--text2);
-            margin-top: 2px;
-        }
-
-        .prio-bar {
-            height: 3px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 4px;
-        }
-
-        .prio-fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width .4s;
         }
 
         /* MODE SWITCH */
@@ -2198,14 +2171,6 @@
             </div>
             <div class="card-body" id="rankBody">
                 <div style="color:var(--text3);font-size:11px;">音骸のサブステを入力すると優先度が表示されます</div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-head">
-                <h2>厳選難易度 — 目標スコアは何個に1個か</h2>
-            </div>
-            <div class="card-body" id="difficultyBody">
-                <div style="color:var(--text3);font-size:11px;">ステータスと音骸を入力すると表示されます</div>
             </div>
         </div>
         <!-- Echo Preset UI -->
@@ -5027,56 +4992,6 @@
             updateRanking(scores, sorted, E);
         }
 
-        // ================================================================
-        // 厳選難易度表
-        // ================================================================
-        // 「スコア20%」と言われても拾う個数の実感に結びつかない。
-        // 目標スコアごとに「何個に1個か」を出して、どこで満足すべきかの目安にする。
-        // 分布は入れ替え難易度と同じものを使う（最弱スロット＝更新候補を基準にする）。
-        function updateDifficulty(dist, weakestIdx) {
-            const el = document.getElementById('difficultyBody'); if (!el) return;
-            const E = getPartials().E;
-            if (!dist || E <= 0) {
-                el.innerHTML = '<div style="color:var(--text3);font-size:11px;">ステータスと音骸を入力すると表示されます</div>';
-                return;
-            }
-            const arr = dist[weakestIdx];
-            const maxPct = arr[arr.length - 1] / E * 100;
-            // 目標は5%刻み。分布の上限を超える段は出しても意味がないので打ち切る
-            const targets = [];
-            for (let t = 5; t <= 45; t += 5) {
-                if (t > maxPct + 5) break;
-                targets.push(t);
-            }
-            const quant = f => arr[Math.min(arr.length - 1, Math.floor(f * arr.length))] / E * 100;
-            const rows = targets.map(t => {
-                const prob = shareAtLeast(arr, t * E / 100);
-                const oneIn = prob > 0 ? Math.round(100 / prob) : null;
-                // 確率は桁が大きく変わるので、バーは対数目盛にする
-                const w = prob > 0 ? Math.min(100, Math.pow(prob, 0.32) * 26) : 0;
-                const col = prob >= 10 ? 'var(--g5x)' : prob >= 1 ? 'var(--g4x)' : 'var(--g3x)';
-                return `<tr>
-      <td class="dt-k">${t}% 以上</td>
-      <td class="dt-v">${prob >= 0.05 ? prob.toFixed(2) + '%' : '&lt;0.05%'}</td>
-      <td class="dt-v" style="color:${col}">${oneIn ? oneIn.toLocaleString() + ' 個に1個' : `${DIST_SAMPLES.toLocaleString()}個に1個未満`}</td>
-      <td class="dt-bar"><div class="dt-track"><div class="dt-fill" style="width:${w.toFixed(1)}%;background:${col}"></div></div></td>
-    </tr>`;
-            }).join('');
-            el.innerHTML = `
-    <div class="dt-kpis">
-      <div class="dt-kpi"><div class="dt-kpi-v">${quant(0.5).toFixed(2)}%</div><div class="dt-kpi-l">中央値（半分はこれ以下）</div></div>
-      <div class="dt-kpi"><div class="dt-kpi-v">${quant(0.9).toFixed(2)}%</div><div class="dt-kpi-l">上位10%のライン</div></div>
-      <div class="dt-kpi"><div class="dt-kpi-v">${quant(0.99).toFixed(2)}%</div><div class="dt-kpi-l">上位1%のライン</div></div>
-    </div>
-    <div class="scrollx"><table class="dt-table">
-      <thead><tr><th>目標スコア</th><th>到達確率</th><th>期待個数</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>
-    <div class="note-sm">音骸を1個拾って5枠すべて開放したときに、その目標に届く確率です。
-      基準は最も弱いスロット（${esc(S.echoes[weakestIdx].name)}）を入れ替えた場合。
-      バーは対数目盛です。</div>`;
-        }
-
         // 「上位◯%」の表示。分布がまだ計算できていない間は何も出さない。
         function topLabel(top, untouched) {
             if (untouched || top == null) return '';
@@ -5094,20 +5009,11 @@
             clearTimeout(distTimer);
             distTimer = setTimeout(() => {
                 const hasData = S.echoes.some(e => e.subs.some(x => x.key && x.val !== ''));
-                if (!hasData || getPartials().E <= 0) {
-                    rankTopPct = [null, null, null, null, null];
-                    updateDifficulty(null);
-                    return;
-                }
+                if (!hasData || getPartials().E <= 0) { rankTopPct = [null, null, null, null, null]; return; }
                 const dist = getDistributions();
                 rankTopPct = S.echoes.map((_, i) => slotTopPercent(i, dist));
                 const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScoreAt(i) }));
-                const sorted = [...scores].sort((a, b) => a.score - b.score);
-                updateRanking(scores, sorted, getPartials().E);
-                // 難易度表の基準は「実際に入れ替えたいスロット」＝入力済みで最も弱いもの。
-                // 手つかずのスロットを基準にしても更新判断の材料にならない。
-                const ref = sorted.find(x => !isEchoUntouched(S.echoes[x.idx])) || sorted[0];
-                updateDifficulty(dist, ref.idx);
+                updateRanking(scores, [...scores].sort((a, b) => a.score - b.score), getPartials().E);
             }, 300);
         }
 
@@ -5116,28 +5022,48 @@
             const hasData = S.echoes.some(e => e.subs.some(s => s.key && s.val !== ''));
             if (!hasData) { body.innerHTML = '<div style="color:var(--text3);font-size:11px;">音骸のサブステを入力すると表示されます</div>'; return; }
             const maxScore = Math.max(...sorted.map(s => s.score), .0001);
-            body.innerHTML = sorted.map((s, rank) => {
+            // 「最優先」は実際に手を入れる対象に付ける。
+            // 未入力のスロットが最下位に来ても、それは更新対象ではない。
+            const firstReal = sorted.findIndex(x => !isEchoUntouched(S.echoes[x.idx]));
+            const rows = sorted.map((s, rank) => {
                 const pctR = s.score / maxScore;
-                const col = rank === 0 ? 'var(--red)' : rank === 1 ? 'var(--orange)' : rank === 2 ? 'var(--gold)' : 'var(--text3)';
-                const disp = E > 0 ? (s.score / E * 100).toFixed(2) + '%' : (s.score * 10000).toFixed(0);
                 const echo = S.echoes[s.idx];
                 const top = rankTopPct[s.idx];
                 // 未入力のサブステは「不要なので省略した」＝価値0として計上する仕様。
                 // ただしコストもメインステもサブステも一切触っていないスロットは
-                // 単に未着手なので、順位や計算は変えずに印だけ付けて区別できるようにする。
+                // 単に未着手なので、順位や計算は変えずに印だけ付けて区別できる。
                 const untouched = isEchoUntouched(echo);
-                const tag = untouched
-                    ? '<span style="font-size:9px;color:var(--text3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;margin-left:6px;">未入力</span>'
-                    : '';
-                return `<div class="rank-row">
-      <span class="rank-num" style="color:${col}">${rank + 1}</span>
-      <div class="rank-info">
-        <div class="rank-name">${esc(echo.name)}${tag}</div>
-        <div class="rank-detail">スコア ${disp}　（最強比 ${(pctR * 100).toFixed(0)}%）${topLabel(top, untouched)}${rank === 0 && !untouched ? '　← 最優先で更新' : ''}</div>
-        <div class="prio-bar"><div class="prio-fill" style="width:${pctR * 100}%;background:${col}"></div></div>
-      </div>
-    </div>`;
+                const isTop = rank === firstReal;
+                const rankCol = isTop ? 'var(--red)' : rank === firstReal + 1 ? 'var(--orange)' : rank === firstReal + 2 ? 'var(--gold)' : 'var(--text3)';
+                // スコアの色は順位ではなく入れ替え難易度で決める。
+                // 引き直しても超えにくいスロットほど明るくする。
+                const barCol = untouched || top == null ? 'var(--dc-dim)'
+                    : top < 5 ? 'var(--g5x)' : top < 20 ? 'var(--g4x)' : top < 50 ? 'var(--g3x)' : 'var(--text3)';
+                const disp = E > 0 ? (s.score / E * 100).toFixed(2) + '%' : (s.score * 10000).toFixed(0);
+                const topTxt = untouched ? '—' : top == null ? '…'
+                    : top < 1 ? '上位 1%未満' : top > 99 ? '下位 1%未満' : `上位 ${top.toFixed(0)}%`;
+                // どのサブステが効いていて、どれが無駄枠なのかを同じ行で見せる
+                const subTxt = echo.subs.map(x => {
+                    if (!x.key || x.val === '') return '';
+                    const sd = SUB_STATS.find(y => y.key === x.key);
+                    if (!sd) return '';
+                    const dead = mv(x.key, x.val) <= 0;
+                    return `<span class="rk-sub${dead ? ' dead' : ''}">${sd.name} ${x.val}${sd.unit}</span>`;
+                }).filter(Boolean).join('');
+                return `<tr>
+      <td class="rk-num" style="color:${rankCol}">${rank + 1}</td>
+      <td class="rk-name">${esc(echo.name)}${untouched ? '<span class="rk-tag">未入力</span>' : ''}${isTop ? '<span class="rk-first">← 最優先</span>' : ''}</td>
+      <td class="rk-score" style="color:${barCol}">${disp}</td>
+      <td class="rk-top">${topTxt}</td>
+      <td class="rk-barcell"><div class="rk-track"><div class="rk-fill" style="width:${(pctR * 100).toFixed(1)}%;background:${barCol}"></div></div></td>
+      <td class="rk-subs">${subTxt || '<span style="color:var(--text3)">—</span>'}</td>
+    </tr>`;
             }).join('');
+            body.innerHTML = `<div class="scrollx"><table class="rk-table">
+      <thead><tr><th></th><th>スロット</th><th>スコア</th><th>入れ替え難易度</th><th></th><th>サブステ</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="note-sm">「入れ替え難易度」は、ランダムに拾った音骸がこのスロットを超える確率です。
+      上位1%のスロットを引き直すのは現実的ではありません。灰色のサブステはこのビルドでは価値0です。</div>`;
         }
 
         // ================================================================
