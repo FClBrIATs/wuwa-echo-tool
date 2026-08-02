@@ -1338,6 +1338,23 @@
             margin-top: 7px;
         }
 
+        /* PC ではカード幅に収まらないので、パネルだけカードの外へはみ出させる。
+           表を丸ごと見せるほうが、狭い枠内でスクロールさせるより探しやすい */
+        @media(min-width:521px) {
+            .echo-card.picking {
+                overflow: visible;
+                position: relative;
+                z-index: 30;
+            }
+
+            .echo-card.picking .pk {
+                width: max-content;
+                min-width: 100%;
+                max-width: calc(100vw - 48px);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, .65);
+            }
+        }
+
         @media(max-width:520px) {
             /* カードの内側余白ぶんを取り返して、8段すべてを横スクロールなしで収める */
             .pk {
@@ -2544,7 +2561,7 @@
                         </div>
                     </div>
                     <div class="hint">選択した強化段階のサブ枠数まで入力できます。</div>
-                    <div class="sec-title">現在のサブステ</div>
+                    <div class="sec-title" data-open="1">現在のサブステ</div>
                     <div id="newSubRows"></div>
                     <div class="divider"></div>
                     <div class="field"><label>比較スロット</label>
@@ -4465,6 +4482,9 @@
                     if (!title.parentElement || title.parentElement !== body) return;
                     const details = document.createElement('details');
                     details.className = 'collapsible-section';
+                    // data-open="1" の節は最初から開く。
+                    // そのタブの主目的にあたる入力欄が畳まれていると、何をすればいいか分からない。
+                    if (title.dataset.open === '1') details.open = true;
                     const summary = document.createElement('summary');
                     summary.className = title.className;
                     if (title.id) summary.id = title.id;
@@ -5246,6 +5266,9 @@
             const echo = S.echoes[idx];
             const E = getPartials().E;
             const open = picker && picker.ei === idx;
+            // はみ出し表示を有効にするための目印（CSS側で overflow を解除する）
+            const card = document.getElementById(`ec_${idx}`);
+            if (card) card.classList.toggle('picking', !!open);
 
             // 固定枠（攻撃力実数 or HP実数）はコストで決まるので状態に反映しておく
             const cd = echo.main.cost ? COST_DATA[echo.main.cost] : null;

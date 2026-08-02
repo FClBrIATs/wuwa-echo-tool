@@ -859,4 +859,58 @@ await withPage(async page => {
     check('手動で変えると選択表示が外れる', r.手で変えたら消える, 0);
 });
 
+suite('パネルの見え方');
+await withPage(async page => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const r = await page.evaluate(b => {
+        eval(b); buildEchoGrid(); recalcAll();
+        // 非表示のタブでは要素の寸法が取れないので、対象タブを開いてから測る
+        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('装備音骸')).click();
+        openPicker(0, 0);
+        const card = document.getElementById('ec_0');
+        const pk = card.querySelector('.pk');
+        const sc = card.querySelector('.pk-scroll');
+        const tb = card.querySelector('.pk-mx');
+        return {
+            目印が付く: card.classList.contains('picking'),
+            カード幅: Math.round(card.getBoundingClientRect().width),
+            パネル幅: Math.round(pk.getBoundingClientRect().width),
+            表の必要幅: Math.round(tb.scrollWidth),
+            表示領域: Math.round(sc.clientWidth),
+            はみ出せる: getComputedStyle(card).overflow === 'visible',
+            ページ横スクロール: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        };
+    }, BUILD);
+    // カード幅に収まらない表を、狭い枠内でスクロールさせずに丸ごと見せる
+    checkTrue('パネルを開いたカードに目印が付く', r.目印が付く);
+    checkTrue('カードからはみ出せる', r.はみ出せる);
+    checkTrue('パネルがカードより広い', r.パネル幅 > r.カード幅);
+    checkTrue('表が横スクロールなしで収まる', r.表示領域 >= r.表の必要幅);
+    checkTrue('ページ自体は横スクロールしない', !r.ページ横スクロール);
+
+    // 閉じたら目印も外れる
+    const closed = await page.evaluate(() => {
+        closePicker();
+        return document.getElementById('ec_0').classList.contains('picking');
+    });
+    checkTrue('閉じると目印が外れる', !closed);
+});
+
+suite('主要な入力欄が最初から開いている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const find = (tab, txt) => [...document.querySelectorAll(`#${tab} details`)]
+            .find(d => d.querySelector('summary')?.textContent.includes(txt));
+        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('新規判定')).click();
+        document.getElementById('newLevel').value = '15'; buildNewSubs();
+        return {
+            新規判定のサブステ: find('tab-new', '現在のサブステ')?.open,
+            入力欄が見える: document.querySelector('#newSubRows .ec-sub-btn')?.offsetParent !== null,
+        };
+    });
+    // そのタブの主目的にあたる入力欄が畳まれていると、何をすればいいか分からない
+    checkTrue('新規判定タブのサブステ欄が開いている', r.新規判定のサブステ);
+    checkTrue('サブステの入力欄が見えている', r.入力欄が見える);
+});
+
 await finish();
