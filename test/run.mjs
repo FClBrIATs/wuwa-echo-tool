@@ -7,7 +7,16 @@
 import { suite, check, checkNear, checkTrue, withPage, finish } from './harness.mjs';
 
 // 検証用の標準ビルド：全体攻撃力2600 / クリ率68% / クリダメ245% / スキル100%
-const BUILD = `
+// ③新規判定タブのサブステはパネル入力になったので、テストからは状態に直接入れる
+const SETSUB = `
+  function setNewSub(i, key, val) {
+    if (!S.newSubs) S.newSubs = Array.from({length:5},()=>({key:'',val:''}));
+    S.newSubs[i] = { key, val: String(val) };
+    buildNewSubs();
+  }
+`;
+
+const BUILD = SETSUB + `
   S.base_stat='500'; S.total_stat='2600'; S.crit_rate='68'; S.crit_dmg='245';
   S.ratio={normal:0,heavy:0,skill:100,lib:0,echo:0};
 `;
@@ -279,8 +288,7 @@ await withPage(async page => {
         o.E = Math.round(getPartials().E);
         // 新規判定
         document.getElementById('newLevel').value = '10'; buildNewSubs();
-        const ks = document.getElementById('ns_0_k'); ks.value = 'crit_dmg'; onNewKey(0);
-        const vs = document.getElementById('ns_0_v'); vs.value = '12.6'; onNewVal(0);
+        setNewSub(0, 'crit_dmg', '12.6');
         document.getElementById('compareSlot').value = '0'; runJudge();
         o.判定結果あり = !!document.getElementById('judgeResult').textContent.trim();
         o.分布図あり = document.querySelectorAll('#probResult svg').length;
@@ -466,8 +474,7 @@ await withPage(async page => {
         { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
         buildEchoGrid(); recalcAll();
         document.getElementById('newLevel').value = '5'; buildNewSubs();
-        const k = document.getElementById('ns_0_k'); k.value = 'flat_hp'; onNewKey(0);
-        const v = document.getElementById('ns_0_v'); v.value = '320'; onNewVal(0);
+        setNewSub(0, 'flat_hp', '320');
         document.getElementById('compareSlot').value = '3';
         const runs = [];
         for (let i = 0; i < 5; i++) { runJudge(); runs.push(document.getElementById('probResult').innerHTML); }
@@ -488,8 +495,7 @@ await withPage(async page => {
         buildEchoGrid(); recalcAll();
         document.getElementById('newLevel').value = '10'; buildNewSubs();
         [['crit_dmg', '15'], ['crit_rate', '8.1']].forEach(([k, v], i) => {
-            const ks = document.getElementById(`ns_${i}_k`); ks.value = k; onNewKey(i);
-            const vs = document.getElementById(`ns_${i}_v`); vs.value = v; onNewVal(i);
+            setNewSub(i, k, v);
         });
         document.getElementById('compareSlot').value = '0';
         const t0 = performance.now(); runJudge(); const ms = performance.now() - t0;
@@ -540,8 +546,7 @@ await withPage(async page => {
         document.getElementById('newLevel').value = '25'; buildNewSubs();
         [['crit_dmg', '21'], ['crit_rate', '10.5'], ['atk_pct', '11.6'], ['dmg_skill', '11.6'], ['flat_atk', '60']]
             .forEach(([k, v], i) => {
-                const ks = document.getElementById(`ns_${i}_k`); if (!ks) return; ks.value = k; onNewKey(i);
-                const vs = document.getElementById(`ns_${i}_v`); if (vs) { vs.value = v; onNewVal(i); }
+                setNewSub(i, k, v);
             });
         document.getElementById('compareSlot').value = '0';
         runJudge();
@@ -701,6 +706,211 @@ await withPage(async page => {
         return { before, after: document.getElementById('backupModal').classList.contains('open') };
     });
     checkTrue('Escでモーダルが閉じる', esc.before && !esc.after);
+});
+
+// ── 入力パネル ────────────────────────────────────────
+suite('サブステをパネルから1タップで入力できる');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b); recalcAll();
+        const o = {};
+        // パネルを開いてセルを押すだけで種類と値が同時に決まる
+        openPicker(0, 0);
+        o.パネルが開く = !!document.querySelector('#ec_0 .pk-cell');
+        pickSub(0, 0, 'crit_dmg', 7);
+        o.一度で種類と値が入る = { ...S.echoes[0].subs[0] };
+        // 押すと次の空き枠へ送られる
+        o.次の枠へ送られる = picker && picker.si;
+        pickSub(0, 1, 'crit_rate', 7);
+        pickSub(0, 2, 'atk_pct', 7);
+        pickSub(0, 3, 'dmg_skill', 7);
+        pickSub(0, 4, 'flat_atk', 3);
+        o.閉じる = picker === null;
+        o.入力結果 = S.echoes[0].subs.map(x => x.key + ':' + x.val).join(',');
+        // 使用済みの種類は選べない
+        openPicker(0, 0);
+        const row = [...document.querySelectorAll('#ec_0 .pk-mx tbody tr')]
+            .find(tr => tr.querySelector('th').textContent === 'クリ率');
+        o.使用済みは無効 = row.classList.contains('pk-used');
+        closePicker();
+        o.閉じられる = picker === null;
+        // 消せる
+        clearSub(0, 0);
+        o.消せる = S.echoes[0].subs[0].key === '';
+        return o;
+    }, BUILD);
+    checkTrue('パネルが開く', r.パネルが開く);
+    check('1タップで種類と値が決まる', r.一度で種類と値が入る, { key: 'crit_dmg', val: '21' });
+    check('次の空き枠へ自動で進む', r.次の枠へ送られる, 1);
+    checkTrue('5枠そろうと自動で閉じる', r.閉じる);
+    check('5枠すべて入る', r.入力結果, 'crit_dmg:21,crit_rate:10.5,atk_pct:11.6,dmg_skill:11.6,flat_atk:60');
+    checkTrue('同じ種類は選べない', r.使用済みは無効);
+    checkTrue('閉じられる', r.閉じられる);
+    checkTrue('個別に消せる', r.消せる);
+});
+
+suite('コストとメインステを1タップで選べる');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b); recalcAll();
+        const o = {};
+        openMainPicker(0);
+        o.選択肢の数 = document.querySelectorAll('#ec_0 .pk-chip').length;
+        pickMain(0, 4, 'crit_dmg');
+        o.両方決まる = { cost: S.echoes[0].main.cost, key1: S.echoes[0].main.key1, val1: S.echoes[0].main.val1 };
+        o.固定枠も入る = { key2: S.echoes[0].main.key2, val2: S.echoes[0].main.val2 };
+        o.選んだら閉じる = picker === null;
+        // コスト1は固定枠がHP実数
+        pickMain(1, 1, 'atk_pct');
+        o.コスト1の固定枠 = { key2: S.echoes[1].main.key2, val2: S.echoes[1].main.val2 };
+        // コスト合計の表示
+        openMainPicker(2);
+        o.合計表示 = document.querySelector('#ec_2 .pk-note').textContent.replace(/\s+/g, ' ').trim();
+        closePicker();
+        return o;
+    }, BUILD);
+    // コスト4が6種、コスト3が10種、コスト1が3種で全19通り
+    check('選択肢は19通り', r.選択肢の数, 19);
+    check('コストとメインステが同時に決まる', r.両方決まる, { cost: 4, key1: 'crit_dmg', val1: 44 });
+    check('コストで決まる固定枠も入る', r.固定枠も入る, { key2: 'flat_atk', val2: 150 });
+    checkTrue('選んだら閉じる', r.選んだら閉じる);
+    check('コスト1の固定枠はHP実数', r.コスト1の固定枠, { key2: 'flat_hp', val2: 2280 });
+    checkTrue('コスト合計が出る', r.合計表示.includes('コスト合計') && r.合計表示.includes('5'));
+});
+
+suite('コスト上限を超えると警告する');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        // ゲーム上の上限は12。5枠すべてコスト4は成立しない
+        [0, 1, 2, 3, 4].forEach(i => pickMain(i, 4, 'atk_pct'));
+        openMainPicker(0);
+        const note = document.querySelector('#ec_0 .pk-note');
+        const o = { 文言: note.textContent.replace(/\s+/g, ' ').trim(), 色: note.getAttribute('style') || '' };
+        closePicker();
+        return o;
+    }, BUILD);
+    checkTrue('合計20と表示される', r.文言.includes('20'));
+    checkTrue('超過を知らせる', r.文言.includes('上限を超えています'));
+    checkTrue('赤で示す', r.色.includes('--red'));
+});
+
+suite('新規判定タブもパネル入力');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b); recalcAll();
+        const o = {};
+        document.getElementById('newLevel').value = '15'; buildNewSubs();
+        openNewPicker(0);
+        o.パネルが開く = !!document.querySelector('#newSubRows .pk-cell');
+        pickNewSub(0, 'crit_dmg', 7);
+        o.次へ送られる = newPicker;
+        pickNewSub(1, 'crit_rate', 7);
+        pickNewSub(2, 'atk_pct', 7);
+        o.開放枠を埋めたら閉じる = newPicker === null;
+        o.入力 = S.newSubs.slice(0, 3).map(x => x.key + ':' + x.val).join(',');
+        // レベルを上げても消えない
+        document.getElementById('newLevel').value = '25'; buildNewSubs();
+        o.レベル変更後も残る = S.newSubs.slice(0, 3).map(x => x.key).join(',');
+        return o;
+    }, BUILD);
+    checkTrue('パネルが開く', r.パネルが開く);
+    check('次の枠へ進む', r.次へ送られる, 1);
+    checkTrue('開放済みの枠を埋めたら閉じる', r.開放枠を埋めたら閉じる);
+    check('入力が state に入る', r.入力, 'crit_dmg:21,crit_rate:10.5,atk_pct:11.6');
+    check('レベルを上げても保持される', r.レベル変更後も残る, 'crit_dmg,crit_rate,atk_pct');
+});
+
+suite('新規音骸の入力がリロードで残る');
+await withPage(async page => {
+    await page.evaluate(b => {
+        eval(b); recalcAll();
+        document.getElementById('newLevel').value = '10'; buildNewSubs();
+        pickNewSub(0, 'crit_dmg', 5);
+        pickNewSub(1, 'crit_rate', 3);
+        saveState();
+    }, BUILD);
+    await page.reload();
+    await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
+    const r = await page.evaluate(() => (S.newSubs || []).slice(0, 2).map(x => x.key + ':' + x.val).join(','));
+    // 以前は DOM にしか無かったため、タブを離れるだけで消えていた
+    check('新規音骸のサブステが復元される', r, 'crit_dmg:18.6,crit_rate:8.1');
+});
+
+suite('ダメージ比率のプリセット');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        o.ボタン数 = document.querySelectorAll('.ratio-preset').length;
+        applyRatioPreset(0); // 共鳴スキル主体
+        o.比率 = { ...S.ratio };
+        o.入力欄にも入る = ['r_n', 'r_h', 'r_s', 'r_l', 'r_e'].map(id => document.getElementById(id).value).join(',');
+        o.合計 = document.getElementById('ratio_total_note').textContent.trim();
+        o.選択中が1つ光る = document.querySelectorAll('.ratio-preset.on').length;
+        S.ratio.normal = 50; updateRatioVis();
+        o.手で変えたら消える = document.querySelectorAll('.ratio-preset.on').length;
+        return o;
+    });
+    checkTrue('プリセットが並ぶ', r.ボタン数 >= 5);
+    check('1タップで5項目が入る', r.比率, { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 });
+    check('入力欄にも反映される', r.入力欄にも入る, '0,0,100,0,0');
+    check('合計100になる', r.合計, '= 100%');
+    check('選択中のプリセットが分かる', r.選択中が1つ光る, 1);
+    check('手動で変えると選択表示が外れる', r.手で変えたら消える, 0);
+});
+
+suite('パネルの見え方');
+await withPage(async page => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const r = await page.evaluate(b => {
+        eval(b); buildEchoGrid(); recalcAll();
+        // 非表示のタブでは要素の寸法が取れないので、対象タブを開いてから測る
+        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('装備音骸')).click();
+        openPicker(0, 0);
+        const card = document.getElementById('ec_0');
+        const pk = card.querySelector('.pk');
+        const sc = card.querySelector('.pk-scroll');
+        const tb = card.querySelector('.pk-mx');
+        return {
+            目印が付く: card.classList.contains('picking'),
+            カード幅: Math.round(card.getBoundingClientRect().width),
+            パネル幅: Math.round(pk.getBoundingClientRect().width),
+            表の必要幅: Math.round(tb.scrollWidth),
+            表示領域: Math.round(sc.clientWidth),
+            はみ出せる: getComputedStyle(card).overflow === 'visible',
+            ページ横スクロール: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        };
+    }, BUILD);
+    // カード幅に収まらない表を、狭い枠内でスクロールさせずに丸ごと見せる
+    checkTrue('パネルを開いたカードに目印が付く', r.目印が付く);
+    checkTrue('カードからはみ出せる', r.はみ出せる);
+    checkTrue('パネルがカードより広い', r.パネル幅 > r.カード幅);
+    checkTrue('表が横スクロールなしで収まる', r.表示領域 >= r.表の必要幅);
+    checkTrue('ページ自体は横スクロールしない', !r.ページ横スクロール);
+
+    // 閉じたら目印も外れる
+    const closed = await page.evaluate(() => {
+        closePicker();
+        return document.getElementById('ec_0').classList.contains('picking');
+    });
+    checkTrue('閉じると目印が外れる', !closed);
+});
+
+suite('主要な入力欄が最初から開いている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const find = (tab, txt) => [...document.querySelectorAll(`#${tab} details`)]
+            .find(d => d.querySelector('summary')?.textContent.includes(txt));
+        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('新規判定')).click();
+        document.getElementById('newLevel').value = '15'; buildNewSubs();
+        return {
+            新規判定のサブステ: find('tab-new', '現在のサブステ')?.open,
+            入力欄が見える: document.querySelector('#newSubRows .ec-sub-btn')?.offsetParent !== null,
+        };
+    });
+    // そのタブの主目的にあたる入力欄が畳まれていると、何をすればいいか分からない
+    checkTrue('新規判定タブのサブステ欄が開いている', r.新規判定のサブステ);
+    checkTrue('サブステの入力欄が見えている', r.入力欄が見える);
 });
 
 await finish();

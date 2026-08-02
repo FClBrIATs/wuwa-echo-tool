@@ -28,6 +28,8 @@
             --text3: #686c78;
             --shadow: 0 2px 14px rgba(0, 0, 0, .55), 0 0 0 1px rgba(212, 175, 55, .04);
             /* 入れ替え難易度の段階表示（暗い順→明るい順、最暗でも背景比3:1を確保） */
+            --g1x: #7a6226;
+            --g2x: #9c7d2c;
             --g3x: #bd9a35;
             --g4x: #d9b944;
             --g5x: #f0d670;
@@ -1074,6 +1076,310 @@
             border-radius: 3px;
         }
 
+        .ratio-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .ratio-preset {
+            padding: 5px 9px;
+            font-size: 10.5px;
+            background: var(--card2);
+            border: 1px solid var(--border2);
+            border-radius: 5px;
+            color: var(--text2);
+            cursor: pointer;
+        }
+
+        .ratio-preset.on {
+            background: var(--p);
+            border-color: var(--p);
+            color: #0a0b0e;
+            font-weight: 600;
+        }
+
+        /* 音骸カードの入力（パネル方式） */
+        .ec-main {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .ec-main.open,
+        .ec-main:hover {
+            border-color: var(--p);
+        }
+
+        .ec-cost {
+            flex-shrink: 0;
+            font-size: 10px;
+            font-weight: 700;
+            color: #0a0b0e;
+            background: var(--p);
+            border-radius: 3px;
+            padding: 1px 5px;
+        }
+
+        .ec-main-t {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .ec-fixed {
+            flex-shrink: 0;
+            font-size: 9.5px;
+            color: var(--text3);
+        }
+
+        .ec-ph {
+            color: var(--text3);
+        }
+
+        .ec-subs {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .ec-sub {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ec-sub-btn {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 8px;
+            background: var(--card2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text);
+            font: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .ec-sub.act .ec-sub-btn,
+        .ec-sub-btn:hover {
+            border-color: var(--p);
+        }
+
+        .ec-sub-btn.dead {
+            border-style: dashed;
+            color: var(--text3);
+        }
+
+        .ec-sub-n {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ec-sub-v {
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ec-x {
+            flex-shrink: 0;
+            width: 22px;
+            background: none;
+            border: 0;
+            color: var(--text3);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px;
+        }
+
+        /* 入力パネル */
+        .pk {
+            background: var(--card2);
+            border: 1px solid var(--p);
+            border-radius: 7px;
+            padding: 8px 9px 9px;
+            margin: 4px 0 6px;
+        }
+
+        .pk-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10.5px;
+            color: var(--p);
+            margin-bottom: 7px;
+        }
+
+        .pk-close {
+            background: none;
+            border: 0;
+            color: var(--text3);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 0 2px;
+        }
+
+        .pk-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table.pk-mx {
+            border-collapse: separate;
+            border-spacing: 2px;
+        }
+
+        .pk-mx th {
+            font-size: 9px;
+            color: var(--text3);
+            font-weight: 500;
+            padding: 0 2px 2px;
+            white-space: nowrap;
+        }
+
+        .pk-mx tbody th {
+            text-align: right;
+            padding-right: 5px;
+            color: var(--text2);
+            font-size: 10px;
+        }
+
+        .pk-mx td {
+            padding: 0;
+        }
+
+        .pk-cell {
+            width: 42px;
+            height: 32px;
+            border: 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10.5px;
+            font-weight: 600;
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+            padding: 0;
+        }
+
+        .pk-mx tr.pk-used .pk-cell {
+            opacity: .18;
+            pointer-events: none;
+        }
+
+        .pk-grp {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text2);
+            margin: 8px 0 4px;
+        }
+
+        .pk-fixed {
+            color: var(--text3);
+        }
+
+        .pk-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .pk-chip {
+            padding: 5px 8px;
+            font-size: 10.5px;
+            background: var(--card);
+            border: 1px solid var(--border2);
+            border-radius: 5px;
+            color: var(--text2);
+            cursor: pointer;
+        }
+
+        .pk-chip b {
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+            color: var(--text);
+        }
+
+        .pk-chip.on {
+            background: var(--p);
+            border-color: var(--p);
+            color: #0a0b0e;
+        }
+
+        .pk-chip.on b {
+            color: #0a0b0e;
+        }
+
+        .pk-note {
+            font-size: 9.5px;
+            color: var(--text3);
+            line-height: 1.7;
+            margin-top: 7px;
+        }
+
+        /* PC ではカード幅に収まらないので、パネルだけカードの外へはみ出させる。
+           表を丸ごと見せるほうが、狭い枠内でスクロールさせるより探しやすい */
+        @media(min-width:521px) {
+            .echo-card.picking {
+                overflow: visible;
+                position: relative;
+                z-index: 30;
+            }
+
+            .echo-card.picking .pk {
+                width: max-content;
+                min-width: 100%;
+                max-width: calc(100vw - 48px);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, .65);
+            }
+        }
+
+        @media(max-width:520px) {
+            /* カードの内側余白ぶんを取り返して、8段すべてを横スクロールなしで収める */
+            .pk {
+                margin-left: -7px;
+                margin-right: -7px;
+                padding-left: 7px;
+                padding-right: 7px;
+            }
+
+            .pk-cell {
+                width: 33px;
+                height: 38px;
+                font-size: 9.5px;
+            }
+
+            .pk-mx {
+                border-spacing: 1px;
+            }
+
+            .pk-mx tbody th {
+                font-size: 9px;
+                padding-right: 3px;
+            }
+        }
+
         /* 装備音骸ランキング（表形式） */
         .rk-table {
             border-collapse: collapse;
@@ -1910,6 +2216,7 @@
                         <div id="ratio_warn" class="warn-box"
                             style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
                             ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
+                        <div class="ratio-presets" id="ratioPresets"></div>
                         <div class="inline2">
                             <div class="field"><label>通常攻撃</label>
                                 <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
@@ -2254,7 +2561,7 @@
                         </div>
                     </div>
                     <div class="hint">選択した強化段階のサブ枠数まで入力できます。</div>
-                    <div class="sec-title">現在のサブステ</div>
+                    <div class="sec-title" data-open="1">現在のサブステ</div>
                     <div id="newSubRows"></div>
                     <div class="divider"></div>
                     <div class="field"><label>比較スロット</label>
@@ -3086,6 +3393,9 @@
             ],
             harmonyManual: B(), // 手動ハーモニーバフ
             other: {}, // 項目別モードの「その他」欄（ユーザー直接入力）
+            // ③新規判定タブのサブステ。DOMに置いていたので自動保存されず、
+            // タブを離れたり再読み込みすると消えていた
+            newSubs: Array.from({ length: 5 }, () => ({ key: '', val: '' })),
             echoes: Array.from({ length: 5 }, (_, i) => ({
                 name: `スロット${i + 1}`,
                 main: { cost: null, key1: '', val1: 0, key2: '', val2: 0 },
@@ -3756,6 +4066,34 @@
             }
         }
 
+        // ダメージ比率は5つの数値を合計100になるよう手入力させていた。
+        // 実際のビルドはおおむね決まった型なので、よくある構成をボタンにする。
+        // 押したあと個別に微調整もできる。
+        const RATIO_PRESETS = [
+            { name: '共鳴スキル主体', r: { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 } },
+            { name: '共鳴解放主体', r: { normal: 0, heavy: 0, skill: 0, lib: 100, echo: 0 } },
+            { name: '通常攻撃主体', r: { normal: 90, heavy: 0, skill: 0, lib: 10, echo: 0 } },
+            { name: '重撃主体', r: { normal: 10, heavy: 80, skill: 0, lib: 10, echo: 0 } },
+            { name: 'スキル＋解放', r: { normal: 0, heavy: 0, skill: 60, lib: 40, echo: 0 } },
+            { name: '音骸スキル主体', r: { normal: 0, heavy: 0, skill: 0, lib: 0, echo: 100 } },
+        ];
+
+        function applyRatioPreset(i) {
+            const p = RATIO_PRESETS[i]; if (!p) return;
+            S.ratio = { ...p.r };
+            const ids = { r_n: 'normal', r_h: 'heavy', r_s: 'skill', r_l: 'lib', r_e: 'echo' };
+            Object.entries(ids).forEach(([id, k]) => {
+                const el = document.getElementById(id); if (el) el.value = S.ratio[k];
+            });
+            updateRatioVis(); recalcAll();
+        }
+
+        function buildRatioPresets() {
+            const d = document.getElementById('ratioPresets'); if (!d) return;
+            d.innerHTML = RATIO_PRESETS.map((p, i) =>
+                `<button type="button" class="ratio-preset" onclick="applyRatioPreset(${i})">${esc(p.name)}</button>`).join('');
+        }
+
         function updateRatioVis() {
             const v = document.getElementById('ratioVis'); if (!v) return;
             const r = S.ratio, t = r.normal + r.heavy + r.skill + r.lib + r.echo || 1;
@@ -3767,6 +4105,10 @@
     <div class="ratio-seg" style="width:${r.echo / t * 100}%;background:#ec4899" title="音骸スキル"></div>
   `;
             const total = S.ratio.normal + S.ratio.heavy + S.ratio.skill + S.ratio.lib + S.ratio.echo;
+            document.querySelectorAll('.ratio-preset').forEach((b, i) => {
+                const p = RATIO_PRESETS[i];
+                b.classList.toggle('on', p && Object.keys(p.r).every(k => (S.ratio[k] || 0) === p.r[k]));
+            });
             const tn = document.getElementById('ratio_total_note');
             if (tn) { tn.textContent = ` = ${total}%`; tn.style.color = total === 100 ? 'var(--green)' : 'var(--red)'; }
             const rw = document.getElementById('ratio_warn');
@@ -4140,6 +4482,9 @@
                     if (!title.parentElement || title.parentElement !== body) return;
                     const details = document.createElement('details');
                     details.className = 'collapsible-section';
+                    // data-open="1" の節は最初から開く。
+                    // そのタブの主目的にあたる入力欄が畳まれていると、何をすればいいか分からない。
+                    if (title.dataset.open === '1') details.open = true;
                     const summary = document.createElement('summary');
                     summary.className = title.className;
                     if (title.id) summary.id = title.id;
@@ -4796,90 +5141,171 @@
             heal: '%',
         };
 
+        // ================================================================
+        // 入力パネル（コスト/メインステ・サブステ）
+        // ================================================================
+        // ドロップダウンは「種類」と「値」で2回選ぶ必要があり、5スロットで60回かかっていた。
+        // 種類×値の表を出して交差セルを1回押す方式にする。
+        // セルを押したら次の空き枠へ自動で送るので、パネルを1度開けば5枠を5タップで埋められる。
+        //
+        // picker: {ei, si} … サブステ入力中 / {ei, main:true} … コスト・メインステ選択中
+        let picker = null;
+
+        function openPicker(ei, si) { picker = { ei, si }; buildEchoSubRows(ei); }
+        function openMainPicker(ei) { picker = { ei, main: true }; buildEchoSubRows(ei); }
+        function closePicker() {
+            const ei = picker && picker.ei;
+            picker = null;
+            if (ei != null) buildEchoSubRows(ei);
+        }
+
+        // 次の空き枠へ送る。無ければ閉じる。
+        function advancePicker(ei) {
+            const next = S.echoes[ei].subs.findIndex(x => !x.key);
+            if (next < 0) { closePicker(); return; }
+            picker = { ei, si: next };
+        }
+
+        // セルの色は「そのロールが今のビルドでどれだけ効くか」。
+        // 入力しながら当たり外れが分かるようにする。
+        function cellTone(pct, max) {
+            if (pct <= 0) return { bg: 'var(--dc-dim)', fg: 'var(--text3)' };
+            const r = Math.min(1, pct / (max || 1));
+            const ramp = ['var(--g1x)', 'var(--g2x)', 'var(--g3x)', 'var(--g4x)', 'var(--g5x)'];
+            return { bg: ramp[Math.min(4, Math.floor(r * 5))], fg: r > 0.55 ? '#0a0b0e' : 'var(--text)' };
+        }
+
+        function subMatrixHTML(ei, si) {
+            const echo = S.echoes[ei];
+            const E = getPartials().E;
+            const used = echo.subs.map((x, i) => i !== si && x.key ? x.key : '').filter(Boolean);
+            const cols = Math.max(...SUB_STATS.map(x => x.vals.length));
+            const cells = SUB_STATS.map(sd => {
+                const pcts = sd.vals.map(v => E > 0 ? mv(sd.key, v, false) / E * 100 : 0);
+                return { sd, pcts };
+            });
+            const max = Math.max(...cells.flatMap(c => c.pcts), 0.0001);
+            let h = `<div class="pk-head">
+      <span>${si + 1}枠目のサブステを選択</span>
+      <button type="button" class="pk-close" onclick="closePicker()" aria-label="閉じる">✕</button>
+    </div><div class="pk-scroll"><table class="pk-mx"><thead><tr><th></th>`;
+            for (let c = 0; c < cols; c++) h += `<th>${c + 1}</th>`;
+            h += '</tr></thead><tbody>';
+            cells.forEach(({ sd, pcts }) => {
+                const dis = used.includes(sd.key);
+                h += `<tr class="${dis ? 'pk-used' : ''}"><th>${esc(sd.name)}</th>`;
+                for (let c = 0; c < cols; c++) {
+                    if (c >= sd.vals.length) { h += '<td></td>'; continue; }
+                    const t = cellTone(pcts[c], max);
+                    h += `<td><button type="button" class="pk-cell" ${dis ? 'disabled' : ''}
+        style="background:${t.bg};color:${t.fg}"
+        title="${esc(sd.name)} ${sd.vals[c]}${sd.unit}｜寄与 ${pcts[c].toFixed(2)}%"
+        onclick="pickSub(${ei},${si},'${sd.key}',${c})">${sd.vals[c]}</button></td>`;
+                }
+                h += '</tr>';
+            });
+            return h + `</tbody></table></div>
+    <div class="pk-note">明るいセルほど今のビルドで価値が高いロールです。灰色は価値0。押すと次の枠へ進みます。</div>`;
+        }
+
+        function pickSub(ei, si, key, vi) {
+            const sd = SUB_STATS.find(x => x.key === key); if (!sd) return;
+            S.echoes[ei].subs[si] = { key, val: String(sd.vals[vi]) };
+            advancePicker(ei);
+            if (inputMode === 'detail') fillDetailInputs();
+            buildEchoSubRows(ei);
+            recalcAll();
+        }
+
+        function clearSub(ei, si) {
+            S.echoes[ei].subs[si] = { key: '', val: '' };
+            if (inputMode === 'detail') fillDetailInputs();
+            buildEchoSubRows(ei);
+            recalcAll();
+        }
+
+        // コストとメインステは連動しており、組み合わせは全19通りしかない。
+        // 別々に選ばせず、1回のタップで両方決まるようにする。
+        function mainPanelHTML(ei) {
+            const echo = S.echoes[ei];
+            let h = `<div class="pk-head"><span>コストとメインステを選択</span>
+      <button type="button" class="pk-close" onclick="closePicker()" aria-label="閉じる">✕</button></div>`;
+            [4, 3, 1].forEach(cost => {
+                const cd = COST_DATA[cost];
+                const fixed = cd.fixedAtk != null ? `攻撃力 ${cd.fixedAtk}` : cd.fixedHp != null ? `HP ${cd.fixedHp}` : '';
+                h += `<div class="pk-grp">${esc(cd.label)}${fixed ? `<span class="pk-fixed">固定枠 ${fixed}</span>` : ''}</div><div class="pk-chips">`;
+                cd.stats.forEach(st => {
+                    const on = String(echo.main.cost) === String(cost) && echo.main.key1 === st.key;
+                    h += `<button type="button" class="pk-chip${on ? ' on' : ''}"
+          onclick="pickMain(${ei},${cost},'${st.key}')">${esc(st.name)} <b>${st.val}${st.unit}</b></button>`;
+                });
+                h += '</div>';
+            });
+            return h + costTotalHTML();
+        }
+
+        // 音骸のコスト合計は12が上限で、実際の構成は 4-3-3-1-1 か 4-4-1-1-1 の2択。
+        // 入力ミスに気づけるよう現在の合計を出す。
+        function costTotalHTML() {
+            const total = S.echoes.reduce((a, e) => a + (Number(e.main.cost) || 0), 0);
+            const set = S.echoes.map(e => Number(e.main.cost) || 0).filter(Boolean).sort((a, b) => b - a).join('-');
+            const ok = total <= 12;
+            return `<div class="pk-note" style="color:${ok ? 'var(--text3)' : 'var(--red)'}">
+      現在のコスト合計 <b>${total}</b> / 12${set ? `（${set}）` : ''}
+      ${ok ? '' : ' — 上限を超えています'}</div>`;
+        }
+
+        function pickMain(ei, cost, key) {
+            onEchoMainCost(ei, String(cost));
+            onEchoMain1Key(ei, key);
+            closePicker();
+        }
+
         function buildEchoSubRows(idx) {
             const c = document.getElementById(`ebd_${idx}`); if (!c) return;
             const echo = S.echoes[idx];
-            c.innerHTML = '';
+            const E = getPartials().E;
+            const open = picker && picker.ei === idx;
+            // はみ出し表示を有効にするための目印（CSS側で overflow を解除する）
+            const card = document.getElementById(`ec_${idx}`);
+            if (card) card.classList.toggle('picking', !!open);
 
-            // ---- メインステータス1（ランダム選択：固定枠除く全種類） ----
-            const savedKey1 = echo.main.key1 || '';
-            const savedVal1 = echo.main.val1 || 0;
-            // コスト4のstats＋コスト3独自stats＋コスト1のstats から固定枠を除いてユニーク化
-            const MAIN1_STATS = [
-                { key: 'hp_pct', name: 'HP%', unit: '%' },
-                { key: 'atk_pct', name: '攻撃力%', unit: '%' },
-                { key: 'def_pct', name: '防御力%', unit: '%' },
-                { key: 'crit_rate', name: 'クリティカル', unit: '%' },
-                { key: 'crit_dmg', name: 'クリティカルダメージ', unit: '%' },
-                { key: 'heal', name: 'HP回復効果アップ', unit: '%' },
-                { key: 'res_eff', name: '共鳴効率', unit: '%' },
-                { key: 'dmg_fire', name: '焦熱ダメージアップ', unit: '%' },
-                { key: 'dmg_ice', name: '凝縮ダメージアップ', unit: '%' },
-                { key: 'dmg_thunder', name: '電導ダメージアップ', unit: '%' },
-                { key: 'dmg_wind', name: '気動ダメージアップ', unit: '%' },
-                { key: 'dmg_light', name: '回折ダメージアップ', unit: '%' },
-                { key: 'dmg_dark', name: '消滅ダメージアップ', unit: '%' },
-            ];
-            const m1Opts = '<option value="">メインステ</option>' + MAIN1_STATS.map(s =>
-                `<option value="${s.key}"${s.key === savedKey1 ? ' selected' : ''}>${s.name}</option>`).join('');
-            // 値はコストに依存するが、ここでは参考値として現在のコストの値を表示
-            const savedCost1 = echo.main.cost || '';
-            let m1ValStr = '';
-            if (savedKey1 && savedCost1) {
-                const cd1 = COST_DATA[savedCost1];
-                const st1 = cd1 ? cd1.stats.find(s => s.key === savedKey1) : null;
-                if (st1) m1ValStr = st1.val + st1.unit;
-            }
+            // 固定枠（攻撃力実数 or HP実数）はコストで決まるので状態に反映しておく
+            const cd = echo.main.cost ? COST_DATA[echo.main.cost] : null;
+            if (cd && cd.fixedAtk != null) { echo.main.key2 = 'flat_atk'; echo.main.val2 = cd.fixedAtk; }
+            else if (cd && cd.fixedHp != null) { echo.main.key2 = 'flat_hp'; echo.main.val2 = cd.fixedHp; }
+            else { echo.main.key2 = ''; echo.main.val2 = 0; }
 
-            // ---- メインステ（旧メインステ1） ----
-            const savedCost = echo.main.cost || '';
-            const cd2 = savedCost ? COST_DATA[savedCost] : null;
+            const st1 = cd && echo.main.key1 ? cd.stats.find(x => x.key === echo.main.key1) : null;
+            const fixedTxt = cd ? (cd.fixedAtk != null ? `攻撃力 ${cd.fixedAtk}` : cd.fixedHp != null ? `HP ${cd.fixedHp}` : '') : '';
+            const mainTxt = st1 ? `${st1.name} ${st1.val}${st1.unit}` : '';
 
-            const costOpts = '<option value="">コスト</option>' + [4, 3, 1].map(c =>
-                `<option value="${c}"${String(c) === String(savedCost) ? ` selected` : ''}>${COST_DATA[c].label}</option>`).join('');
+            let h = `<button type="button" class="ec-main${open && picker.main ? ' open' : ''}" onclick="openMainPicker(${idx})">
+      ${echo.main.cost ? `<span class="ec-cost">C${echo.main.cost}</span>` : ''}
+      <span class="ec-main-t">${mainTxt ? esc(mainTxt) : '<span class="ec-ph">コスト・メインステ</span>'}</span>
+      ${fixedTxt ? `<span class="ec-fixed">${fixedTxt}</span>` : ''}
+    </button>`;
 
-            // メインステ2：コストから自動決定（fixedAtk or fixedHp）
-            const fixedAtk = cd2 ? cd2.fixedAtk : null;
-            const fixedHp = cd2 ? cd2.fixedHp : null;
-            let m2AutoLabel = '', m2AutoVal = 0;
-            if (fixedAtk != null) { m2AutoLabel = `攻撃力  ${fixedAtk}`; m2AutoVal = fixedAtk; }
-            else if (fixedHp != null) { m2AutoLabel = `HP  ${fixedHp}`; m2AutoVal = fixedHp; }
-            // stateにも反映
-            if (m2AutoVal) { S.echoes[idx].main.key2 = fixedAtk != null ? 'flat_atk' : 'flat_hp'; S.echoes[idx].main.val2 = m2AutoVal; }
-            else { S.echoes[idx].main.key2 = ''; S.echoes[idx].main.val2 = 0; }
+            if (open && picker.main) h += `<div class="pk">${mainPanelHTML(idx)}</div>`;
 
-            // コスト行（先）
-            const mrow2 = document.createElement('div');
-            mrow2.style.cssText = 'display:flex;align-items:center;gap:3px;margin-bottom:3px;';
-            mrow2.innerHTML = `
-    <select style="width:auto;padding:2px 4px;font-size:10px;"
-      onchange="onEchoMainCost(${idx},this.value)">${costOpts}</select>
-    <span id="emv_val2_${idx}" style="font-size:10px;color:var(--text2);white-space:nowrap;background:var(--card2);padding:2px 6px;border-radius:3px;min-width:60px;display:inline-block;margin-left:16px;">${m2AutoLabel}</span>
-  `;
-            c.appendChild(mrow2);
-
-            // メインステ行（後）
-            const mrow1 = document.createElement('div');
-            mrow1.style.cssText = 'display:flex;align-items:center;gap:3px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--border);';
-            mrow1.innerHTML = `
-    <select style="width:auto;padding:2px 4px;font-size:10px;"
-      onchange="onEchoMain1Key(${idx},this.value)">${m1Opts}</select>
-    <span id="emv_val1_${idx}" style="font-size:10px;font-weight:700;color:var(--p);white-space:nowrap;margin-left:16px;">${m1ValStr}</span>
-  `;
-            c.appendChild(mrow1);
-
-            // サブステータス行
+            h += '<div class="ec-subs">';
             for (let s = 0; s < 5; s++) {
                 const sub = echo.subs[s];
-                const usedKeys = echo.subs.map((x, i) => i !== s && x.key ? x.key : '').filter(Boolean);
-                const row = document.createElement('div'); row.className = 'sub-row';
-                row.innerHTML = `
-      ${makeStatSelectHTML(`ess_${idx}_${s}`, sub.key, `onEchoKey(${idx},${s},this.value)`, 'stat-sel', usedKeys)}
-      ${makeValSelectHTML(`esv_${idx}_${s}`, sub.key, sub.val, `onEchoVal(${idx},${s},this.value)`)}
-      <span class="sub-mv" id="emv_${idx}_${s}" style="color:var(--text3)"></span>
-    `;
-                c.appendChild(row);
+                const sd = sub.key ? SUB_STATS.find(x => x.key === sub.key) : null;
+                const val = sd ? mv(sub.key, sub.val) : 0;
+                const dead = sd && val <= 0;
+                const act = open && picker.si === s;
+                h += `<div class="ec-sub${act ? ' act' : ''}">
+        <button type="button" class="ec-sub-btn${dead ? ' dead' : ''}" onclick="openPicker(${idx},${s})">
+          ${sd ? `<span class="ec-sub-n">${esc(sd.name)}</span><span class="ec-sub-v">${sub.val}${sd.unit}</span>`
+                        : `<span class="ec-ph">${s + 1}枠目</span>`}
+        </button>
+        <span class="sub-mv" id="emv_${idx}_${s}">${sd && E > 0 ? (dead ? '価値0' : '+' + (val / E * 100).toFixed(2) + '%') : ''}</span>
+        ${sd ? `<button type="button" class="ec-x" onclick="clearSub(${idx},${s})" aria-label="${s + 1}枠目を消す">✕</button>` : ''}
+      </div>`;
+                if (act) h += `<div class="pk">${subMatrixHTML(idx, s)}</div>`;
             }
+            c.innerHTML = h + '</div>';
         }
 
         // コスト変更：main2 を自動セット
@@ -4939,23 +5365,6 @@
             });
             return t;
         }
-
-        function onEchoKey(ei, si, key) {
-            S.echoes[ei].subs[si].key = key;
-            S.echoes[ei].subs[si].val = '';
-            const el = document.getElementById(`esv_${ei}_${si}`);
-            if (el) el.outerHTML = makeValSelectHTML(`esv_${ei}_${si}`, key, '', `onEchoVal(${ei},${si},this.value)`);
-            // 同音骸の他スロットのキー選択を更新（使用済み反映）
-            for (let s = 0; s < 5; s++) {
-                if (s === si) continue;
-                const sel = document.getElementById(`ess_${ei}_${s}`); if (!sel) continue;
-                const curKey = S.echoes[ei].subs[s].key;
-                const usedKeys = S.echoes[ei].subs.map((x, i) => i !== s && x.key ? x.key : '').filter(Boolean);
-                sel.outerHTML = makeStatSelectHTML(`ess_${ei}_${s}`, curKey, `onEchoKey(${ei},${s},this.value)`, 'stat-sel', usedKeys);
-            }
-            recalcAll();
-        }
-        function onEchoVal(ei, si, val) { S.echoes[ei].subs[si].val = val; if (inputMode === 'detail') fillDetailInputs(); recalcAll(); }
 
         function updateEchoScores() {
             scheduleDistribution();
@@ -5069,82 +5478,91 @@
         // ================================================================
         // TAB 3 – NEW ECHO
         // ================================================================
-        function buildNewSubs() {
+        // ③新規判定タブのサブステ入力。②と同じパネル方式。
+        let newPicker = null;
+
+        function newSlots() {
             const lvl = parseInt(document.getElementById('newLevel')?.value) || 0;
-            const slots = { 0: 0, 5: 1, 10: 2, 15: 3, 20: 4, 25: 5 }[lvl] || 0;
-            const d = document.getElementById('newSubRows'); if (!d) return;
-
-            // 現在の入力値を退避
-            const saved = [];
-            for (let s = 0; ; s++) {
-                const kEl = document.getElementById(`ns_${s}_k`);
-                if (!kEl) break;
-                saved.push({ key: kEl.value, val: document.getElementById(`ns_${s}_v`)?.value || '' });
-            }
-
-            d.innerHTML = '';
-            for (let s = 0; s < slots; s++) {
-                const usedKeys = _getNewUsedKeys(s, slots);
-                const row = document.createElement('div'); row.className = 'sub-row';
-                const prevKey = saved[s]?.key || '';
-                const prevVal = saved[s]?.val || '';
-                row.innerHTML = `
-      ${makeStatSelectHTML(`ns_${s}_k`, prevKey, `onNewKey(${s})`, 'stat-sel', usedKeys)}
-      ${prevKey ? makeValSelectHTML(`ns_${s}_v`, prevKey, prevVal, `onNewVal(${s})`) : `<select class="val-sel" id="ns_${s}_v" disabled><option value=""></option></select>`}
-      <span class="sub-mv" id="ns_${s}_m" style="color:var(--text3)"></span>
-    `;
-                d.appendChild(row);
-            }
-
-            // スコア表示を更新
-            for (let s = 0; s < slots; s++) {
-                if (saved[s]?.key && saved[s]?.val) onNewVal(s);
-            }
+            return { 0: 0, 5: 1, 10: 2, 15: 3, 20: 4, 25: 5 }[lvl] || 0;
         }
 
-        function _getNewUsedKeys(excludeSlot, totalSlots) {
-            const keys = [];
-            for (let i = 0; i < totalSlots; i++) {
-                if (i === excludeSlot) continue;
-                const k = document.getElementById(`ns_${i}_k`)?.value || '';
-                if (k) keys.push(k);
-            }
-            return keys;
+        function openNewPicker(si) { newPicker = si; buildNewSubs(); }
+        function closeNewPicker() { newPicker = null; buildNewSubs(); }
+
+        function pickNewSub(si, key, vi) {
+            const sd = SUB_STATS.find(x => x.key === key); if (!sd) return;
+            if (!S.newSubs) S.newSubs = Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+            S.newSubs[si] = { key, val: String(sd.vals[vi]) };
+            // 次の空き枠へ送る（開放済みの枠内で）
+            const n = newSlots();
+            const next = S.newSubs.slice(0, n).findIndex(x => !x.key);
+            newPicker = next < 0 ? null : next;
+            buildNewSubs();
         }
 
-        function onNewKey(s) {
-            const key = document.getElementById(`ns_${s}_k`)?.value || '';
-            const el = document.getElementById(`ns_${s}_v`);
-            if (el) el.outerHTML = makeValSelectHTML(`ns_${s}_v`, key, '', `onNewVal(${s})`);
-            // 他スロットの選択肢も更新
-            const lvl = parseInt(document.getElementById('newLevel')?.value) || 0;
-            const slots = { 0: 0, 5: 1, 10: 2, 15: 3, 20: 4, 25: 5 }[lvl] || 0;
-            for (let i = 0; i < slots; i++) {
-                if (i === s) continue;
-                const sel = document.getElementById(`ns_${i}_k`); if (!sel) continue;
-                const curKey = sel.value;
-                const usedKeys = _getNewUsedKeys(i, slots);
-                sel.outerHTML = makeStatSelectHTML(`ns_${i}_k`, curKey, `onNewKey(${i})`, 'stat-sel', usedKeys);
-            }
+        function clearNewSub(si) {
+            S.newSubs[si] = { key: '', val: '' };
+            buildNewSubs();
         }
 
-        function onNewVal(s) {
-            const key = document.getElementById(`ns_${s}_k`)?.value || '';
-            const val = document.getElementById(`ns_${s}_v`)?.value || '';
-            const mvEl = document.getElementById(`ns_${s}_m`); if (!mvEl) return;
+        function newSubMatrixHTML(si) {
             const E = getPartials().E;
-            if (key && val) { const v = mv(key, val, false); mvEl.textContent = E > 0 ? `+${(v / E * 100).toFixed(2)}%` : ''; mvEl.style.color = v > 0 ? 'var(--p)' : 'var(--text3)'; }
-            else { mvEl.textContent = ''; mvEl.style.color = 'var(--text3)'; }
+            const used = S.newSubs.map((x, i) => i !== si && x.key ? x.key : '').filter(Boolean);
+            const cols = Math.max(...SUB_STATS.map(x => x.vals.length));
+            const cells = SUB_STATS.map(sd => ({ sd, pcts: sd.vals.map(v => E > 0 ? mv(sd.key, v, false) / E * 100 : 0) }));
+            const max = Math.max(...cells.flatMap(c => c.pcts), 0.0001);
+            let h = `<div class="pk-head"><span>${si + 1}枠目のサブステを選択</span>
+      <button type="button" class="pk-close" onclick="closeNewPicker()" aria-label="閉じる">✕</button>
+    </div><div class="pk-scroll"><table class="pk-mx"><thead><tr><th></th>`;
+            for (let c = 0; c < cols; c++) h += `<th>${c + 1}</th>`;
+            h += '</tr></thead><tbody>';
+            cells.forEach(({ sd, pcts }) => {
+                const dis = used.includes(sd.key);
+                h += `<tr class="${dis ? 'pk-used' : ''}"><th>${esc(sd.name)}</th>`;
+                for (let c = 0; c < cols; c++) {
+                    if (c >= sd.vals.length) { h += '<td></td>'; continue; }
+                    const t = cellTone(pcts[c], max);
+                    h += `<td><button type="button" class="pk-cell" ${dis ? 'disabled' : ''}
+        style="background:${t.bg};color:${t.fg}"
+        title="${esc(sd.name)} ${sd.vals[c]}${sd.unit}｜寄与 ${pcts[c].toFixed(2)}%"
+        onclick="pickNewSub(${si},'${sd.key}',${c})">${sd.vals[c]}</button></td>`;
+                }
+                h += '</tr>';
+            });
+            return h + '</tbody></table></div><div class="pk-note">明るいセルほど今のビルドで価値が高いロールです。押すと次の枠へ進みます。</div>';
+        }
+
+        function buildNewSubs() {
+            const d = document.getElementById('newSubRows'); if (!d) return;
+            if (!S.newSubs) S.newSubs = Array.from({ length: 5 }, () => ({ key: '', val: '' }));
+            const slots = newSlots();
+            if (newPicker != null && newPicker >= slots) newPicker = null;
+            const E = getPartials().E;
+            let h = '<div class="ec-subs">';
+            for (let s = 0; s < slots; s++) {
+                const sub = S.newSubs[s];
+                const sd = sub.key ? SUB_STATS.find(x => x.key === sub.key) : null;
+                const val = sd ? mv(sub.key, sub.val, false) : 0;
+                const dead = sd && val <= 0;
+                h += `<div class="ec-sub${newPicker === s ? ' act' : ''}">
+        <button type="button" class="ec-sub-btn${dead ? ' dead' : ''}" onclick="openNewPicker(${s})">
+          ${sd ? `<span class="ec-sub-n">${esc(sd.name)}</span><span class="ec-sub-v">${sub.val}${sd.unit}</span>`
+                        : `<span class="ec-ph">${s + 1}枠目</span>`}
+        </button>
+        <span class="sub-mv">${sd && E > 0 ? (dead ? '価値0' : '+' + (val / E * 100).toFixed(2) + '%') : ''}</span>
+        ${sd ? `<button type="button" class="ec-x" onclick="clearNewSub(${s})" aria-label="${s + 1}枠目を消す">✕</button>` : ''}
+      </div>`;
+                if (newPicker === s) h += `<div class="pk">${newSubMatrixHTML(s)}</div>`;
+            }
+            d.innerHTML = h + '</div>' + (slots === 0
+                ? '<div style="font-size:11px;color:var(--text3);">レベルを選ぶとサブステ枠が開きます</div>' : '');
         }
 
         function runJudge() {
             const lvl = parseInt(document.getElementById('newLevel')?.value) || 0;
             const usedSlots = { 0: 0, 5: 1, 10: 2, 15: 3, 20: 4, 25: 5 }[lvl] || 0;
             const remainSlots = 5 - usedSlots;
-            const subs = Array.from({ length: usedSlots }, (_, s) => ({
-                key: document.getElementById(`ns_${s}_k`)?.value || '',
-                val: document.getElementById(`ns_${s}_v`)?.value || '',
-            }));
+            const subs = (S.newSubs || []).slice(0, usedSlots).map(x => ({ key: x.key, val: x.val }));
             const cmpIdx = parseInt(document.getElementById('compareSlot')?.value ?? '-1');
             const scores = S.echoes.map((e, i) => ({ idx: i, score: echoScoreAt(i) }));
             const sorted = [...scores].sort((a, b) => a.score - b.score);
@@ -5428,10 +5846,7 @@
             if (cancelBtn) cancelBtn.style.display = 'none';
 
             // サブステ
-            const newSubs = Array.from({ length: usedSlots }, (_, s) => ({
-                key: document.getElementById(`ns_${s}_k`)?.value || '',
-                val: document.getElementById(`ns_${s}_v`)?.value || '',
-            }));
+            const newSubs = (S.newSubs || []).slice(0, usedSlots).map(x => ({ key: x.key, val: x.val }));
             while (newSubs.length < 5) newSubs.push({ key: '', val: '' });
 
             // 名前
@@ -6056,6 +6471,7 @@ rebuildCharaWeaponSelects();
 
         function init() {
             migrateCharaStorage();
+            buildRatioPresets();
             const restored = loadState();
             updateRatioVis();
             buildHarmonyPicker();

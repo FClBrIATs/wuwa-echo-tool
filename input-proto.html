@@ -1,0 +1,293 @@
+<title>音骸サブステ入力 方式比較</title>
+<style>
+:root{
+  --bg:#0a0b0e; --card:#14161c; --card2:#1b1e26; --border:#2a2e38; --border2:#3a3f4c;
+  --p:#d4af37; --text:#e8e6e1; --text2:#a3a6b0; --text3:#686c78;
+  --g1:#7a6226; --g2:#9c7d2c; --g3:#bd9a35; --g4:#d9b944; --g5:#f0d670;
+  --dim:#3a3f4c; --ok:#22c55e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  font-size:14px;line-height:1.7;padding:20px 14px 60px;-webkit-text-size-adjust:100%}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:17px;letter-spacing:.05em;color:var(--p);margin:0 0 4px}
+.sub{font-size:12px;color:var(--text3);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 16px 18px;margin-bottom:16px}
+h2{font-size:14px;margin:0 0 2px}
+h2 .badge{font-size:10px;font-weight:400;color:var(--text3);margin-left:8px}
+.lede{font-size:11.5px;color:var(--text2);margin:0 0 14px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{flex:1;min-width:100px;padding:9px 8px;font-size:12px;font-weight:600;border-radius:7px;cursor:pointer;
+  background:var(--card2);border:1px solid var(--border);color:var(--text2)}
+.tab.on{background:var(--p);border-color:var(--p);color:#0a0b0e}
+.meter{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.m{background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:8px 10px;text-align:center}
+.m b{display:block;font-size:20px;font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--p)}
+.m span{font-size:9.5px;color:var(--text3)}
+.slots{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.slot{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);
+  border-radius:6px;padding:7px 10px;font-size:12px;min-height:38px}
+.slot.act{border-color:var(--p);background:rgba(212,175,55,.1)}
+.slot .n{color:var(--text3);font-size:10px;width:2.4em;flex-shrink:0}
+.slot .v{flex:1;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.slot .e{color:var(--text3)}
+.slot .pc{font-size:10.5px;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.slot .x{background:none;border:0;color:var(--text3);cursor:pointer;font-size:14px;padding:0 4px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:7px 14px;font-size:11.5px;border-radius:6px;cursor:pointer;
+  background:var(--card2);border:1px solid var(--border2);color:var(--text2)}
+.btn.p{background:var(--p);border-color:var(--p);color:#0a0b0e;font-weight:600}
+.pane{border-top:1px solid var(--border);padding-top:14px;margin-top:4px}
+/* マトリクス */
+.mx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.mx-t{border-collapse:separate;border-spacing:2px;font-size:11px}
+.mx-t th{font-size:9.5px;color:var(--text3);font-weight:500;padding:0 2px 3px;white-space:nowrap}
+.mx-t th.rh{text-align:right;padding-right:6px;color:var(--text2);font-size:10.5px}
+.mx-t td{padding:0}
+.cell{width:44px;height:34px;border:0;border-radius:4px;cursor:pointer;font-size:11px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;color:#0a0b0e;font-weight:600;padding:0}
+.cell:disabled{opacity:.25;cursor:not-allowed}
+.cell.blank{background:transparent;cursor:default}
+tr.used .cell{opacity:.2;pointer-events:none}
+/* チップ */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:9px 12px;font-size:12px;border-radius:6px;cursor:pointer;
+  background:var(--card2);border:1px solid var(--border2);color:var(--text)}
+.chip.on{background:var(--p);border-color:var(--p);color:#0a0b0e;font-weight:600}
+.chip:disabled{opacity:.3;cursor:not-allowed}
+.chip.val{font-family:"IBM Plex Mono",ui-monospace,monospace;min-width:62px;text-align:center}
+.step{font-size:10.5px;color:var(--text3);margin:12px 0 7px}
+/* ドロップダウン */
+.dd{display:flex;flex-direction:column;gap:7px}
+.ddrow{display:flex;gap:7px;align-items:center}
+.ddrow span{font-size:10px;color:var(--text3);width:2.4em}
+select{flex:1;padding:8px 7px;font-size:12px;border-radius:6px;background:var(--card2);
+  border:1px solid var(--border2);color:var(--text);font-family:inherit}
+.note{font-size:11px;color:var(--text3);background:var(--card2);border-left:2px solid var(--border2);
+  padding:9px 12px;border-radius:0 5px 5px 0;margin-top:14px;line-height:1.8}
+.legend{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text3);margin-bottom:10px}
+.legend i{display:block;width:18px;height:9px;border-radius:2px}
+.res{display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:var(--ok);
+  border-radius:7px;padding:10px 13px;font-size:12px;margin-bottom:14px}
+.res.on{display:block}
+table.cmp{border-collapse:collapse;width:100%;font-size:11.5px;margin-top:6px}
+.cmp th,.cmp td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp th{font-size:10px;color:var(--text3);font-weight:500}
+.cmp tbody tr:last-child td{border-bottom:none}
+.cmp .best{color:var(--p);font-weight:600}
+@media(max-width:520px){
+  body{padding:16px 10px 50px} .card{padding:13px 12px 15px}
+  /* 狭い画面では8段すべてを画面内に収める。タップ領域の高さは確保する */
+  .cell{width:34px;height:40px;font-size:10px}
+  table.mx-t{border-spacing:1px}
+  .mx-t th.rh{font-size:9.5px;padding-right:4px}
+  .mx-t th{font-size:8.5px}
+}
+</style>
+<div class="wrap">
+<h1>音骸サブステ入力 — 方式比較</h1>
+<p class="sub">音骸1個ぶん（サブステ5枠）を実際に入力して、必要なタップ数と時間を比べられます。スマホでも開いてみてください。装備5スロットぶんは、この5倍かかります。</p>
+
+<div class="tabs">
+  <button class="tab on" data-m="mx">案1 マトリクス</button>
+  <button class="tab" data-m="ch">案2 2段階チップ</button>
+  <button class="tab" data-m="dd">現状 ドロップダウン</button>
+</div>
+
+<div class="card">
+  <h2 id="ttl">案1 マトリクス<span class="badge" id="bdg"></span></h2>
+  <p class="lede" id="led"></p>
+
+  <div class="meter">
+    <div class="m"><b id="mTap">0</b><span>タップ数</span></div>
+    <div class="m"><b id="mSec">0.0</b><span>経過秒</span></div>
+    <div class="m"><b id="mAll">0</b><span>5スロット換算</span></div>
+  </div>
+
+  <div class="res" id="res"></div>
+  <div class="slots" id="slots"></div>
+  <div class="btnrow">
+    <button class="btn p" id="reset">やり直す</button>
+    <button class="btn" id="fill">見本を入れる</button>
+  </div>
+
+  <div class="pane" id="pane"></div>
+  <div class="note" id="note"></div>
+</div>
+
+<div class="card">
+  <h2>結果</h2>
+  <p class="lede">3方式をひととおり試すと埋まります。</p>
+  <table class="cmp">
+    <thead><tr><th>方式</th><th>タップ</th><th>秒</th><th>5スロット換算</th></tr></thead>
+    <tbody id="cmp"><tr><td colspan="4" style="color:var(--text3);text-align:left">まだ記録がありません</td></tr></tbody>
+  </table>
+</div>
+</div>
+<script>
+// 狭い画面ではラベルを詰めないと8段が収まらない
+const SHORT = {flat_atk:'攻撃実数', flat_hp:'HP実数', flat_def:'防御実数', crit_rate:'クリ率', crit_dmg:'クリダメ'};
+const narrow = () => window.matchMedia('(max-width:520px)').matches;
+const labelOf = s => (narrow() && SHORT[s.key]) ? SHORT[s.key] : s.name;
+const SUBS = [{"key":"crit_rate","name":"クリ率","unit":"%","vals":[6.3,6.9,7.5,8.1,8.7,9.3,9.9,10.5],"pct":[4.6,5.038,5.476,5.914,6.352,6.79,7.228,7.666]},{"key":"crit_dmg","name":"クリダメ","unit":"%","vals":[12.6,13.8,15,16.2,17.4,18.6,19.8,21],"pct":[4.314,4.725,5.136,5.547,5.958,6.369,6.779,7.19]},{"key":"atk_pct","name":"攻撃力%","unit":"%","vals":[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6],"pct":[1.231,1.365,1.519,1.654,1.808,1.942,2.096,2.231]},{"key":"flat_atk","name":"攻撃力実数","unit":"","vals":[30,40,50,60],"pct":[1.154,1.538,1.923,2.308]},{"key":"hp_pct","name":"HP%","unit":"%","vals":[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6],"pct":[0,0,0,0,0,0,0,0]},{"key":"flat_hp","name":"HP実数","unit":"","vals":[320,360,390,430,470,510,540,580],"pct":[0,0,0,0,0,0,0,0]},{"key":"def_pct","name":"防御%","unit":"%","vals":[8.1,9,10,10.9,11.8,12.8,13.8,14.7],"pct":[0,0,0,0,0,0,0,0]},{"key":"flat_def","name":"防御実数","unit":"","vals":[40,50,60,70],"pct":[0,0,0,0]},{"key":"dmg_normal","name":"通常バフ","unit":"%","vals":[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6],"pct":[0,0,0,0,0,0,0,0]},{"key":"dmg_heavy","name":"重撃バフ","unit":"%","vals":[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6],"pct":[0,0,0,0,0,0,0,0]},{"key":"dmg_skill","name":"スキルバフ","unit":"%","vals":[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6],"pct":[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6]},{"key":"dmg_lib","name":"解放バフ","unit":"%","vals":[6.4,7.1,7.9,8.6,9.4,10.1,10.9,11.6],"pct":[0,0,0,0,0,0,0,0]},{"key":"res_eff","name":"共鳴効率","unit":"%","vals":[6.8,7.6,8.4,9.2,10,10.8,11.6,12.4],"pct":[0,0,0,0,0,0,0,0]}];
+const RAMP = ['#7a6226','#9c7d2c','#bd9a35','#d9b944','#f0d670'];
+const MAXPCT = Math.max(...SUBS.flatMap(s=>s.pct));
+const colOf = p => p<=0 ? '#2a2e38' : RAMP[Math.min(4, Math.floor(p/MAXPCT*5))];
+const inkOf = p => p<=0 ? '#686c78' : (p/MAXPCT>0.55 ? '#0a0b0e' : '#e8e6e1');
+
+const MODES = {
+  mx:{name:'案1 マトリクス', badge:'1枠 = 1タップ',
+      lede:'種類と値が交差するセルを1回押すだけで1枠決まります。色は現在のビルドでの価値で、明るいほど当たりです。'},
+  ch:{name:'案2 2段階チップ', badge:'1枠 = 2タップ',
+      lede:'種類を押してから値を押します。回数は現状と同じですが、押す対象が大きくOSのピッカーも開きません。'},
+  dd:{name:'現状 ドロップダウン', badge:'1枠 = 2タップ＋α',
+      lede:'いまのツールの方式です。スマホではOSのピッカーが開くため、実際はこれ以上かかります。'}
+};
+const NOTES = {
+  mx:'13種×8段で104セル。行ラベルを含めると約420px必要なので、狭い画面では横スクロールになります。指が太いと隣を押しやすいのが弱点です。',
+  ch:'タップ領域を大きく取れるので誤タップに強い方式です。ただし回数は減りません。',
+  dd:'比較の基準です。選択肢を頭文字で絞り込める利点はありますが、スマホでは毎回ピッカーが開きます。'
+};
+const SAMPLE = [['crit_dmg',6],['crit_rate',4],['atk_pct',5],['dmg_skill',3],['flat_atk',2]];
+
+let mode='mx', picks=[], taps=0, t0=null, timer=null, pendingKey=null;
+const rec={};
+const $ = id => document.getElementById(id);
+
+function tap(){ if(t0===null){ t0=performance.now(); timer=setInterval(paintMeter,100);} taps++; }
+function paintMeter(){
+  $('mTap').textContent=taps;
+  const sec = t0===null?0:(performance.now()-t0)/1000;
+  $('mSec').textContent=sec.toFixed(1);
+  $('mAll').textContent=taps*5;
+}
+function finish(){
+  if(timer){clearInterval(timer);timer=null;}
+  const sec=(performance.now()-t0)/1000;
+  rec[mode]={taps,sec};
+  $('res').className='res on';
+  $('res').innerHTML=`5枠そろいました — <b>${taps}タップ / ${sec.toFixed(1)}秒</b>。装備5スロットぶんなら <b>${taps*5}タップ</b>。`;
+  paintCmp();
+}
+function paintCmp(){
+  const ks=Object.keys(rec);
+  if(!ks.length) return;
+  const best=Math.min(...ks.map(k=>rec[k].taps));
+  $('cmp').innerHTML=ks.map(k=>{
+    const r=rec[k], b=r.taps===best?' class="best"':'';
+    return `<tr><td>${MODES[k].name}</td><td${b}>${r.taps}</td><td>${r.sec.toFixed(1)}</td><td${b}>${r.taps*5}</td></tr>`;
+  }).join('');
+}
+function reset(){
+  picks=[];taps=0;t0=null;pendingKey=null;
+  if(timer){clearInterval(timer);timer=null;}
+  $('res').className='res';
+  paintMeter();render();
+}
+function used(){ return picks.map(p=>p.key); }
+function add(key,i){
+  if(picks.length>=5) return;
+  picks.push({key,i});
+  pendingKey=null;
+  if(picks.length===5) finish();
+  render();
+}
+function del(n){ tap(); picks.splice(n,1); $('res').className='res'; render(); }
+
+function renderSlots(){
+  $('slots').innerHTML=[0,1,2,3,4].map(n=>{
+    const p=picks[n];
+    if(!p) return `<div class="slot${n===picks.length?' act':''}"><span class="n">${n+1}</span><span class="v e">未入力</span></div>`;
+    const s=SUBS.find(x=>x.key===p.key);
+    return `<div class="slot"><span class="n">${n+1}</span>
+      <span class="v">${s.name} ${s.vals[p.i]}${s.unit}</span>
+      <span class="pc" style="color:${colOf(s.pct[p.i])}">${s.pct[p.i]>0?'+'+s.pct[p.i].toFixed(2)+'%':'価値0'}</span>
+      <button class="x" data-del="${n}" aria-label="削除">✕</button></div>`;
+  }).join('');
+}
+function renderMatrix(){
+  const u=used(), maxCols=Math.max(...SUBS.map(s=>s.vals.length));
+  let h='<div class="mx"><table class="mx-t"><thead><tr><th></th>';
+  for(let c=0;c<maxCols;c++) h+=`<th>${c+1}段</th>`;
+  h+='</tr></thead><tbody>';
+  SUBS.forEach(s=>{
+    const isUsed=u.includes(s.key);
+    h+=`<tr class="${isUsed?'used':''}"><th class="rh">${labelOf(s)}</th>`;
+    for(let c=0;c<maxCols;c++){
+      if(c>=s.vals.length){ h+='<td><button class="cell blank" disabled></button></td>'; continue; }
+      h+=`<td><button class="cell" data-k="${s.key}" data-i="${c}"
+        style="background:${colOf(s.pct[c])};color:${inkOf(s.pct[c])}"
+        title="${s.name} ${s.vals[c]}${s.unit} — 寄与 ${s.pct[c]}%">${s.vals[c]}</button></td>`;
+    }
+    h+='</tr>';
+  });
+  return h+'</tbody></table></div>';
+}
+function renderChips(){
+  const u=used();
+  let h='<div class="step">1. 種類を選ぶ</div><div class="chips">';
+  SUBS.forEach(s=>{
+    const dis=u.includes(s.key);
+    h+=`<button class="chip${pendingKey===s.key?' on':''}" data-key="${s.key}" ${dis?'disabled':''}>${s.name}</button>`;
+  });
+  h+='</div>';
+  if(pendingKey){
+    const s=SUBS.find(x=>x.key===pendingKey);
+    h+='<div class="step">2. 値を選ぶ</div><div class="chips">';
+    s.vals.forEach((v,i)=>{
+      h+=`<button class="chip val" data-k="${s.key}" data-i="${i}"
+        style="border-color:${colOf(s.pct[i])}">${v}${s.unit}</button>`;
+    });
+    h+='</div>';
+  }
+  return h;
+}
+function renderDd(){
+  const u=used(), n=picks.length;
+  if(n>=5) return '<div class="step">5枠そろいました</div>';
+  const s=pendingKey?SUBS.find(x=>x.key===pendingKey):null;
+  let h='<div class="dd"><div class="ddrow"><span>'+(n+1)+'</span>';
+  h+='<select id="ddK"><option value="">種類を選択</option>';
+  SUBS.forEach(x=>{ h+=`<option value="${x.key}" ${u.includes(x.key)?'disabled':''} ${pendingKey===x.key?'selected':''}>${x.name}</option>`; });
+  h+='</select>';
+  h+='<select id="ddV"'+(s?'':' disabled')+'><option value="">値</option>';
+  if(s) s.vals.forEach((v,i)=>{ h+=`<option value="${i}">${v}${s.unit}</option>`; });
+  h+='</select></div></div>';
+  return h;
+}
+function render(){
+  const M=MODES[mode];
+  $('ttl').firstChild.nodeValue=M.name;
+  $('bdg').textContent=M.badge;
+  $('led').textContent=M.lede;
+  $('note').textContent=NOTES[mode];
+  renderSlots();
+  $('pane').innerHTML = mode==='mx'?renderMatrix() : mode==='ch'?renderChips() : renderDd();
+  if(mode==='mx'){
+    $('pane').insertAdjacentHTML('afterbegin',
+      '<div class="legend">価値 低 <i style="background:'+RAMP[0]+'"></i><i style="background:'+RAMP[1]+'"></i><i style="background:'+RAMP[2]+'"></i><i style="background:'+RAMP[3]+'"></i><i style="background:'+RAMP[4]+'"></i> 高　<i style="background:#2a2e38"></i> このビルドでは価値0</div>');
+  }
+}
+document.addEventListener('click', e => {
+  const t=e.target.closest('button, .tab');
+  if(!t) return;
+  if(t.dataset.m){ mode=t.dataset.m;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.m===mode));
+    reset(); return; }
+  if(t.id==='reset'){ reset(); return; }
+  if(t.id==='fill'){ reset(); SAMPLE.forEach(([k,i])=>picks.push({key:k,i})); taps=0; render(); return; }
+  if(t.dataset.del!==undefined){ del(+t.dataset.del); return; }
+  if(t.classList.contains('cell') && t.dataset.k){ tap(); add(t.dataset.k, +t.dataset.i); return; }
+  if(t.classList.contains('chip') && t.dataset.key){ tap(); pendingKey=t.dataset.key; render(); return; }
+  if(t.classList.contains('chip') && t.dataset.k){ tap(); add(t.dataset.k, +t.dataset.i); return; }
+});
+document.addEventListener('change', e => {
+  if(e.target.id==='ddK'){ tap(); pendingKey=e.target.value||null; render();
+    if(pendingKey){ const v=document.getElementById('ddV'); if(v) v.focus(); } return; }
+  if(e.target.id==='ddV'){ tap(); if(pendingKey && e.target.value!=='') add(pendingKey, +e.target.value); return; }
+});
+reset();
+window.addEventListener('resize', () => { if(mode==='mx') render(); });
+</script>

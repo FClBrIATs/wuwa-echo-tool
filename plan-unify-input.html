@@ -1,0 +1,179 @@
+<title>入力モード一本化 計画</title>
+<style>
+:root{
+  --bg:#0a0b0e; --card:#14161c; --card2:#1b1e26; --border:#2a2e38; --border2:#3a3f4c;
+  --p:#d4af37; --text:#e8e6e1; --text2:#a3a6b0; --text3:#686c78;
+  --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  font-size:14px;line-height:1.75;padding:26px 16px 70px}
+.wrap{max-width:940px;margin:0 auto}
+h1{font-size:19px;letter-spacing:.05em;color:var(--p);margin:0 0 5px}
+.sub{font-size:12px;color:var(--text3);margin:0 0 24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px 20px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 3px;display:flex;align-items:baseline;gap:9px}
+h2 .no{font-size:11px;font-weight:600;color:#0a0b0e;background:var(--p);border-radius:4px;padding:1px 7px;flex-shrink:0}
+.lede{font-size:12.5px;color:var(--text2);margin:0 0 15px}
+h3{font-size:12.5px;margin:16px 0 5px;color:var(--p)}
+p{margin:0 0 10px;font-size:13px}
+ul{margin:0 0 10px;padding-left:1.25em;font-size:13px}
+li{margin-bottom:4px}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:var(--p);
+  background:var(--card2);padding:1px 5px;border-radius:3px}
+pre{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:11px 13px;
+  overflow-x:auto;font-size:11.5px;line-height:1.7;margin:0 0 10px}
+pre code{background:none;padding:0;color:var(--text2)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:440px;font-size:12.5px;margin-bottom:10px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{font-size:11px;color:var(--text3);font-weight:500;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+td.n{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace;white-space:nowrap}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.box{border-left:2px solid var(--border2);background:var(--card2);padding:10px 14px;
+  border-radius:0 6px 6px 0;font-size:12.5px;margin:0 0 12px}
+.box.v{border-left-color:var(--ok)}
+.box.w{border-left-color:var(--warn)}
+.box b{color:var(--text)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding-left:30px;margin-bottom:13px;font-size:13px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:20px;height:20px;
+  border-radius:50%;background:var(--card2);border:1px solid var(--border2);color:var(--p);
+  font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.steps li b{display:block;color:var(--text);margin-bottom:1px}
+.steps li span{color:var(--text2);font-size:12.5px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px 13px}
+.kpi b{display:block;font-size:21px;color:var(--p);font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-size:10px;color:var(--text3)}
+.tag{font-size:10px;border-radius:3px;padding:1px 6px;white-space:nowrap}
+.tag.keep{background:rgba(34,197,94,.15);color:var(--ok)}
+.tag.del{background:rgba(239,68,68,.15);color:var(--bad)}
+.tag.mod{background:rgba(245,158,11,.15);color:var(--warn)}
+@media(max-width:600px){body{padding:18px 11px 50px}.card{padding:14px 13px 16px}}
+</style>
+<div class="wrap">
+<h1>入力モード一本化 — 実装計画</h1>
+<p class="sub">合計値入力を廃止し、項目別入力に統一する。既存の保存データを壊さないことを最優先に組んでいる。数値はすべてツール本体で実測した。</p>
+
+<div class="kpis">
+  <div class="kpi"><b>32</b><span>inputMode の参照箇所</span></div>
+  <div class="kpi"><b>16</b><span>移行が必要な入力項目</span></div>
+  <div class="kpi"><b>162</b><span>影響を受けうるテスト</span></div>
+  <div class="kpi"><b class="ok">一致</b><span>移行後のスコア（検算済み）</span></div>
+</div>
+
+<div class="card">
+<h2><span class="no">前提</span>移行できることは確認済み</h2>
+<p class="lede">計画を立てる前に、両モードが同じ結果を出せるかを実測した。</p>
+
+<p>合計値モードで入力したビルドを、自動加算される分を差し引いて項目別の「その他」欄へ移したところ、<b>期待ダメージ指数が完全に一致した</b>。</p>
+<pre><code>移行前  E = 9243 ／ 全体攻撃力 2600
+移行後  E = 9243 ／ 全体攻撃力 2600   ← 一致
+残差 16項目、マイナスなし</code></pre>
+
+<div class="box v"><b>これが計画の土台になる。</b>項目別モードは合計値モードの上位互換で、機能の後退なしに統合できる。</div>
+
+<h3>移行の式</h3>
+<p>項目別モードはハーモニー・武器・キャラ・音骸を自動で足す。合計値モードの入力にはそれらが既に含まれているため、<b>単純にコピーすると二重計上になる</b>。自動加算される分を引いた残りを「その他」に入れる。</p>
+<pre><code>その他 = 合計値モードの入力 − 項目別モードが自動計算する分</code></pre>
+<p>対象は16項目。基礎値・全体値・クリ率・クリダメ・属性ダメ6種・全属性ダメ・スキル別ダメ5種。</p>
+</div>
+
+<div class="card">
+<h2><span class="no">課題</span>先に決めておくこと</h2>
+<p class="lede">実装前に判断が要る点。ここを飛ばすと後戻りする。</p>
+
+<h3>1. 残差がマイナスになる場合がある</h3>
+<p>ハーモニーなどの自動加算が、入力された合計を上回るケースが実際に起きる。実測例：</p>
+<pre><code>合計値モード： クリ率 20%
+ハーモニー等の自動加算： 22%
+→ その他 = −2%</code></pre>
+<p>合計値モードでは登録データを使わないので、「ハーモニーを選んでいるのに合計値には含めていない」という入力が成立していた。移行するとその矛盾が表面化する。</p>
+<div class="box w"><b>方針の候補</b>：(a) マイナスのまま入れて計算を一致させる（数字は不自然だが結果は正しい）／(b) 0で止めて差分を警告する（数字は自然だがスコアが変わる）。<br>
+一致を優先するなら (a)。ただし「その他 −2%」という表示の意味を説明する必要がある。</div>
+
+<h3>2. 手軽さを失わないか</h3>
+<p>合計値モードは4項目を打つだけで使えた。項目別モードの編集可能な欄は52個ある（残り66個は自動計算の読み取り専用）。</p>
+<div class="box"><b>ただし実際に必須なのは「その他」の4項目だけ。</b>登録データが無くても、その他欄に直接打てば従来と同じ手数で使える。<b>問題は導線</b>で、「その他」という名前では「ここに全部打てばいい」と分からない。</div>
+
+<h3>3. 「その他」という名前が実態に合わなくなる</h3>
+<p>一本化後は、この欄が<b>主要な直接入力欄</b>になる。名前と配置の見直しが要る。</p>
+</div>
+
+<div class="card">
+<h2><span class="no">計画</span>実装の順序</h2>
+<p class="lede">前の段が次の段の前提になっている。1〜2が終われば、既存ユーザーのデータは安全な状態になる。</p>
+
+<ol class="steps">
+<li><b>移行処理を書く（UIは触らない）</b>
+<span>保存データに合計値モードの入力があれば、起動時に残差を計算して「その他」へ移す。移行済みの目印を保存し、二重実行を防ぐ。この時点ではモード切替は残したまま、移行結果が元と一致することをテストで固める。</span></li>
+
+<li><b>移行のテストを厚くする</b>
+<span>ハーモニーあり／なし、音骸あり／なし、残差がマイナスになる場合、空データ、壊れたデータ。<b>ここが最も壊してはいけない部分</b>なので、UIを消す前に検証を済ませる。</span></li>
+
+<li><b>入力欄の名前と並びを直す</b>
+<span>「その他」を直接入力の主役として扱えるようにする。項目別モードだけで違和感なく使えることを確認してから、次へ進む。</span></li>
+
+<li><b>合計値モードのUIを外す</b>
+<span>モード切替ボタン、合計値ブロック、ダメバフ／スキルバフの合計値側を削除。<code>setInputMode</code> と切替の配線も外す。</span></li>
+
+<li><b>計算側の分岐を落とす</b>
+<span><code>inputMode</code> の32箇所、<code>totalModeContribution</code>（14行）、<code>getHarmonyTotalEff</code> ほか4つのラッパー、<code>S.base_stat</code> など合計値モード専用の状態を削除。<b>スコア計算の総入れ替えではなく、分岐の片側を消すだけ</b>。</span></li>
+
+<li><b>テストを項目別へ寄せる</b>
+<span>テストの共通ビルド定義が合計値モードの項目を使っているので、その1箇所を書き換える。162件が通ることを確認する。</span></li>
+
+<li><b>ドキュメント更新</b>
+<span>README の機能一覧、PHASES.md に判断の記録。</span></li>
+</ol>
+</div>
+
+<div class="card">
+<h2><span class="no">範囲</span>何を消して何を残すか</h2>
+<div class="scroll"><table>
+<thead><tr><th>対象</th><th>扱い</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td><code>inputMode</code> と全分岐（32箇所）</td><td><span class="tag del">削除</span></td><td>常に項目別として扱う</td></tr>
+<tr><td><code>setInputMode</code> / モード切替ボタン</td><td><span class="tag del">削除</span></td><td>UIから消える</td></tr>
+<tr><td><code>totalModeContribution</code>（14行）</td><td><span class="tag del">削除</span></td><td>厳密差分の合計値モード側の処理</td></tr>
+<tr><td><code>getHarmonyTotalEff</code> ほか4つ</td><td><span class="tag del">削除</span></td><td>モード連動ラッパー。直接呼び出しに戻す</td></tr>
+<tr><td><code>S.base_stat</code> / <code>total_stat</code> / <code>crit_rate</code> / <code>crit_dmg</code> / <code>dmg_*</code></td><td><span class="tag mod">移行後に削除</span></td><td>移行処理が読む必要があるため、消すのは最後</td></tr>
+<tr><td>合計値入力ブロックのHTML</td><td><span class="tag del">削除</span></td><td></td></tr>
+<tr><td><code>S.other</code>（その他欄）</td><td><span class="tag mod">主役化</span></td><td>名前と配置を見直す</td></tr>
+<tr><td><code>detailBreakdown</code> / <code>getPartials</code></td><td><span class="tag keep">維持</span></td><td>項目別側の処理はそのまま使える</td></tr>
+<tr><td>スコア計算・確率計算・可視化</td><td><span class="tag keep">維持</span></td><td>モードに依存しない</td></tr>
+<tr><td>音骸セット保存・バックアップ</td><td><span class="tag keep">維持</span></td><td>影響なし</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="card">
+<h2><span class="no">リスク</span>壊れうる箇所と対策</h2>
+<div class="scroll"><table>
+<thead><tr><th>リスク</th><th>影響</th><th>対策</th></tr></thead>
+<tbody>
+<tr><td>移行でスコアが変わる</td><td class="bad">大</td><td>移行前後のEが一致することをテストで固定。UIを消す前に済ませる</td></tr>
+<tr><td>移行が二重に走り、残差が二重に引かれる</td><td class="bad">大</td><td>移行済みフラグを保存データに持たせる</td></tr>
+<tr><td>合計値モードで使っていた人が、項目別の入力欄の多さで迷う</td><td class="warn">中</td><td>直接入力欄を先頭に置き、名前を実態に合わせる</td></tr>
+<tr><td>残差のマイナス表示に戸惑う</td><td class="warn">中</td><td>方針を決めたうえで説明文を添える</td></tr>
+<tr><td>テストが合計値モード前提で書かれている</td><td class="warn">中</td><td>共通ビルド定義1箇所の書き換えで済む</td></tr>
+<tr><td>古いバックアップJSONの復元</td><td class="ok">小</td><td>バックアップは登録データのみで、入力内容を含まない</td></tr>
+</tbody>
+</table></div>
+<div class="box v"><b>後戻りできる形にする。</b>1〜2までは既存の動作を一切変えない追加だけなので、途中で方針を変えても捨てるものが少ない。UIを消すのは4段目まで待つ。</div>
+</div>
+
+<div class="card" style="background:var(--card2)">
+<h2>確認したいこと</h2>
+<p style="margin:0 0 8px">着手前に決めていただきたい点：</p>
+<ul style="margin:0">
+<li><b>残差がマイナスになったときの扱い</b> — 計算の一致を優先するか、表示の自然さを優先するか</li>
+<li><b>「その他」欄の呼び方</b> — 「直接入力」「手入力」など。ここが一本化後の主役になる</li>
+<li><b>移行のタイミング</b> — 起動時に黙って移すか、確認を出してから移すか</li>
+</ul>
+</div>
+</div>
