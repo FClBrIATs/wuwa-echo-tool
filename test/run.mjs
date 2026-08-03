@@ -913,17 +913,26 @@ await withPage(async page => {
     checkTrue('サブステの入力欄が見えている', r.入力欄が見える);
 });
 
-suite('ハーモニー選択が畳まれていない');
+suite('選択式の入力がまとまっている');
 await withPage(async page => {
     const r = await page.evaluate(() => {
-        // 見出しが無いままだと直前の「ダメージ比率」の折りたたみに巻き込まれ、
-        // 一次入力であるハーモニー選択がページから消えていた
-        const d = [...document.querySelectorAll('#tab-stats details')]
-            .find(x => x.querySelector('summary')?.textContent.includes('ハーモニー'));
-        return { 開いている: d?.open, 見えている: document.getElementById('harmonyPicker').offsetParent !== null };
+        const pick = document.getElementById('harmonyPicker');
+        const detail = document.getElementById('block_detail');
+        return {
+            // 折りたたみの中に入れると、一次入力なのにページから消える
+            選択ブロックの中: !!pick.closest('#select_block'),
+            折りたたまれていない: !pick.closest('details'),
+            見えている: pick.offsetParent !== null,
+            // キャラ・武器と同じ「選ぶ入力」なので、数値の内訳より前に置く
+            内訳より前: pick.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING ? true : false,
+            キャラ選択も同じ枠: !!document.getElementById('sel_chara').closest('#select_block'),
+        };
     });
-    checkTrue('ハーモニーの見出しが開いた状態で始まる', r.開いている);
+    checkTrue('ハーモニーがキャラ・武器と同じ枠にある', r.選択ブロックの中);
+    checkTrue('キャラ選択も同じ枠にある', r.キャラ選択も同じ枠);
+    checkTrue('折りたたみに巻き込まれていない', r.折りたたまれていない);
     checkTrue('ハーモニー選択が見えている', r.見えている);
+    checkTrue('数値の内訳より前に置かれる', r.内訳より前);
 });
 
 // ── 合計欄への直接入力 ──────────────────────────────────
@@ -1007,7 +1016,7 @@ await withPage(async page => {
         合計値モードのブロック: !!document.getElementById('block_total'),
         切替関数: typeof setInputMode,
         内訳が最初から見えている: document.getElementById('block_detail').offsetParent !== null,
-        キャラ武器の選択も見えている: document.getElementById('cw_select_block').offsetParent !== null,
+        キャラ武器の選択も見えている: document.getElementById('select_block').offsetParent !== null,
         属性バフの内訳が見えている: document.getElementById('di_attr_rows').children.length,
     }));
     checkTrue('モード切替ボタンは無い', !r.モード切替ボタン);
