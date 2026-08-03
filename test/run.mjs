@@ -913,17 +913,26 @@ await withPage(async page => {
     checkTrue('サブステの入力欄が見えている', r.入力欄が見える);
 });
 
-suite('ハーモニー選択が畳まれていない');
+suite('選択式の入力がまとまっている');
 await withPage(async page => {
     const r = await page.evaluate(() => {
-        // 見出しが無いままだと直前の「ダメージ比率」の折りたたみに巻き込まれ、
-        // 一次入力であるハーモニー選択がページから消えていた
-        const d = [...document.querySelectorAll('#tab-stats details')]
-            .find(x => x.querySelector('summary')?.textContent.includes('ハーモニー'));
-        return { 開いている: d?.open, 見えている: document.getElementById('harmonyPicker').offsetParent !== null };
+        const pick = document.getElementById('harmonyPicker');
+        const detail = document.getElementById('block_detail');
+        return {
+            // 折りたたみの中に入れると、一次入力なのにページから消える
+            選択ブロックの中: !!pick.closest('#select_block'),
+            折りたたまれていない: !pick.closest('details'),
+            見えている: pick.offsetParent !== null,
+            // キャラ・武器と同じ「選ぶ入力」なので、数値の内訳より前に置く
+            内訳より前: pick.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING ? true : false,
+            キャラ選択も同じ枠: !!document.getElementById('sel_chara').closest('#select_block'),
+        };
     });
-    checkTrue('ハーモニーの見出しが開いた状態で始まる', r.開いている);
+    checkTrue('ハーモニーがキャラ・武器と同じ枠にある', r.選択ブロックの中);
+    checkTrue('キャラ選択も同じ枠にある', r.キャラ選択も同じ枠);
+    checkTrue('折りたたみに巻き込まれていない', r.折りたたまれていない);
     checkTrue('ハーモニー選択が見えている', r.見えている);
+    checkTrue('数値の内訳より前に置かれる', r.内訳より前);
 });
 
 // ── 合計欄への直接入力 ──────────────────────────────────
@@ -971,6 +980,35 @@ await withPage(async page => {
     check('注釈も消える', r.注釈も消える, '');
 });
 
+suite('手入力と自動計算が見分けられる');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const items = [...document.querySelectorAll('#tab-stats .detail-item')];
+        const manual = items.filter(x => x.classList.contains('manual'));
+        return {
+            欄がある: items.length,
+            // 編集できる欄には必ず印が付いていること（逆も同じ）
+            印の無い入力欄: items.filter(x => !x.classList.contains('manual') && !x.querySelector('input[readonly]')).length,
+            編集できない手入力欄: manual.filter(x => x.querySelector('input[readonly]')).length,
+            手入力の見出し: manual.length && getComputedStyle(manual[0].querySelector('label'), '::before').content,
+            自動欄は点線: getComputedStyle(document.getElementById('di_cr_h')).borderStyle,
+            手入力欄は実線: getComputedStyle(document.getElementById('di_cr_other')).borderStyle,
+            色が違う: getComputedStyle(document.getElementById('di_cr_h')).backgroundColor
+                !== getComputedStyle(document.getElementById('di_cr_other')).backgroundColor,
+            凡例: [...document.querySelectorAll('#block_detail .input-legend span')].map(x => x.className),
+        };
+    });
+    checkTrue('内訳の入力欄がある', r.欄がある > 20);
+    check('編集できる欄には必ず印が付く', r.印の無い入力欄, 0);
+    check('印の付いた欄は必ず編集できる', r.編集できない手入力欄, 0);
+    checkTrue('手入力の見出しに印が入る', r.手入力の見出し.includes('✎'));
+    // 色覚に依存しないよう、枠線の種類でも区別する
+    check('自動計算の欄は点線', r.自動欄は点線, 'dashed');
+    check('手入力の欄は実線', r.手入力欄は実線, 'solid');
+    checkTrue('背景色も変える', r.色が違う);
+    check('凡例が3種類出る', r.凡例, ['lg-auto', 'lg-manual', 'lg-total']);
+});
+
 suite('合計値入力モードが無い');
 await withPage(async page => {
     const r = await page.evaluate(() => ({
@@ -978,7 +1016,7 @@ await withPage(async page => {
         合計値モードのブロック: !!document.getElementById('block_total'),
         切替関数: typeof setInputMode,
         内訳が最初から見えている: document.getElementById('block_detail').offsetParent !== null,
-        キャラ武器の選択も見えている: document.getElementById('cw_select_block').offsetParent !== null,
+        キャラ武器の選択も見えている: document.getElementById('select_block').offsetParent !== null,
         属性バフの内訳が見えている: document.getElementById('di_attr_rows').children.length,
     }));
     checkTrue('モード切替ボタンは無い', !r.モード切替ボタン);
