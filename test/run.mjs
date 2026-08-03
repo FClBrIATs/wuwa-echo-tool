@@ -155,8 +155,9 @@ await withPage(async page => {
         固定: getCharaEntries('weapon').filter(e => e._builtin).length,
         ユーザー: getCharaEntries('weapon').filter(e => !e._builtin).map(e => e.name),
         保存件数: JSON.parse(localStorage.getItem('echo_chara_weapon')).length,
+        固定件数の実際: BUILTIN_WEAPON.length,
     }));
-    check('起動時に重複が掃除される', [r.固定, r.保存件数], [5, 1]);
+    check('起動時に重複が掃除される', [r.固定, r.保存件数], [r.固定件数の実際, 1]);
     check('本物の登録は残る', r.ユーザー, ['本物の登録']);
 });
 
@@ -1112,6 +1113,132 @@ await withPage(async page => {
     check('濃い段には明色の文字を載せる', r.濃い段の文字色,
         ['var(--text)', 'var(--text)', 'var(--on-g)', 'var(--on-g)', 'var(--on-g)']);
     check('価値0のセルは灰色のまま', r.価値0の文字色, 'var(--text3)');
+});
+
+// ── 登録タブ：ハーモニーが固定プリセットごと出る ──────────────
+suite('登録タブにハーモニーの固定プリセットが出る');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        // 以前は customHarmonies()（ユーザー登録分）しか見ておらず、
+        // ①タブのピッカーには30件出るのに登録タブには1件も出ない食い違いがあった
+        const items = [...document.querySelectorAll('#customList .custom-item')];
+        return {
+            表示件数: items.length,
+            全ハーモニー件数: allHarmonies().length,
+            固定件数: HARMONIES.length,
+            固定バッジの数: items.filter(x => x.textContent.includes('固定')).length,
+            固定に編集ボタンが無い: items.every(x => {
+                const isBuiltin = x.textContent.includes('固定');
+                const hasEditBtn = !!x.querySelector('button');
+                return !isBuiltin || !hasEditBtn;
+            }),
+        };
+    });
+    check('表示件数がallHarmonies()と一致', r.表示件数, r.全ハーモニー件数);
+    checkTrue('固定プリセットが30件以上ある', r.固定件数 >= 30);
+    check('固定バッジの数がHARMONIES件数と一致', r.固定バッジの数, r.固定件数);
+    checkTrue('固定プリセットには編集・削除ボタンが出ない', r.固定に編集ボタンが無い);
+});
+
+suite('登録タブでユーザー追加ハーモニーも共存する');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const before = allHarmonies().length;
+        document.getElementById('cName').value = 'テストハーモニー';
+        document.getElementById('cSetType').value = '2+5'; onCustomSetType('2+5');
+        addCustomHarmony();
+        const items = [...document.querySelectorAll('#customList .custom-item')];
+        const mine = items.find(x => x.textContent.includes('テストハーモニー'));
+        return {
+            増えた件数: allHarmonies().length - before,
+            自分の登録に編集削除ボタンがある: !!(mine && mine.querySelectorAll('button').length === 2),
+            自分の登録に固定バッジが無い: !!(mine && !mine.textContent.includes('固定')),
+        };
+    });
+    check('ユーザー登録が1件増える', r.増えた件数, 1);
+    checkTrue('ユーザー登録には編集・削除ボタンが出る', r.自分の登録に編集削除ボタンがある);
+    checkTrue('ユーザー登録に固定バッジは付かない', r.自分の登録に固定バッジが無い);
+});
+
+// ── ダメージ比率：登録キャラ由来は「合計100%」警告を出さない ──
+suite('登録キャラのratioは合計100%警告の対象外');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        const findCharaId = name => getCharaEntries('chara').find(e => e.name === name)?.id;
+
+        // デュアルタイプ（合計200%）
+        document.getElementById('sel_chara').value = findCharaId('仇遠S0');
+        onCharaWeaponChange(); recalcAll();
+        o.デュアルタイプの合計 = S.ratio.echo + S.ratio.heavy;
+        o.デュアルタイプで警告が出ない = document.getElementById('ratio_warn').style.display === 'none';
+        o.デュアルタイプの表示 = document.getElementById('ratio_total_note').textContent;
+
+        // 純ヒーラー（合計0%）
+        document.getElementById('sel_chara').value = findCharaId('モーニエS0');
+        onCharaWeaponChange(); recalcAll();
+        o.ヒーラーの合計 = S.ratio.normal + S.ratio.heavy + S.ratio.skill + S.ratio.lib + S.ratio.echo;
+        o.ヒーラーで警告が出ない = document.getElementById('ratio_warn').style.display === 'none';
+
+        // 手で1つでも触ると、以後は通常の警告に戻る
+        document.getElementById('r_n').value = '30';
+        document.getElementById('r_n').dispatchEvent(new Event('input', { bubbles: true }));
+        o.手入力後は警告が戻る = document.getElementById('ratio_warn').style.display === 'block';
+
+        // 通常（100%）のキャラでは今まで通り警告なし
+        document.getElementById('sel_chara').value = findCharaId('ツバキS0');
+        onCharaWeaponChange(); recalcAll();
+        o.通常キャラは合計100 = S.ratio.normal + S.ratio.lib;
+        o.通常キャラで警告なし = document.getElementById('ratio_warn').style.display === 'none';
+        return o;
+    });
+    check('仇遠は音骸スキル+重撃とも100%（合計200）', r.デュアルタイプの合計, 200);
+    checkTrue('デュアルタイプでも「合計100%」警告は出ない', r.デュアルタイプで警告が出ない);
+    checkTrue('その旨の表示が出る', r.デュアルタイプの表示.includes('登録キャラの配分'));
+    check('モーニエのratioは全項目0', r.ヒーラーの合計, 0);
+    checkTrue('ヒーラー（合計0%）でも警告は出ない', r.ヒーラーで警告が出ない);
+    checkTrue('手で編集した後は通常の警告に戻る', r.手入力後は警告が戻る);
+    check('通常のキャラ（ツバキ）は合計100', r.通常キャラは合計100, 100);
+    checkTrue('通常のキャラでは元々警告が出ない', r.通常キャラで警告なし);
+});
+
+// ── キャラ・武器の収録データ拡充 ──────────────────────────
+suite('収録キャラ・武器データの整合性');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const CH_FIELDS_KNOWN = new Set(['base_atk', 'base_hp', 'base_def', 'atk_pct', 'flat_atk', 'hp_pct', 'flat_hp',
+            'def_pct', 'crit_rate', 'crit_dmg', 'dmg_fire', 'dmg_ice', 'dmg_thunder', 'dmg_wind', 'dmg_light',
+            'dmg_dark', 'dmg_all', 'dmg_normal', 'dmg_heavy', 'dmg_skill', 'dmg_lib', 'dmg_echo',
+            'name', 'desc', 'attr', 'ratio', 'weaponType']);
+        const ATTRS = new Set(['fire', 'ice', 'thunder', 'wind', 'light', 'dark', 'other', '']);
+        const badKeys = [];
+        [...BUILTIN_CHARA, ...BUILTIN_WEAPON].forEach(e => Object.keys(e).forEach(k => {
+            if (!CH_FIELDS_KNOWN.has(k)) badKeys.push(`${e.name}:${k}`);
+        }));
+        const badAttr = BUILTIN_CHARA.filter(e => e.attr && !ATTRS.has(e.attr)).map(e => e.name);
+        const dupeNames = arr => { const seen = new Set(), dup = []; arr.forEach(n => { if (seen.has(n)) dup.push(n); seen.add(n); }); return dup; };
+        const weaponTypes = new Set(BUILTIN_WEAPON.map(e => e.weaponType));
+        return {
+            キャラ数: BUILTIN_CHARA.length,
+            武器数: BUILTIN_WEAPON.length,
+            スキーマ外キー: badKeys,
+            不正な属性: badAttr,
+            キャラ名重複: dupeNames(BUILTIN_CHARA.map(e => e.name)),
+            武器名重複: dupeNames(BUILTIN_WEAPON.map(e => e.name)),
+            武器種別が全件にある: BUILTIN_WEAPON.every(e => !!e.weaponType),
+            武器種別の種類数: weaponTypes.size,
+            属性なしキャラ: BUILTIN_CHARA.filter(e => !e.attr).map(e => e.name),
+        };
+    });
+    checkTrue('キャラは40件以上収録', r.キャラ数 >= 40);
+    checkTrue('武器は40件以上収録', r.武器数 >= 40);
+    check('スキーマ外のキーは無い', r.スキーマ外キー, []);
+    check('不正な属性値は無い', r.不正な属性, []);
+    check('キャラ名の重複は無い', r.キャラ名重複, []);
+    check('武器名の重複は無い', r.武器名重複, []);
+    checkTrue('全武器に武器種別が設定されている', r.武器種別が全件にある);
+    check('武器種別は5種類（長刃・迅刀・拳銃・手甲・増幅器）', r.武器種別の種類数, 5);
+    check('属性未設定のキャラは無い（カルテジアは気動）', r.属性なしキャラ, []);
 });
 
 await finish();
