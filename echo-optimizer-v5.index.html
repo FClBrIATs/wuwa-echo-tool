@@ -2403,23 +2403,23 @@
                         <div class="inline2">
                             <div class="field"><label>通常攻撃</label>
                                 <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
-                                    oninput="S.ratio.normal=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                                    oninput="S.ratio.normal=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>重撃</label>
                                 <input type="number" inputmode="decimal" min="0" max="100" id="r_h" value="0"
-                                    oninput="S.ratio.heavy=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                                    oninput="S.ratio.heavy=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>共鳴スキル</label>
                                 <input type="number" inputmode="decimal" min="0" max="100" id="r_s" value="100"
-                                    oninput="S.ratio.skill=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                                    oninput="S.ratio.skill=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>共鳴解放</label>
                                 <input type="number" inputmode="decimal" min="0" max="100" id="r_l" value="0"
-                                    oninput="S.ratio.lib=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                                    oninput="S.ratio.lib=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                             <div class="field"><label>音骸スキル</label>
                                 <input type="number" inputmode="decimal" min="0" max="100" id="r_e" value="0"
-                                    oninput="S.ratio.echo=+this.value||0;updateRatioVis();recalcAll();autoSize(this)">
+                                    oninput="S.ratio.echo=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
                             </div>
                         </div>
                         <div class="ratio-vis" id="ratioVis"></div>
@@ -3414,6 +3414,9 @@
         // STATE
         // ================================================================
         let statMode = 'atk';
+        // ダメージ比率の出どころ。'chara' なら「合計100%」警告を出さない。
+        // デュアルタイプのキャラは合計200%で登録されていて、それが正しい状態のため。
+        let ratioSource = 'manual';
         let useAttr = ''; // 使用属性: 'fire'|'ice'|'thunder'|'wind'|'light'|'dark'|'' (空=合算)
         let S = {
             ratio: { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 },
@@ -3704,10 +3707,12 @@
 
             // キャラに ratio が登録されていれば S.ratio に反映、なければデフォルトにリセット
             const selChara = document.getElementById('sel_chara');
+            ratioSource = 'manual';
             if (selChara && selChara.value) {
                 const charaEntry = getCharaEntries('chara').find(e => e.id === selChara.value);
                 const defaultRatio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
                 const r = (charaEntry && charaEntry.ratio) ? charaEntry.ratio : defaultRatio;
+                if (charaEntry && charaEntry.ratio) ratioSource = 'chara';
                 S.ratio.normal = r.normal ?? 0;
                 S.ratio.heavy  = r.heavy  ?? 0;
                 S.ratio.skill  = r.skill  ?? 0;
@@ -4035,6 +4040,7 @@
 
         function applyRatioPreset(i) {
             const p = RATIO_PRESETS[i]; if (!p) return;
+            ratioSource = 'manual';
             S.ratio = { ...p.r };
             const ids = { r_n: 'normal', r_h: 'heavy', r_s: 'skill', r_l: 'lib', r_e: 'echo' };
             Object.entries(ids).forEach(([id, k]) => {
@@ -4064,10 +4070,17 @@
                 const p = RATIO_PRESETS[i];
                 b.classList.toggle('on', p && Object.keys(p.r).every(k => (S.ratio[k] || 0) === p.r[k]));
             });
+            // 登録キャラ由来のratioは合計100%を前提にしていない
+            // （デュアルタイプは200%、純ヒーラーは0%が正しい状態）ので、
+            // その場合は「ズレている」警告を出さない。
+            const fromChara = ratioSource === 'chara';
             const tn = document.getElementById('ratio_total_note');
-            if (tn) { tn.textContent = ` = ${total}%`; tn.style.color = total === 100 ? 'var(--green)' : 'var(--red)'; }
+            if (tn) {
+                tn.textContent = fromChara && total !== 100 ? ` = ${total}%（登録キャラの配分）` : ` = ${total}%`;
+                tn.style.color = total === 100 ? 'var(--green)' : (fromChara ? 'var(--text2)' : 'var(--red)');
+            }
             const rw = document.getElementById('ratio_warn');
-            if (rw) rw.style.display = (total !== 100) ? 'block' : 'none';
+            if (rw) rw.style.display = (total !== 100 && !fromChara) ? 'block' : 'none';
         }
 
         // ================================================================
@@ -6018,8 +6031,11 @@
 
         function renderCustomList() {
             const d = document.getElementById('customList'); if (!d) return;
-            const custom = customHarmonies();
-            if (!custom.length) { d.innerHTML = '<div style="color:var(--text3);font-size:11px;">登録データなし</div>'; return; }
+            // 固定プリセット（HARMONIES）とユーザー登録分の両方を出す。
+            // 以前はユーザー登録分しか見ておらず、①タブのピッカーには30件出るのに
+            // ここには1件も出ないという食い違いがあった。
+            const list = allHarmonies();
+            if (!list.length) { d.innerHTML = '<div style="color:var(--text3);font-size:11px;">登録データなし</div>'; return; }
             const bLabel = k => ({
                 base_atk: '基礎攻撃力', base_hp: '基礎HP', base_def: '基礎防御力',
                 atk_pct: '攻撃力%', flat_atk: '攻撃力実数',
@@ -6032,7 +6048,9 @@
                 dmg_skill: 'スキル', dmg_lib: '解放', dmg_echo: '音骸'
             })[k] || k;
             const fmtBuff = b => Object.entries(b).filter(([, v]) => v > 0).map(([k, v]) => `${bLabel(k)}+${v}%`).join(' ');
-            d.innerHTML = custom.map(h => {
+            d.innerHTML = list.map(h => {
+                // ユーザー登録分だけ custom:true が付く（addCustomHarmony参照）
+                const isBuiltin = !h.custom;
                 const a = ATTR[h.attr] || ATTR.other;
                 // 属性を選んで登録したのに全属性バフとして保存されている古いデータ。
                 // 意図が判別できないため自動では直さず、編集で直せるよう印だけ付ける。
@@ -6051,10 +6069,12 @@
         <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : '3セット: '}${s5str || '未設定'}${h.desc ? `<span style="color:var(--text3);margin-left:5px;">${esc(h.desc)}</span>` : ''}</div>
         ${warn}
       </div>
-      <div style="display:flex;gap:5px;flex-shrink:0;">
+      ${isBuiltin
+                        ? '<span style="font-size:9px;color:var(--text3);padding:2px 6px;border:1px solid var(--border);border-radius:3px;flex-shrink:0;">固定</span>'
+                        : `<div style="display:flex;gap:5px;flex-shrink:0;">
         <button class="btn" style="padding:3px 8px;font-size:10px;" onclick="editCustomHarmony('${h.id}')">編集</button>
         <button class="btn btn-d" style="padding:3px 8px;font-size:10px;" onclick="deleteCustomHarmony('${h.id}')">削除</button>
-      </div>
+      </div>`}
     </div>`;
             }).join('');
         }
@@ -6141,21 +6161,111 @@
             // 合計100を推奨。省略したキーは0扱いになります。
             // 例: ratio: { normal: 0, heavy: 0, skill: 60, lib: 40, echo: 0 }
             //
-            { name: '今汐S0', desc: '全バフ発動時', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 20, dmg_all: 20 ,ratio: {skill: 90, lib: 10}},
-            { name: 'ツバキS0', desc: '全バフ発動時', attr: 'dark', base_atk: 412, base_hp: 10325, base_def: 1161, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_dark: 15, dmg_normal: 15 ,ratio: {normal: 95,lib: 5}},
-            { name: 'カルテジアS0', desc: '全バフ発動時', attr: '', base_atk: 312, base_hp: 14800, base_def: 611, crit_rate: 13, crit_dmg: 150, hp_pct: 12, dmg_all: 60, ratio: {normal: 100} },
-            { name: '緋雪S0', desc: '全バフ発動時', attr: 'dark', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 190, atk_pct: 12, dmg_dark: 15, dmg_normal: 15, ratio: {lib: 100}},
+            // 複数のダメージ種が同格で主力になる「デュアルタイプ」のキャラは、
+            // 合計200%（両方に満額の重みを付ける）で登録している。大雑把な厳選用途では
+            // 半々に割るより実態に近いという判断（要相談時は要再確認）。
+            // 純ヒーラー（モーニエ・ショアキーパー・ヴェリーナ）は ratio: {}（全項目0）。
+            // 全バフ発動時（S0）・レベル90時点の値。共鳴チェーン・HP回復効果%・共鳴効率%は
+            // 未対応のため含まれない。出典：鳴潮wiki(wikiwiki.jp/w-w/)
+            //
+            { name: '今汐S0', desc: '全バフ発動時', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 20, ratio: { skill: 90, lib: 10 } },
+            { name: 'ツバキS0', desc: '全バフ発動時', attr: 'dark', base_atk: 450, base_hp: 10325, base_def: 1161, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_dark: 15, dmg_normal: 15, ratio: { normal: 95, lib: 5 } },
+            { name: 'カルテジアS0', desc: '全バフ発動時', attr: 'wind', base_atk: 312, base_hp: 14800, base_def: 611, crit_rate: 13, crit_dmg: 150, hp_pct: 12, dmg_all: 60, ratio: { normal: 100 } },
+            { name: '緋雪S0', desc: '全バフ発動時（固有スキル込みのクリダメ190）', attr: 'ice', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 190, atk_pct: 12, ratio: { lib: 100 } },
+            { name: '秧秧・玄翎S0', desc: '全バフ発動時。dmg_darkは虚滅効果6スタック時の最大値(千咲併用前提)', attr: 'dark', base_atk: 425, base_hp: 11025, base_def: 1148, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_dark: 66, ratio: { heavy: 100 } },
+            { name: 'ルシラーS0', desc: '全バフ発動時。結霜/音骸2モード制のためダメバフ欄なし', attr: 'ice', base_atk: 375, base_hp: 12237, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { normal: 100, echo: 100 } },
+            { name: 'レベッカS0', desc: '全バフ発動時。攻撃力+20%(スタック条件込み、atk_pctは12のみ反映、+8%は未反映)', attr: 'thunder', base_atk: 400, base_hp: 11600, base_def: 1173, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { normal: 100 } },
+            { name: 'ルーシーS0', desc: '全バフ発動時。dmg_lightは共鳴回路発動時の条件付き最大値', attr: 'light', base_atk: 425, base_hp: 11025, base_def: 1148, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 65, ratio: { heavy: 100 } },
+            { name: 'ダーニャS0', desc: '全バフ発動時。dmg_fireは斉爆モード時条件付き', attr: 'fire', base_atk: 425, base_hp: 11025, base_def: 1148, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_fire: 30, ratio: { lib: 100 } },
+            { name: 'シグリカS0', desc: '全バフ発動時。意味の祝福6スタック時の最大値', attr: 'wind', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_wind: 48, dmg_echo: 48, ratio: { echo: 100 } },
+            { name: 'リューク・ヘルセンS0', desc: '全バフ発動時。攻撃力+25%(条件付き)は未反映', attr: 'light', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { normal: 100 } },
+            { name: 'エイメスS0', desc: '全バフ発動時。クリダメ+60%(モード条件付き最大)は未反映(base 150のまま)', attr: 'fire', base_atk: 425, base_hp: 11025, base_def: 1148, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { lib: 100 } },
+            { name: 'モーニエS0', desc: '全バフ発動時。純ヒーラー。本来の回復効果%+12は未対応のため未反映。ratioは全項目0（直接ダメージ寄与なしとして扱う）', attr: 'fire', base_atk: 287, base_hp: 15375, base_def: 1356, crit_rate: 5, crit_dmg: 150, def_pct: 15.2, ratio: {} },
+            { name: 'リンネーS0', desc: '全バフ発動時。dmg_lightは変奏スキル発動後条件付き', attr: 'light', base_atk: 375, base_hp: 12237, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 25, ratio: { normal: 100 } },
+            { name: '千咲S0', desc: '全バフ発動時。dmg_darkは変奏/共鳴解放発動時条件付き', attr: 'dark', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_dark: 20, ratio: { lib: 100 } },
+            { name: '仇遠S0', desc: '全バフ発動時。共鳴スキル/共鳴解放/終奏=音骸スキルダメージ、酔墨淋漓状態の強化技=重撃ダメージのデュアルタイプ', attr: 'wind', base_atk: 375, base_hp: 12237, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { echo: 100, heavy: 100 } },
+            { name: 'ガルブレーナS0', desc: '全バフ発動時。通常攻撃1〜3段目=重撃、4段目=音骸スキルダメージのデュアルタイプ', attr: 'fire', base_atk: 462, base_hp: 10300, base_def: 1105, crit_rate: 5, crit_dmg: 166, atk_pct: 12, ratio: { heavy: 100, echo: 100 } },
+            { name: 'ユーノS0', desc: '全バフ発動時', attr: 'wind', base_atk: 450, base_hp: 10525, base_def: 1124, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { lib: 100 } },
+            { name: 'オーガスタS0', desc: '全バフ発動時。dmg_thunderは終奏スキルトリガー後条件付き(S0上限1スタック)', attr: 'thunder', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_thunder: 15, ratio: { heavy: 100 } },
+            { name: 'フローヴァS0', desc: '全バフ発動時。クリダメ+60%(余韻24スタック条件付き最大)は未反映。幾重世界状態=共鳴スキル、コンダクター状態のヘカテー攻撃=音骸スキルダメージのデュアルタイプ', attr: 'dark', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100, echo: 100 } },
+            { name: 'ルパS0', desc: '全バフ発動時', attr: 'fire', base_atk: 387, base_hp: 11912, base_def: 1185, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { lib: 100 } },
+            { name: 'シャコンヌS0', desc: '全バフ発動時。dmg_windはソロ演奏状態(ほぼ常時)', attr: 'wind', base_atk: 375, base_hp: 12237, base_def: 1197, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_wind: 24, ratio: { normal: 100 } },
+            { name: 'ザンニーS0', desc: '全バフ発動時。dmg_lightは変奏スキル発動時条件付き', attr: 'light', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 12, ratio: { heavy: 100 } },
+            { name: 'カンタレラS0', desc: '全バフ発動時。dmg_darkは音骸スキル発動時条件付き最大(2スタック)', attr: 'dark', base_atk: 400, base_hp: 11600, base_def: 1099, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_dark: 12, ratio: { normal: 100 } },
+            { name: 'ブラントS0', desc: '全バフ発動時。dmg_fireは固有スキルにより常時', attr: 'fire', base_atk: 375, base_hp: 11675, base_def: 1307, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_fire: 15, ratio: { normal: 100 } },
+            { name: 'フィービーS0', desc: '全バフ発動時。アブソリューション(重撃)/コンフェッション(共鳴スキル)の2モード制のデュアルタイプ', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_light: 12, ratio: { heavy: 100, skill: 100 } },
+            { name: 'ロココS0', desc: '全バフ発動時。攻撃力+20%(条件付き)は未反映', attr: 'dark', base_atk: 375, base_hp: 12250, base_def: 1197, crit_rate: 5, crit_dmg: 166, atk_pct: 12, ratio: { heavy: 100 } },
+            { name: 'カルロッタS0', desc: '全バフ発動時', attr: 'ice', base_atk: 462, base_hp: 12450, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100 } },
+            { name: 'ショアキーパーS0', desc: '全バフ発動時。純ヒーラー。本来の回復効果%+12は未対応のため未反映。ratioは全項目0（直接ダメージ寄与なしとして扱う）', attr: 'light', base_atk: 287, base_hp: 16712, base_def: 1099, crit_rate: 5, crit_dmg: 150, hp_pct: 15.2, ratio: {} },
+            { name: '相里要S0', desc: '全バフ発動時。dmg_thunderは共鳴スキル発動時条件付き最大(4スタック)', attr: 'thunder', base_atk: 425, base_hp: 10625, base_def: 1222, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_thunder: 20, ratio: { lib: 100 } },
+            { name: '折枝S0', desc: '全バフ発動時。攻撃力+18%(条件付き)は未反映', attr: 'ice', base_atk: 375, base_hp: 12250, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { normal: 100 } },
+            { name: '長離S0', desc: '全バフ発動時。dmg_fireは心眼+強化重撃/共鳴解放条件付き最大合算', attr: 'fire', base_atk: 462, base_hp: 10387, base_def: 1099, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_fire: 40, ratio: { skill: 100 } },
+            { name: '吟霖S0', desc: '全バフ発動時。裁判の雷=共鳴スキルダメージ、強化重撃「千の顔を持つ」=重撃ダメージのデュアルタイプ', attr: 'thunder', base_atk: 400, base_hp: 11000, base_def: 1283, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100, heavy: 100 } },
+            { name: '忌炎S0', desc: '全バフ発動時。クリダメ162=150+12(疾風招来、命中時ほぼ常時)', attr: 'wind', base_atk: 437, base_hp: 10487, base_def: 1185, crit_rate: 13, crit_dmg: 162, atk_pct: 12, ratio: { heavy: 100 } },
+            { name: '凌陽S0', desc: '全バフ発動時(恒常)。dmg_iceは常時、獅子奮迅中は+50(条件付き、未反映)', attr: 'ice', base_atk: 437, base_hp: 10387, base_def: 1209, crit_rate: 5, crit_dmg: 150, atk_pct: 12, dmg_ice: 12, ratio: { normal: 100, skill: 100 } },
+            { name: 'アンコS0', desc: '全バフ発動時(恒常)。dmg_fire=常時12+条件付き10の合算22', attr: 'fire', base_atk: 425, base_hp: 10512, base_def: 1246, crit_rate: 5, crit_dmg: 150, atk_pct: 12, dmg_fire: 22, ratio: { normal: 100 } },
+            { name: 'カカロS0', desc: '全バフ発動時(恒常)', attr: 'thunder', base_atk: 437, base_hp: 10500, base_def: 1185, crit_rate: 5, crit_dmg: 166, atk_pct: 12, ratio: { lib: 100 } },
+            { name: '鑑心S0', desc: '全バフ発動時(恒常)', attr: 'wind', base_atk: 337, base_hp: 14112, base_def: 1124, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { heavy: 100 } },
+            { name: 'ヴェリーナS0', desc: '全バフ発動時(恒常)。純ヒーラー。本来の回復効果%+12は未対応のため未反映。ratioは全項目0（直接ダメージ寄与なしとして扱う）', attr: 'light', base_atk: 337, base_hp: 14237, base_def: 1099, crit_rate: 5, crit_dmg: 150, atk_pct: 12, ratio: {} },
+            { name: '漂泊者・回折S0', desc: '全バフ発動時(恒常/主人公)', attr: 'light', base_atk: 375, base_hp: 11400, base_def: 1369, crit_rate: 5, crit_dmg: 150, atk_pct: 12, dmg_light: 12, ratio: { skill: 100 } },
+            { name: '漂泊者・気動S0', desc: '全バフ発動時(恒常/主人公)。本来の回復効果%+12は未対応のため未反映', attr: 'wind', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 5, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100 } },
+            { name: '漂泊者・消滅S0', desc: '全バフ発動時(恒常/主人公)。dmg_darkは暗湧状態条件付き', attr: 'dark', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 5, crit_dmg: 150, atk_pct: 12, dmg_dark: 20, ratio: { normal: 100 } },
+            { name: '漂泊者・電導S0', desc: '全バフ発動時(恒常/主人公)', attr: 'thunder', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100 } },
             // ▲ここまで▲
         ];
 
         const BUILTIN_WEAPON = [
             // ▼ここから武器を追記▼
-            { name: '千古の湖水R1', desc: '全バフ発動時', base_atk: 587, crit_rate: 24.3, atk_pct: 12 },
-            { name: '千古の湖水R5', desc: '全バフ発動時', base_atk: 587, crit_rate: 24.3, atk_pct: 24 },
-            { name: '歳華調和R1', desc: '全バフ発動時', base_atk: 587, crit_rate: 24.3, dmg_all:12 ,dmg_skill: 48 },
-            { name: '春裁ちR1', desc: '全バフ発動時', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 70 },
-            { name: '定めを覆す荊冠R1', desc: '全バフ発動時', base_atk: 412, hp_pct: 84.2},
-
+            // weaponType は武器種別（長刃・迅刀・拳銃・手甲・増幅器）。将来のグリッド選択パネルで
+            // タブの軸に使う想定。精錬ランクは特記無ければ1（R1、無凸）。
+            // 「ルシラーの限定武器」として伝わっていた「フリーズフレームR1」は出典側が
+            // 「ダーニャの偽物の矮星との混同の可能性、要確認」と明記していたため、
+            // 裏取りできるまでここには含めていない。
+            { name: '千古の湖水R1', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 12 },
+            { name: '千古の湖水R5', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 24 },
+            { name: '歳華調和R1', weaponType: '長刃', desc: '全バフ発動時(限定・今汐)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_skill: 48 },
+            { name: '春裁ちR1', weaponType: '迅刀', desc: '全バフ発動時(限定・ツバキ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 70 },
+            { name: '定めを覆す荊冠R1', weaponType: '迅刀', desc: '全バフ発動時(限定・カルテジア)', base_atk: 412, hp_pct: 84.2 },
+            { name: 'スターキャリブレーターR1', weaponType: '長刃', desc: '全バフ発動時(限定・モーニエ)', base_atk: 412, def_pct: 16 },
+            { name: 'ラディアンスの切っ先R1', weaponType: '長刃', desc: '全バフ発動時(恒常)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_lib: 24 },
+            { name: '曇斬R1', weaponType: '長刃', desc: '全バフ発動時(限定・千咲)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_lib: 24, dmg_all: 24 },
+            { name: '雷霆を統べし王剣R1', weaponType: '長刃', desc: '全バフ発動時(限定・オーガスタ)', base_atk: 675, crit_rate: 12.1, atk_pct: 12, dmg_heavy: 20 },
+            { name: '闘炎の爪痕R1', weaponType: '長刃', desc: '全バフ発動時(限定・ルパ)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_lib: 24 },
+            { name: '蒼鱗連峰R1', weaponType: '長刃', desc: '全バフ発動時(限定・忌炎)', base_atk: 587, crit_dmg: 48.6, dmg_all: 12, dmg_heavy: 48 },
+            { name: '仙境の湖光R1', weaponType: '長刃', desc: '全バフ発動時(恒常)', base_atk: 587, flat_atk: 36.4, dmg_lib: 21 },
+            { name: '天つ蒼淵R1', weaponType: '迅刀', desc: '全バフ発動時(限定・秧秧玄翎)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_heavy: 36 },
+            { name: '灼霜R1', weaponType: '迅刀', desc: '全バフ発動時(限定・緋雪)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_ice: 28 },
+            { name: 'とこしえの明星R1', weaponType: '迅刀', desc: '全バフ発動時(限定・エイメス)', base_atk: 587, crit_rate: 24.3, dmg_all: 12 },
+            { name: 'レーザーの鋭剣R1', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, atk_pct: 12, dmg_skill: 24 },
+            { name: '破敵の鋭竹R1', weaponType: '迅刀', desc: '全バフ発動時(限定・仇遠)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_heavy: 30 },
+            { name: 'エンドレスボヤージュR1', weaponType: '迅刀', desc: '全バフ発動時(限定・ブラント)', base_atk: 412, crit_rate: 8, dmg_normal: 48 },
+            { name: '赫く燃ゆる流光R1', weaponType: '迅刀', desc: '全バフ発動時(限定・長離、1スタック時。最大14スタックで+56)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_skill: 4 },
+            { name: 'スペクトラル・トリガーR1', weaponType: '拳銃', desc: '全バフ発動時(限定・ルーシー)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_heavy: 30 },
+            { name: 'スカル・ポッパーR1', weaponType: '拳銃', desc: '全バフ発動時(限定・レベッカ)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 12 },
+            { name: 'スペクトル・ブラスターR1', weaponType: '拳銃', desc: '全バフ発動時(限定・リンネー)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 36 },
+            { name: 'フェーズのさざ波R1', weaponType: '拳銃', desc: '全バフ発動時(恒常)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_all: 24 },
+            { name: 'ルクス＆アンブラR1', weaponType: '拳銃', desc: '全バフ発動時(限定・ガルブレーナ)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_heavy: 24, dmg_echo: 24 },
+            { name: '森のアリアR1', weaponType: '拳銃', desc: '全バフ発動時(限定・シャコンヌ)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_wind: 24 },
+            { name: 'ラストダンスR1', weaponType: '拳銃', desc: '全バフ発動時(限定・カルロッタ)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_skill: 48 },
+            { name: '不変の湖煙R1', weaponType: '拳銃', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 10 },
+            { name: 'ソル・スウォーンの注釈R1', weaponType: '手甲', desc: '全バフ発動時(限定・シグリカ)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_echo: 32 },
+            { name: 'デイブレイカースパインR1', weaponType: '手甲', desc: '全バフ発動時(限定・リューク・ヘルセン)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_light: 20 },
+            { name: 'パルスの機腕R1', weaponType: '手甲', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 6 },
+            { name: '万物を書き留める月相R1', weaponType: '手甲', desc: '全バフ発動時(限定・ユーノ)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_lib: 20 },
+            { name: '焔光の裁きR1', weaponType: '手甲', desc: '全バフ発動時(限定・ザンニー)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12 },
+            { name: 'トラジコメーディアR1', weaponType: '手甲', desc: '全バフ発動時(限定・ロココ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_heavy: 48 },
+            { name: '万端の枢機R1', weaponType: '手甲', desc: '全バフ発動時(限定・相里要)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_lib: 48 },
+            { name: '怒涛の湖音R1', weaponType: '手甲', desc: '全バフ発動時(恒常)', base_atk: 587, flat_atk: 36.4, dmg_normal: 10, dmg_skill: 10 },
+            { name: '夕霞の飲露R1', weaponType: '増幅器', desc: '全バフ発動時(限定・ルシラー)', base_atk: 412, hp_pct: 12 },
+            { name: '偽物の矮星R1', weaponType: '増幅器', desc: '全バフ発動時(限定・ダーニャ)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_lib: 36 },
+            { name: 'ボゾンの観測器R1', weaponType: '増幅器', desc: '全バフ発動時(恒常)', base_atk: 525, atk_pct: 12, dmg_normal: 12 },
+            { name: '幽冥の忘憂曲R1', weaponType: '増幅器', desc: '全バフ発動時(限定・フローヴァ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_skill: 32, dmg_echo: 32 },
+            { name: '深海の囁きR1', weaponType: '増幅器', desc: '全バフ発動時(限定・カンタレラ)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 40 },
+            { name: '光のハルモニアR1', weaponType: '増幅器', desc: '全バフ発動時(限定・フィービー)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_normal: 14, dmg_heavy: 14 },
+            { name: '星々のコンチェルトR1', weaponType: '増幅器', desc: '全バフ発動時(限定・ショアキーパー)', base_atk: 412, hp_pct: 12 },
+            { name: '氷華の雅印R1', weaponType: '増幅器', desc: '全バフ発動時(限定・折枝)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 12 },
+            { name: '糸繰りの奇術R1', weaponType: '増幅器', desc: '全バフ発動時(限定・吟霖)', base_atk: 500, crit_rate: 36, dmg_all: 12 },
+            { name: '栄枯の湖岸R1', weaponType: '増幅器', desc: '全バフ発動時(恒常)', base_atk: 500, flat_atk: 53.9, dmg_normal: 3.2 },
             // ▲ここまで▲
         ];
 
@@ -6329,9 +6439,11 @@ rebuildCharaWeaponSelects();
                 const ratioStr = ratioParts.length ? `［比率 ${ratioParts.join(' ')}］` : '';
                 const attrKey = e.attr || inferCharaAttr(e);
                 const attrStr = attrKey && ATTR[attrKey] ? `<span style="font-size:9px;color:${ATTR[attrKey].color};border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-right:5px;">${ATTR[attrKey].label}</span>` : '';
+                // 武器種別（将来のグリッド選択パネルでタブの軸に使う）。今は一覧の目印としてのみ表示
+                const wtStr = e.weaponType ? `<span style="font-size:9px;color:var(--text2);border:1px solid var(--border);border-radius:3px;padding:0 4px;margin-right:5px;">${esc(e.weaponType)}</span>` : '';
                 return `<div class="custom-item${e.id === editingCharaId ? ' editing' : ''}">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:11px;font-weight:500;">${attrStr}${esc(e.name)}${e.id === editingCharaId ? ' <span style="font-size:9px;color:var(--p)">編集中</span>' : ''}</div>
+        <div style="font-size:11px;font-weight:500;">${attrStr}${wtStr}${esc(e.name)}${e.id === editingCharaId ? ' <span style="font-size:9px;color:var(--p)">編集中</span>' : ''}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　') || 'ステータス未設定'}</div>
         ${ratioStr ? `<div style="font-size:9px;color:var(--p);margin-top:2px;">${ratioStr}</div>` : ''}
         ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${esc(e.desc)}</div>` : ''}
