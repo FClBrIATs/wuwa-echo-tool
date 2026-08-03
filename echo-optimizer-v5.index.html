@@ -517,15 +517,77 @@
             text-align: right;
         }
 
+        /* 合計欄：ゲーム内のステータス画面と突き合わせる数字なので、内訳より大きく出す。
+           直接打ち込むと自動計算分との差が『直接入力』欄に入る（注釈で示す） */
         .detail-total {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 11px;
             color: var(--p);
             font-family: 'IBM Plex Mono', monospace;
-            padding: 3px 6px;
+            padding: 4px 8px;
             background: var(--bg);
             border-radius: 4px;
             margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .detail-total .dt-label {
+            color: var(--text3);
+            font-size: 10px;
+            font-family: inherit;
+        }
+
+        .detail-total input {
+            flex: 0 1 auto;
+            width: 5.5em;
+            margin-left: auto;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 1px 4px;
+            color: var(--p);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
             text-align: right;
+        }
+
+        .detail-total input:hover {
+            border-color: var(--line);
+        }
+
+        .detail-total input:focus {
+            border-color: var(--p);
+            outline: none;
+        }
+
+        .detail-total.hero {
+            padding: 6px 8px;
+        }
+
+        .detail-total.hero input {
+            font-size: 17px;
+            font-weight: 600;
+            width: 6.5em;
+        }
+
+        .detail-total .dt-unit {
+            font-size: 10px;
+            color: var(--text3);
+            margin-left: 0;
+        }
+
+        .detail-total .dt-note {
+            flex: 1 0 100%;
+            text-align: right;
+            font-size: 9px;
+            color: var(--text3);
+            font-family: inherit;
+        }
+
+        .detail-total .dt-note.neg {
+            color: #f59e0b;
         }
 
         .detail-attr-section {
@@ -2116,23 +2178,15 @@
                         <details class="how-to">
                             <summary>📖 使い方</summary>
                             <div class="how-to-body">
-                                <b>合計値入力</b>：キャラの全ステータスをそのまま入力します。登録データは使用されません。<br>
-                                <b>項目別入力</b>：ハーモニー・武器・キャラ・音骸メイン/サブの内訳を入力します。登録データがあれば自動入力されます（手動で上書き可）。<br>
+                                <b>入力の考え方</b>：ハーモニー・武器・キャラ・音骸メイン/サブは登録データと②タブから自動計算されます。手で入れるのは「直接入力」欄だけです。<br>
+                                <b>合計欄</b>：各項目の合計はゲーム内の数値と突き合わせられるよう大きく表示しています。ここに直接打ち込むと、自動計算との差が「直接入力」に入ります。<br>
                                 <b>使用属性</b>：選択した属性のバフのみ計算に使用します。<br>
                                 <b>ダメージ比率</b>：各スキルの比率に応じてスコアの重み付けが変わります。合計100を推奨。
                             </div>
                         </details>
 
-                        <!-- 入力モード切り替え -->
-                        <div class="mode-sw" style="margin:8px 0 10px;">
-                            <button id="inputModeBtn_total" class="mode-btn active"
-                                onclick="setInputMode('total',this)">合計値入力</button>
-                            <button id="inputModeBtn_detail" class="mode-btn"
-                                onclick="setInputMode('detail',this)">項目別入力</button>
-                        </div>
-
-                        <!-- キャラ/武器 選択（項目別のみ表示） -->
-                        <div id="cw_select_block" style="display:none;">
+                        <!-- キャラ/武器 選択 -->
+                        <div id="cw_select_block">
                             <div class="sec-title">キャラ / 武器 選択</div>
                             <div class="stat-row">
                                 <span class="sname">キャラ</span>
@@ -2158,38 +2212,100 @@
                             <button id="statModeBtn_def" class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
                         </div>
 
-                        <!-- ===== 合計値モード ===== -->
-                        <div id="block_total">
-                            <div class="stat-row">
-                                <span class="sname" id="lbl_base">基礎攻撃力</span>
-                                <input type="number" inputmode="decimal" step="any" id="inp_base" placeholder="必須"
-                                    oninput="S.base_stat=this.value;recalcAll();autoSize(this)"
-                                    style="border-color:var(--p)">
+                        <!-- ===== 内訳入力 ===== -->
+                        <div id="block_detail">
+                            <!-- 基礎攻撃力 内訳 -->
+                            <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
+                            <div class="detail-grid">
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_base_weapon" placeholder="0" readonly tabindex="-1"></div>
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_base_chara" placeholder="0" readonly tabindex="-1"></div>
+                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_base_other" placeholder="0" oninput="onDetailOther('base',this.value);autoSize(this)"></div>
                             </div>
+                            <div class="detail-total" id="dt_base"></div>
                             <div id="base_warn" class="warn-box"
                                 style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
-                                基礎攻撃力が未入力です。攻撃力%系のスコアが正しく計算されません。</div>
-                            <div class="stat-row">
-                                <span class="sname" id="lbl_total">全体攻撃力</span>
-                                <input type="number" inputmode="decimal" step="any" id="inp_total" placeholder="例：2000"
-                                    oninput="S.total_stat=this.value;recalcAll();autoSize(this)">
-                            </div>
+                                基礎攻撃力が0です。武器・キャラを選ぶか、直接入力欄に入れてください（攻撃力%系のスコアが正しく計算されません）。</div>
                             <div class="divider"></div>
-                            <div class="stat-row">
-                                <span class="sname">クリ率</span>
-                                <input type="number" inputmode="decimal" step="any" id="inp_cr" placeholder="例: 60"
-                                    oninput="S.crit_rate=this.value;recalcAll();autoSize(this)">
-                                <span class="unit">%</span>
+                            <!-- 全体攻撃力 内訳 -->
+                            <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
+                            <div class="detail-grid">
+                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_pct_h" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>%バフ（武器）</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_pct_w" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_pct_c" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_pct_em" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_pct_es" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_flat_em" placeholder="0" readonly tabindex="-1"></div>
+                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_flat_es" placeholder="0" readonly tabindex="-1"></div>
+                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_stat_other" placeholder="0" oninput="onDetailOther('stat',this.value);autoSize(this)"></div>
                             </div>
-                            <div class="stat-row">
-                                <span class="sname">クリダメ</span>
-                                <input type="number" inputmode="decimal" step="any" id="inp_cd" placeholder="例: 150"
-                                    oninput="S.crit_dmg=this.value;recalcAll();autoSize(this)">
-                                <span class="unit">%</span>
+                            <div class="detail-total" id="dt_total"></div>
+                            <div class="divider"></div>
+                            <!-- クリ率 内訳 -->
+                            <div class="sec-title">クリ率</div>
+                            <div class="detail-grid">
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cr_h" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cr_w"
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                </div>
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cr_c"
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                </div>
+                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cr_em" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cr_es" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cr_other" placeholder="0" oninput="onDetailOther('cr',this.value);autoSize(this)"><span
+                                        class="unit">%</span></div>
                             </div>
+                            <div class="detail-total" id="dt_cr"></div>
+                            <div class="divider"></div>
+                            <!-- クリダメ 内訳 -->
+                            <div class="sec-title">クリダメ</div>
+                            <div class="detail-grid">
+                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cd_h" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cd_w"
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                </div>
+                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cd_c"
+                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                </div>
+                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cd_em" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cd_es" placeholder="0" readonly tabindex="-1"><span
+                                        class="unit">%</span></div>
+                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                        id="di_cd_other" placeholder="0" oninput="onDetailOther('cd',this.value);autoSize(this)"><span
+                                        class="unit">%</span></div>
+                            </div>
+                            <div class="detail-total" id="dt_cd"></div>
                             <div id="crit_warn" class="warn-box"
                                 style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
-                                クリ率・クリダメが未入力です。ダメージ計算にクリティカルが反映されません。</div>
+                                クリダメが100%未満です。ダメージ計算では100%として扱います。</div>
                         </div>
 
                         <div class="divider"></div>
@@ -2241,98 +2357,9 @@
                         </div>
                         <div class="ratio-vis" id="ratioVis"></div>
                         <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
+                        <div class="sec-title" data-open="1">ハーモニー</div>
                         <div class="harmony-picker" id="harmonyPicker"></div>
                         <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
-
-                        <!-- ===== 項目別モード ===== -->
-                        <div id="block_detail" style="display:none;">
-                            <!-- 基礎攻撃力 内訳 -->
-                            <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_weapon" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_chara" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_other" placeholder="0" oninput="onDetailOther('base',this.value);autoSize(this)"></div>
-                            </div>
-                            <div class="detail-total" id="dt_base">合計: 0</div>
-                            <div class="divider"></div>
-                            <!-- 全体攻撃力 内訳 -->
-                            <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_h" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（武器）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_w" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_c" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_em" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_es" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_flat_em" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_flat_es" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_other" placeholder="0" oninput="onDetailOther('stat',this.value);autoSize(this)"></div>
-                            </div>
-                            <div class="detail-total" id="dt_total">全体: 0</div>
-                            <div class="divider"></div>
-                            <!-- クリ率 内訳 -->
-                            <div class="sec-title">クリ率</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_h" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cr_w"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
-                                </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cr_c"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
-                                </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_em" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_es" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_other" placeholder="0" oninput="onDetailOther('cr',this.value);autoSize(this)"><span
-                                        class="unit">%</span></div>
-                            </div>
-                            <div class="detail-total" id="dt_cr">合計: 0%</div>
-                            <div class="divider"></div>
-                            <!-- クリダメ 内訳 -->
-                            <div class="sec-title">クリダメ</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_h" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cd_w"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
-                                </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cd_c"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
-                                </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_em" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_es" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_other" placeholder="0" oninput="onDetailOther('cd',this.value);autoSize(this)"><span
-                                        class="unit">%</span></div>
-                            </div>
-                            <div class="detail-total" id="dt_cd">合計: 0%</div>
-                        </div>
 
                     </div>
                 </div>
@@ -2344,41 +2371,7 @@
                     <div class="card-body">
                         <div class="sec-title">属性バフ</div>
 
-                        <!-- 合計値モード：従来の1行入力 -->
-                        <div id="dmgbuf_total">
-                            <div class="stat-row"><span class="sname" style="color:#ef4444">焦熱</span><input
-                                    type="number" inputmode="decimal" step="any" id="inp_dfire" placeholder="0"
-                                    oninput="S.dmg_fire=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname" style="color:#3b82f6">凝縮</span><input
-                                    type="number" inputmode="decimal" step="any" id="inp_dice" placeholder="0"
-                                    oninput="S.dmg_ice=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname" style="color:#a855f7">電導</span><input
-                                    type="number" inputmode="decimal" step="any" id="inp_dthunder" placeholder="0"
-                                    oninput="S.dmg_thunder=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname" style="color:#22c55e">気動</span><input
-                                    type="number" inputmode="decimal" step="any" id="inp_dwind" placeholder="0"
-                                    oninput="S.dmg_wind=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname" style="color:#eab308">回折</span><input
-                                    type="number" inputmode="decimal" step="any" id="inp_dlight" placeholder="0"
-                                    oninput="S.dmg_light=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname" style="color:#ec4899">消滅</span><input
-                                    type="number" inputmode="decimal" step="any" id="inp_ddark" placeholder="0"
-                                    oninput="S.dmg_dark=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">全属性</span><input type="number" inputmode="decimal" step="any"
-                                    id="inp_dall" placeholder="0"
-                                    oninput="S.dmg_all=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span>
-                            </div>
-                        </div>
-
-                        <!-- 項目別モード：内訳入力 -->
-                        <div id="dmgbuf_detail" style="display:none;">
+                        <div id="dmgbuf_detail">
                             <div class="sub-note" style="margin-bottom:6px;">各属性の内訳を入力してください。登録データは自動入力されます。</div>
                             <!-- 属性ループはJSで生成 -->
                             <div id="di_attr_rows"></div>
@@ -2393,42 +2386,17 @@
                                 <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_c" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any"
+                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_other" placeholder="0" oninput="onDetailOther('dall',this.value);autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
-                            <div class="detail-total" id="dt_dall">合計: 0%</div>
+                            <div class="detail-total" id="dt_dall"></div>
                         </div>
 
                         <div class="sub-note" id="note_da"></div>
                         <div class="divider"></div>                        <div class="sec-title">スキル種別ダメバフ</div>
 
-                        <!-- 合計値モード -->
-                        <div id="skillbuf_total">
-                            <div class="stat-row"><span class="sname">通常攻撃</span><input type="number" inputmode="decimal" step="any"
-                                    id="inp_dnormal" placeholder="0"
-                                    oninput="S.dmg_normal=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">重撃</span><input type="number" inputmode="decimal" step="any"
-                                    id="inp_dheavy" placeholder="0"
-                                    oninput="S.dmg_heavy=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">共鳴スキル</span><input type="number" inputmode="decimal" step="any"
-                                    id="inp_dskill" placeholder="0"
-                                    oninput="S.dmg_skill=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">共鳴解放</span><input type="number" inputmode="decimal" step="any"
-                                    id="inp_dlib" placeholder="0"
-                                    oninput="S.dmg_lib=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                            <div class="stat-row"><span class="sname">音骸スキル</span><input type="number" inputmode="decimal" step="any"
-                                    id="inp_decho" placeholder="0"
-                                    oninput="S.dmg_echo=this.value;recalcAll();autoSize(this)"><span
-                                    class="unit">%</span></div>
-                        </div>
-
-                        <!-- 項目別モード -->
-                        <div id="skillbuf_detail" style="display:none;">
+                        <div id="skillbuf_detail">
                             <div id="di_skill_rows"></div>
                         </div>
                     </div>
@@ -3379,13 +3347,7 @@
         // ================================================================
         let statMode = 'atk';
         let useAttr = ''; // 使用属性: 'fire'|'ice'|'thunder'|'wind'|'light'|'dark'|'' (空=合算)
-        let inputMode = 'total'; // 'total' | 'detail'
-        let autoBuffEnabled = true; // 後方互換（detail=true扱い、total=false扱い）
         let S = {
-            base_stat: '', total_stat: '',
-            crit_rate: '', crit_dmg: '',
-            dmg_fire: '0', dmg_ice: '0', dmg_thunder: '0', dmg_wind: '0', dmg_light: '0', dmg_dark: '0', dmg_all: '0',
-            dmg_normal: '0', dmg_heavy: '0', dmg_skill: '0', dmg_lib: '0', dmg_echo: '0',
             ratio: { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 },
             harmony: [
                 { id: '', setLevel: 5, custom: B() },
@@ -3476,12 +3438,11 @@
         }
 
         function updateAutoStatRows() {
-            if (inputMode === 'total') return; // 合計値モードでは不要
-            const H = getHarmonyTotalEff();
-            const W = inputMode === 'detail' ? getWeaponBuff() : ({});
-            const C = inputMode === 'detail' ? getCharaBuff() : ({});
-            const EM = getEchoMainBuffEff();
-            const ES = getEchoSubBuffEff();
+            const H = getHarmonyTotal();
+            const W = getWeaponBuff();
+            const C = getCharaBuff();
+            const EM = getEchoMainBuff();
+            const ES = getEchoSubBuff();
 
             const ROWS = [
                 {
@@ -3605,7 +3566,7 @@
                 const valEl = document.getElementById(valId);
                 const bdEl = document.getElementById(bdId);
                 if (!row || !valEl || !bdEl) return;
-                if (autoBuffEnabled && total > 0) {
+                if (total > 0) {
                     row.style.display = 'flex';
                     valEl.textContent = `+${total.toFixed(total % 1 === 0 ? 0 : 1)}%`;
                     bdEl.innerHTML = mkBd(parts);
@@ -3671,7 +3632,7 @@
                 .map(([k, v]) => `${labelMap[k] || k} +${v}`);
             const note = document.getElementById('note_charaweapon');
             if (note) note.textContent = parts.length ? '加算: ' + parts.join(' / ') : '';
-            if (inputMode === 'detail') fillDetailInputs();
+            fillDetailInputs();
 
             // キャラに ratio が登録されていれば S.ratio に反映、なければデフォルトにリセット
             const selChara = document.getElementById('sel_chara');
@@ -3716,41 +3677,21 @@
         }
 
         function getPartials() {
-            const H = getHarmonyTotalEff();
-            const CW = getCharaWeaponBuffEff();
-            const EM = getEchoMainBuffEff();
-            const ES = getEchoSubBuffEff();
+            // 内訳はすべて状態から計算する（DOMは読まない）
+            const D = detailBreakdown();
+            const base = D.base.total;
+            const total = D.total;
+            const cr_eff = D.cr.total;
+            const cd_eff = D.cd.total;
 
-            let base, total, cr_eff, cd_eff, da, da_eff, dn, dh, ds, dl, de;
+            // 属性バフ：使用属性が指定されていればその属性のみ、未指定なら全属性を合算
+            const da = useAttr
+                ? (D.attr[useAttr] ? D.attr[useAttr].total : 0)
+                : ATTR_DETAIL.reduce((acc, a) => acc + D.attr[a.key].total, 0);
+            const da_eff = da + D.dall.total;
 
-            if (inputMode === 'detail') {
-                // 項目別モード：内訳をすべて状態から計算する（DOMは読まない）
-                const D = detailBreakdown();
-                base = D.base.total;
-                total = D.total;
-                cr_eff = D.cr.total;
-                cd_eff = D.cd.total;
-
-                // 属性バフ：使用属性が指定されていればその属性のみ、未指定なら全属性を合算
-                da = useAttr
-                    ? (D.attr[useAttr] ? D.attr[useAttr].total : 0)
-                    : ATTR_DETAIL.reduce((acc, a) => acc + D.attr[a.key].total, 0);
-                da_eff = da + D.dall.total;
-
-                dn = D.skill.normal.total; dh = D.skill.heavy.total;
-                ds = D.skill.skill.total; dl = D.skill.lib.total; de = D.skill.echo.total;
-            } else {
-                // 合計値モード：従来通り
-                const cw_base_atk = 0; // 合計値モードでは登録データ不使用
-                base = n(S.base_stat), total = n(S.total_stat);
-                cr_eff = n(S.crit_rate);
-                cd_eff = n(S.crit_dmg);
-                const ATTR_KEYS = ['fire', 'ice', 'thunder', 'wind', 'light', 'dark'];
-                da = useAttr ? n(S['dmg_' + useAttr]) : ATTR_KEYS.reduce((s, k) => s + n(S['dmg_' + k]), 0);
-                da_eff = da + n(S.dmg_all);
-                dn = n(S.dmg_normal); dh = n(S.dmg_heavy);
-                ds = n(S.dmg_skill); dl = n(S.dmg_lib); de = n(S.dmg_echo);
-            }
+            const dn = D.skill.normal.total, dh = D.skill.heavy.total;
+            const ds = D.skill.skill.total, dl = D.skill.lib.total, de = D.skill.echo.total;
 
             const rn = S.ratio.normal / 100, rh = S.ratio.heavy / 100, rs = S.ratio.skill / 100;
             const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
@@ -3758,7 +3699,7 @@
             const DMG_eff = (da_eff + dskill_w) / 100;
             // 項目別モードは内訳から積み上げた total、合計値モードは入力された合計値
             // （合計値が未入力なら基礎値で代用）
-            const stat_eff_final = inputMode === 'detail' ? total : n(S.total_stat) || n(S.base_stat);
+            const stat_eff_final = total;
 
             const cr_clamped = Math.min(cr_eff, 100); // クリ率は100%上限
             // クリダメは「クリティカル時の倍率」なので100%未満はあり得ない。
@@ -3822,27 +3763,7 @@
         // 取りこぼして強い音骸ほど過大評価になる（最大ロールで約+19%）。
         // ズレが一様でないためスロット間の順位が入れ替わりうるので、
         // 「そのスロットを空にしたときとの期待ダメージ差」で測る。
-        //
-        // 合計値モードは入力された合計値に音骸分が既に含まれている前提なので、
-        // スロットを空にするには合計から差し引く必要がある。
-        // 項目別モードは音骸サブステが積み上げ計算に入っているため、
-        // スロットの中身を差し替えるだけでよい。
-
-        // サブステ群が合計値モードの各入力に与えている寄与
-        function totalModeContribution(subs) {
-            const d = { total: 0, cr: 0, cd: 0, dmg: {} };
-            const base = n(S.base_stat);
-            subs.forEach(sub => {
-                if (!sub || !sub.key || sub.val === '') return;
-                const v = n(sub.val);
-                if (sub.key === 'crit_rate') d.cr += v;
-                else if (sub.key === 'crit_dmg') d.cd += v;
-                else if (sub.key === STAT_PCT_KEY[statMode]) d.total += base * v / 100;
-                else if (sub.key === STAT_FLAT_KEY[statMode]) d.total += v;
-                else if (sub.key.startsWith('dmg_')) d.dmg[sub.key] = (d.dmg[sub.key] || 0) + v;
-            });
-            return d;
-        }
+        // 音骸サブステは積み上げ計算に入っているため、スロットの中身を差し替えるだけでよい。
 
         // 指定スロットのサブステを差し替えた状態での期待ダメージ指数。
         // 状態は必ず元に戻す。
@@ -3850,26 +3771,11 @@
             const echo = S.echoes[idx];
             if (!echo) return getPartials().E;
             const bakSubs = echo.subs;
-            const bak = { total: S.total_stat, cr: S.crit_rate, cd: S.crit_dmg, dmg: {} };
-            Object.keys(S).forEach(k => { if (k.startsWith('dmg_')) bak.dmg[k] = S[k]; });
             try {
-                if (inputMode === 'total') {
-                    // 旧サブステの寄与を引き、新サブステの寄与を足す
-                    const before = totalModeContribution(bakSubs);
-                    const after = totalModeContribution(subs);
-                    S.total_stat = String(n(S.total_stat) - before.total + after.total);
-                    S.crit_rate = String(n(S.crit_rate) - before.cr + after.cr);
-                    S.crit_dmg = String(n(S.crit_dmg) - before.cd + after.cd);
-                    new Set([...Object.keys(before.dmg), ...Object.keys(after.dmg)]).forEach(k => {
-                        S[k] = String(n(S[k]) - (before.dmg[k] || 0) + (after.dmg[k] || 0));
-                    });
-                }
                 echo.subs = subs;
                 return getPartials().E;
             } finally {
                 echo.subs = bakSubs;
-                S.total_stat = bak.total; S.crit_rate = bak.cr; S.crit_dmg = bak.cd;
-                Object.keys(bak.dmg).forEach(k => { S[k] = bak.dmg[k]; });
             }
         }
 
@@ -3927,9 +3833,7 @@
         // 分布はビルドが変わると変わる。作り直しの要否を判定するための署名。
         function buildSignature() {
             return JSON.stringify([
-                statMode, useAttr, inputMode, S.ratio,
-                S.base_stat, S.total_stat, S.crit_rate, S.crit_dmg,
-                Object.keys(S).filter(k => k.startsWith('dmg_')).map(k => S[k]),
+                statMode, useAttr, S.ratio,
                 S.other, S.harmony, S.harmonyManual,
                 S.echoes.map(e => [e.main, e.subs]),
             ]);
@@ -3997,13 +3901,9 @@
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const ml = { atk: '攻撃力', hp: 'HP', def: '防御力' }[m];
-            // 合計値モードのラベル
-            const lb = document.getElementById('lbl_base'); if (lb) lb.textContent = `基礎${ml}`;
-            const lt = document.getElementById('lbl_total'); if (lt) lt.textContent = `全体${ml}`;
-            // 項目別モードのラベル
             const lbd = document.getElementById('lbl_base_d'); if (lbd) lbd.textContent = `基礎${ml}`;
-            const ltd = document.getElementById('lbl_total_d'); if (ltd) ltd.textContent = `全体${ml}（内訳）`;
-            if (inputMode === 'detail') fillDetailInputs();
+            const ltd = document.getElementById('lbl_total_d'); if (ltd) ltd.textContent = `全体${ml}`;
+            fillDetailInputs();
             buildEchoGrid();
             buildNewSubs();
             recalcAll();
@@ -4038,32 +3938,19 @@
         function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt || ''; }
 
         function updateStatNotes() {
-            if (inputMode === 'detail') return;
-            const base = n(S.base_stat), total = n(S.total_stat);
-            // 基礎未入力警告
+            const D = detailBreakdown();
+            // 基礎値が0だと攻撃力%系のサブステが一切効かず、スコアが総崩れになる
             const warn = document.getElementById('base_warn');
-            if (warn) warn.style.display = (total > 0 && base <= 0) ? 'block' : 'none';
-            const inp = document.getElementById('inp_base');
-            if (inp) inp.style.borderColor = (total > 0 && base <= 0) ? '#dc2626' : 'var(--p)';
-            const cr = n(S.crit_rate), cd = n(S.crit_dmg);
-            setText('note_cr', cr > 0 ? `クリ率: ${cr.toFixed(1)}%` : '');
-            setText('note_cd', cd > 0 ? `クリダメ: ${cd.toFixed(1)}%` : '');
-            // クリ率・クリダメ未入力の警告（総合値が入力されている場合のみ）
-            const critMissing = total > 0 && S.crit_rate === '' && S.crit_dmg === '';
+            if (warn) warn.style.display = (D.base.total <= 0) ? 'block' : 'none';
+            // クリダメは「クリティカル時の倍率」なので100%未満はあり得ない。
+            // 未入力のまま計算されると優先度ランキングが逆転するため注意を出す。
             const critWarn = document.getElementById('crit_warn');
-            if (critWarn) critWarn.style.display = critMissing ? 'block' : 'none';
-            const crInp = document.getElementById('inp_cr'), cdInp = document.getElementById('inp_cd');
-            if (crInp) crInp.style.borderColor = (total > 0 && S.crit_rate === '') ? '#f59e0b' : '';
-            if (cdInp) cdInp.style.borderColor = (total > 0 && S.crit_dmg === '') ? '#f59e0b' : '';
+            if (critWarn) critWarn.style.display = (D.cd.total > 0 && D.cd.total < 100) ? 'block' : 'none';
         }
 
         function updateDmgNotes() {
-            if (inputMode === 'detail') {
-                const dall = detailBreakdown().dall.total;
-                setText('note_da', dall > 0 ? `全属性バフ合計: +${dall.toFixed(1)}%` : '');
-            } else {
-                setText('note_da', n(S.dmg_all) > 0 ? `全属性バフ: +${n(S.dmg_all)}%` : '');
-            }
+            const dall = detailBreakdown().dall.total;
+            setText('note_da', dall > 0 ? `全属性バフ合計: +${dall.toFixed(1)}%` : '');
         }
 
         // ダメージ比率は5つの数値を合計100になるよう手入力させていた。
@@ -4223,7 +4110,7 @@
         }
 
         function updateHarmonyEffectBox() {
-            const H = getHarmonyTotalEff();
+            const H = getHarmonyTotal();
             const box = document.getElementById('harmonyEffectBox'); if (!box) return;
             const MAP = [['atk_pct', 'ATK/HP/DEF%'],
             ['dmg_fire', '焦熱バフ%'], ['dmg_ice', '凝縮バフ%'], ['dmg_thunder', '電導バフ%'],
@@ -4400,7 +4287,7 @@
             if (h) S.harmony[i].setLevel = h.setType === '3' ? 3 : 5;
             S.harmony[i].custom = { ...getPresetBuff(hId, S.harmony[i].setLevel) };
             buildHarmonyPicker();
-            if (inputMode === 'detail') fillDetailInputs();
+            fillDetailInputs();
             recalcAll();
         }
 
@@ -4408,7 +4295,7 @@
             S.harmony[i].setLevel = lv;
             S.harmony[i].custom = { ...getPresetBuff(S.harmony[i].id, lv) };
             buildHarmonyPicker();
-            if (inputMode === 'detail') fillDetailInputs();
+            fillDetailInputs();
             recalcAll();
         }
 
@@ -4418,60 +4305,6 @@
             recalcAll();
         }
 
-        // ================================================================
-        // MASTER RECALC (no DOM rebuild for inputs!)
-        // ================================================================
-        // AUTO BUFF TOGGLE
-        // ================================================================
-        function B0() {
-            return {
-                atk_pct: 0, hp_pct: 0, def_pct: 0,
-                dmg_fire: 0, dmg_ice: 0, dmg_thunder: 0, dmg_wind: 0, dmg_light: 0, dmg_dark: 0, dmg_all: 0,
-                crit_rate: 0, crit_dmg: 0,
-                dmg_normal: 0, dmg_heavy: 0, dmg_skill: 0, dmg_lib: 0, dmg_echo: 0,
-                base_atk: 0, flat_atk: 0, flat_hp: 0, flat_def: 0, res_eff: 0, heal: 0
-            };
-        }
-
-        // inputMode連動ラッパー（detail=全バフ有効、total=全バフ無効）
-        function getHarmonyTotalEff() { return inputMode === 'detail' ? getHarmonyTotal() : B0(); }
-        function getCharaWeaponBuffEff() { return inputMode === 'detail' ? getCharaWeaponBuff() : B0(); }
-        function getEchoMainBuffEff() { return inputMode === 'detail' ? getEchoMainBuff() : B0(); }
-        function getEchoSubBuffEff() { return inputMode === 'detail' ? getEchoSubBuff() : B0(); }
-
-        // ================================================================
-        // 入力モード切り替え
-        // ================================================================
-        function setInputMode(mode, btn) {
-            inputMode = mode;
-            autoBuffEnabled = (mode === 'detail');
-            // ボタンスタイル
-            ['total', 'detail'].forEach(m => {
-                const b = document.getElementById('inputModeBtn_' + m);
-                if (b) b.className = m === mode ? 'mode-btn active' : 'mode-btn';
-            });
-            // ブロック表示切り替え
-            const showTotal = (mode === 'total');
-            setDisplay('block_total', showTotal);
-            setDisplay('block_detail', !showTotal);
-            setDisplay('dmgbuf_total', showTotal);
-            setDisplay('dmgbuf_detail', !showTotal);
-            setDisplay('skillbuf_total', showTotal);
-            setDisplay('skillbuf_detail', !showTotal);
-            setDisplay('cw_select_block', !showTotal);
-            if (!showTotal) {
-                buildDetailRows();
-                fillDetailInputs();
-            }
-            recalcAll();
-        }
-
-        function setDisplay(id, show) {
-            const el = document.getElementById(id);
-            if (el) el.style.display = show ? '' : 'none';
-        }
-
-        
         function initCollapsibleSections() {
             document.querySelectorAll('.card-body').forEach(body => {
                 if (body.dataset.collapsibleReady === '1') return;
@@ -4704,14 +4537,13 @@
                 if (!tab) return;
 
                 // 1. 生の入力欄・セレクトをクリア
-                tab.querySelectorAll('input[type="number" inputmode="decimal"], input[type="text"]').forEach(el => { el.value = ''; });
+                // セレクタを 'input[type="number" inputmode="decimal"]' と書いていたため
+                // querySelectorAll が例外を投げ、リセットが丸ごと動いていなかった
+                tab.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => { el.value = ''; });
                 tab.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
 
                 // 2. 状態を初期値に戻す
-                S.base_stat = ''; S.total_stat = '';
-                S.crit_rate = ''; S.crit_dmg = '';
-                ['fire', 'ice', 'thunder', 'wind', 'light', 'dark', 'all',
-                    'normal', 'heavy', 'skill', 'lib', 'echo'].forEach(k => S['dmg_' + k] = '0');
+                S.other = {};
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
                 S.harmony = [
                     { id: '', setLevel: 5, custom: B() },
@@ -4724,14 +4556,14 @@
                 tab.querySelectorAll('.attr-sel-btn').forEach(b => { b.classList.remove('active'); b.style.background = 'transparent'; });
                 const noteAttr = document.getElementById('note_useattr'); if (noteAttr) noteAttr.textContent = '';
 
-                // 4. モード類を初期値（攻撃力基準・合計値入力）へ
+                // 4. 基準を初期値（攻撃力基準）へ
                 const atkBtn = document.getElementById('statModeBtn_atk');
                 if (atkBtn) setStatMode('atk', atkBtn);
-                setInputMode('total', null);
 
                 // 5. 再描画
                 buildHarmonyPicker();
                 onCharaWeaponChange();
+                fillDetailInputs();
                 updateRatioVis();
                 recalcAll();
             });
@@ -4799,9 +4631,9 @@
           <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_w" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_c" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_em" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="onDetailOther('d${a.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="onDetailOther('d${a.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
         </div>
-        <div class="detail-total" id="dt_d${a.key}">合計: 0%</div>
+        <div class="detail-total" id="dt_d${a.key}"></div>
       </div>`).join('');
                 attrCont.dataset.built = '1';
             }
@@ -4816,9 +4648,9 @@
           <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_w" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_c" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_es" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
-          <div class="detail-item"><label>その他</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="onDetailOther('s${s.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="onDetailOther('s${s.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
         </div>
-        <div class="detail-total" id="dt_s${s.key}">合計: 0%</div>
+        <div class="detail-total" id="dt_s${s.key}"></div>
       </div>`).join('');
                 skillCont.dataset.built = '1';
             }
@@ -4828,7 +4660,7 @@
         // 項目別モードの内訳計算
         // ================================================================
         // 「ハーモニー/武器/キャラ/音骸メイン/音骸サブ」の各欄は S から導出できる値であり、
-        // ユーザーが直接入力するのは「その他」欄だけ（S.other に保持）。
+        // ユーザーが手で入れるのは「直接入力」欄だけ（S.other に保持）。
         // 以前は getPartials() が入力欄のDOMを直接読んでいたため、
         // fillDetailInputs() を呼び忘れた経路では古い値で計算されうる状態だった。
         // 計算・表示・入力欄への反映がすべてこの関数を参照するようにして、
@@ -4874,7 +4706,7 @@
             };
         }
 
-        // 「その他」欄の入力を状態へ書き戻す
+        // 「直接入力」欄の入力を状態へ書き戻す
         function onDetailOther(key, val) {
             if (!S.other) S.other = {};
             S.other[key] = val;
@@ -4893,7 +4725,7 @@
             ATTR_DETAIL.forEach(a => ['h', 'w', 'c', 'em'].forEach(k => fill(`di_d${a.key}_${k}`, D.attr[a.key][k])));
             ['h', 'w', 'c'].forEach(k => fill('di_dall_' + k, D.dall[k]));
             SKILL_DETAIL.forEach(x => ['h', 'w', 'c', 'es'].forEach(k => fill(`di_s${x.key}_${k}`, D.skill[x.key][k])));
-            // 「その他」欄：ユーザーの入力そのものなので状態から復元する
+            // 「直接入力」欄：ユーザーの入力そのものなので状態から復元する
             const O = S.other || {};
             fill('di_base_other', O.base); fill('di_stat_other', O.stat);
             fill('di_cr_other', O.cr); fill('di_cd_other', O.cd); fill('di_dall_other', O.dall);
@@ -4901,21 +4733,69 @@
             SKILL_DETAIL.forEach(x => fill(`di_s${x.key}_other`, O['s' + x.key]));
         }
 
+        // ================================================================
+        // 合計欄
+        // ================================================================
+        // 各項目の合計は「ゲーム内のステータス画面と突き合わせる数字」なので、
+        // 内訳より大きく出す。さらに直接打ち込めるようにしてあり、その場合は
+        // 「打った値 − 自動計算されている分」を『直接入力』欄に入れる。
+        // 合計を固定値として別に持たない理由は、そうするとハーモニーを切り替えても
+        // 合計が動かず、内訳と合計が食い違った状態になるため。
+        // 差分として持てば、あとから登録データを足しても合計は正しく追従する。
+        // 自動計算の分が打った値を超える場合、差分は負になる（これは正しい状態）。
+        const DETAIL_TOTALS = [
+            { id: 'dt_base', other: 'base', label: '基礎', unit: '', dec: 0, hero: true, get: D => D.base.total },
+            { id: 'dt_total', other: 'stat', label: '全体', unit: '', dec: 0, hero: true, get: D => D.total },
+            { id: 'dt_cr', other: 'cr', label: 'クリ率', unit: '%', dec: 1, hero: true, get: D => D.cr.total },
+            { id: 'dt_cd', other: 'cd', label: 'クリダメ', unit: '%', dec: 1, hero: true, get: D => D.cd.total },
+            { id: 'dt_dall', other: 'dall', label: '合計', unit: '%', dec: 1, get: D => D.dall.total },
+            ...ATTR_DETAIL.map(a => ({ id: 'dt_d' + a.key, other: 'd' + a.key, label: '合計', unit: '%', dec: 1, get: D => D.attr[a.key].total })),
+            ...SKILL_DETAIL.map(x => ({ id: 'dt_s' + x.key, other: 's' + x.key, label: '合計', unit: '%', dec: 1, get: D => D.skill[x.key].total })),
+        ];
+
+        function buildDetailTotals() {
+            DETAIL_TOTALS.forEach(t => {
+                const el = document.getElementById(t.id);
+                if (!el || el.dataset.built === '1') return;
+                if (t.hero) el.classList.add('hero');
+                el.innerHTML = `<span class="dt-label">${t.label}</span>`
+                    + `<input type="number" inputmode="decimal" step="any" id="${t.id}_in" placeholder="0"`
+                    + ` oninput="setDetailTotal('${t.id}',this.value)" onblur="updateDetailTotals()">`
+                    + (t.unit ? `<span class="dt-unit">${t.unit}</span>` : '')
+                    + `<span class="dt-note" id="${t.id}_note"></span>`;
+                el.dataset.built = '1';
+            });
+        }
+
+        // 合計欄への直接入力。自動計算分との差を『直接入力』欄へ回す。
+        function setDetailTotal(id, val) {
+            const t = DETAIL_TOTALS.find(x => x.id === id);
+            if (!t) return;
+            if (!S.other) S.other = {};
+            if (val === '') { S.other[t.other] = ''; recalcAll(); return; }
+            const auto = t.get(detailBreakdown()) - n(S.other[t.other]);
+            const resid = Math.round((n(val) - auto) * 1e4) / 1e4;
+            S.other[t.other] = resid === 0 ? '' : String(resid);
+            recalcAll();
+        }
+
         // 項目別：合計表示を更新
         function updateDetailTotals() {
-            if (inputMode !== 'detail') return;
             // 表示されている入力欄と計算結果がずれないよう、導出欄を書き戻してから合計を出す
             fillDetailInputs();
             const D = detailBreakdown();
-            setDT('dt_base', `合計: ${D.base.total.toFixed(0)}`);
-            setDT('dt_total', `全体: ${D.total.toFixed(0)}`);
-            setDT('dt_cr', `合計: ${D.cr.total.toFixed(1)}%`);
-            setDT('dt_cd', `合計: ${D.cd.total.toFixed(1)}%`);
-            ATTR_DETAIL.forEach(a => setDT(`dt_d${a.key}`, `合計: ${D.attr[a.key].total.toFixed(1)}%`));
-            setDT('dt_dall', `合計: ${D.dall.total.toFixed(1)}%`);
-            SKILL_DETAIL.forEach(x => setDT(`dt_s${x.key}`, `合計: ${D.skill[x.key].total.toFixed(1)}%`));
+            DETAIL_TOTALS.forEach(t => {
+                const inp = document.getElementById(t.id + '_in');
+                // 打鍵中の欄を書き換えるとカーソルが飛ぶので触らない
+                if (inp && document.activeElement !== inp) inp.value = t.get(D).toFixed(t.dec);
+                const note = document.getElementById(t.id + '_note');
+                if (!note) return;
+                const r = n((S.other || {})[t.other]);
+                if (!r) { note.textContent = ''; note.className = 'dt-note'; return; }
+                note.textContent = `直接入力 ${r > 0 ? '+' : '−'}${Math.abs(r)}${t.unit} を含む`;
+                note.className = r < 0 ? 'dt-note neg' : 'dt-note';
+            });
         }
-        function setDT(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
 
         // ================================================================
         function recalcAll() {
@@ -5024,7 +4904,7 @@
             // S.echoesに展開（古い保存形式や欠けたスロットも現在形式へ補正）
             S.echoes = normalizeEchoSet(JSON.parse(JSON.stringify(preset.echoes || [])));
             buildEchoGrid();
-            if (inputMode === 'detail') fillDetailInputs();
+            fillDetailInputs();
             recalcAll();
             requestAnimationFrame(updateEchoScores);
             showPresetMsg(`「${preset.name}」を呼び出しました`, '#15803d');
@@ -5212,14 +5092,14 @@
             const sd = SUB_STATS.find(x => x.key === key); if (!sd) return;
             S.echoes[ei].subs[si] = { key, val: String(sd.vals[vi]) };
             advancePicker(ei);
-            if (inputMode === 'detail') fillDetailInputs();
+            fillDetailInputs();
             buildEchoSubRows(ei);
             recalcAll();
         }
 
         function clearSub(ei, si) {
             S.echoes[ei].subs[si] = { key: '', val: '' };
-            if (inputMode === 'detail') fillDetailInputs();
+            fillDetailInputs();
             buildEchoSubRows(ei);
             recalcAll();
         }
@@ -6408,7 +6288,7 @@ rebuildCharaWeaponSelects();
         function saveState() {
             try {
                 localStorage.setItem(STATE_KEY, JSON.stringify({
-                    __ver: STATE_VER, statMode, useAttr, inputMode, S,
+                    __ver: STATE_VER, statMode, useAttr, S,
                 }));
             } catch { /* 容量超過やプライベートモードでは黙って諦める */ }
         }
@@ -6435,24 +6315,15 @@ rebuildCharaWeaponSelects();
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0, ...(saved.S.ratio || {}) };
                 if (['atk', 'hp', 'def'].includes(saved.statMode)) statMode = saved.statMode;
                 if (typeof saved.useAttr === 'string') useAttr = saved.useAttr;
-                if (['total', 'detail'].includes(saved.inputMode)) inputMode = saved.inputMode;
                 return true;
             } catch {
                 return false;
             }
         }
 
-        // 合計値モードの入力欄を状態から復元する
-        function fillTotalInputs() {
+        // ダメージ比率の入力欄を状態から復元する（他は fillDetailInputs が担当）
+        function fillRatioInputs() {
             const put = (id, v) => { const el = document.getElementById(id); if (el && v !== '' && v != null) el.value = v; };
-            put('inp_base', S.base_stat); put('inp_total', S.total_stat);
-            put('inp_cr', S.crit_rate); put('inp_cd', S.crit_dmg);
-            ['fire', 'ice', 'thunder', 'wind', 'light', 'dark', 'all'].forEach(k => {
-                const v = S['dmg_' + k]; if (v && v !== '0') put('inp_d' + k, v);
-            });
-            ['normal', 'heavy', 'skill', 'lib', 'echo'].forEach(k => {
-                const v = S['dmg_' + k]; if (v && v !== '0') put('inp_d' + k, v);
-            });
             const R = { r_n: 'normal', r_h: 'heavy', r_s: 'skill', r_l: 'lib', r_e: 'echo' };
             Object.entries(R).forEach(([id, k]) => put(id, S.ratio[k]));
         }
@@ -6475,6 +6346,8 @@ rebuildCharaWeaponSelects();
             const restored = loadState();
             updateRatioVis();
             buildHarmonyPicker();
+            buildDetailRows();
+            buildDetailTotals();
             buildEchoGrid();
             rebuildPresetSelect();
             buildNewSubs();
@@ -6484,10 +6357,9 @@ rebuildCharaWeaponSelects();
                         initCardCollapse();
 rebuildCharaWeaponSelects();
             if (restored) {
-                fillTotalInputs();
+                fillRatioInputs();
                 const smBtn = document.getElementById('statModeBtn_' + statMode);
                 if (smBtn) setStatMode(statMode, smBtn);
-                setInputMode(inputMode, null);
                 if (useAttr) {
                     const ab = document.querySelector(`.attr-sel-btn[data-attr="${useAttr}"]`);
                     if (ab) setUseAttr(useAttr, ab);

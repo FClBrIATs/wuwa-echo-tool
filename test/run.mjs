@@ -16,8 +16,10 @@ const SETSUB = `
   }
 `;
 
+// 登録データを使わない素のビルドなので、内訳はすべて「直接入力」に入る。
+// 全体攻撃力2600 ＝ 基礎500 ＋ 実数2100。
 const BUILD = SETSUB + `
-  S.base_stat='500'; S.total_stat='2600'; S.crit_rate='68'; S.crit_dmg='245';
+  S.other = { base:'500', stat:'2100', cr:'68', cd:'245' };
   S.ratio={normal:0,heavy:0,skill:100,lib:0,echo:0};
 `;
 
@@ -75,7 +77,7 @@ await withPage(async page => {
 suite('クリ率:クリダメのバランス判定');
 await withPage(async page => {
     const verdict = cd => page.evaluate(([b, cd]) => {
-        eval(b); S.crit_dmg = cd; updateEdDisplay();
+        eval(b); S.other.cd = cd; updateEdDisplay();
         return document.getElementById('balanceNote').textContent.trim();
     }, [BUILD, cd]);
     // クリダメは100%が基準点。増分(cd-100)と比較しないと判定が反転する
@@ -87,7 +89,7 @@ await withPage(async page => {
 suite('クリダメ未入力時の保護');
 await withPage(async page => {
     const r = await page.evaluate(b => {
-        eval(b); S.crit_dmg = '';
+        eval(b); S.other.cd = '';
         const p = getPartials();
         updateEdDisplay();
         return { crit_factor: p.crit_factor, pCR: p.pCR, cd_unset: p.cd_unset, note: document.getElementById('balanceNote').textContent };
@@ -102,8 +104,8 @@ suite('クリ率100%の頭打ち');
 await withPage(async page => {
     const r = await page.evaluate(b => {
         eval(b);
-        const at = (cr, v, inc) => { S.crit_rate = String(cr); return +mv('crit_rate', v, inc).toFixed(4); };
-        const unit = (cr) => { S.crit_rate = String(cr); return getPartials().pCR; };
+        const at = (cr, v, inc) => { S.other.cr = String(cr); return +mv('crit_rate', v, inc).toFixed(4); };
+        const unit = (cr) => { S.other.cr = String(cr); return getPartials().pCR; };
         return {
             u95: unit(95),
             新規10_5_at95: at(95, 10.5, false), 新規3_at95: at(95, 3, false),
@@ -226,11 +228,10 @@ await withPage(async page => {
 });
 
 // ── 項目別モード ────────────────────────────────────────
-suite('項目別モードが状態から計算される');
+suite('内訳が状態から計算される');
 await withPage(async page => {
     const r = await page.evaluate(() => {
         const o = {};
-        setInputMode('detail', null);
         // 登録データ由来のバフ（ハーモニー）＋ ユーザーの「その他」入力
         S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
         S.other = { base: '500', cr: '5', cd: '150', dlight: '10' };
@@ -313,10 +314,10 @@ await withPage(async page => {
 suite('入力内容がリロードで復元される');
 await withPage(async page => {
     await page.evaluate(() => {
-        S.base_stat = '500'; S.total_stat = '2600'; S.crit_rate = '68'; S.crit_dmg = '245';
+        S.other = { base: '500', stat: '2100', cr: '68', cd: '245' };
         S.ratio = { normal: 0, heavy: 0, skill: 80, lib: 20, echo: 0 };
         S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
-        S.other = { cr: '7' };
+        S.other.cr = '75';
         S.echoes[0].name = 'テスト音骸';
         S.echoes[0].main = { cost: 4, key1: 'crit_rate', val1: 22, key2: 'flat_atk', val2: 150 };
         S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'atk_pct', val: '11.6' },
@@ -330,18 +331,18 @@ await withPage(async page => {
     await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
     const after = await page.evaluate(() => ({
         E: Math.round(getPartials().E), score: Math.round(echoScore(S.echoes[0])),
-        base: S.base_stat, cr: S.crit_rate, ratio: S.ratio, useAttr,
+        base: S.other.base, cr: S.other.cr, ratio: S.ratio, useAttr,
         harmony: S.harmony[0].id, other: S.other.cr, name: S.echoes[0].name,
         cost: S.echoes[0].main.cost, subs: S.echoes[0].subs.filter(x => x.key).length,
-        欄に値が入っている: document.getElementById('inp_total').value,
+        欄に値が入っている: document.getElementById('dt_base_in').value,
     }));
     check('期待ダメージ指数が一致', after.E, before.E);
     check('音骸スコアが一致', after.score, before.score);
-    check('ステータス入力が戻る', [after.base, after.cr, after.欄に値が入っている], ['500', '68', '2600']);
+    check('ステータス入力が戻る', [after.base, after.cr, after.欄に値が入っている], ['500', '75', '500']);
     check('ダメージ比率が戻る', after.ratio, { normal: 0, heavy: 0, skill: 80, lib: 20, echo: 0 });
     check('使用属性が戻る', after.useAttr, 'light');
     check('ハーモニー選択が戻る', after.harmony, 'リフレクト');
-    check('項目別の「その他」が戻る', after.other, '7');
+    check('「直接入力」が戻る', after.other, '75');
     check('音骸の名前・コスト・サブステが戻る', [after.name, after.cost, after.subs], ['テスト音骸', 4, 2]);
 });
 
@@ -358,10 +359,10 @@ await withPage(async page => {
 
 suite('入力すると自動保存される');
 await withPage(async page => {
-    await page.evaluate(() => { const el = document.getElementById('inp_total'); el.value = '3000'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    await page.evaluate(() => { const el = document.getElementById('di_stat_other'); el.value = '3000'; el.dispatchEvent(new Event('input', { bubbles: true })); });
     await page.waitForTimeout(700);
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('ww_echo_state') || 'null'));
-    checkTrue('入力後に保存が走る', saved && saved.S && saved.S.total_stat === '3000');
+    checkTrue('入力後に保存が走る', saved && saved.S && saved.S.other && saved.S.other.stat === '3000');
 });
 
 // ── 厳密差分によるスコア ──────────────────────────────
@@ -389,7 +390,7 @@ await withPage(async page => {
             同一サブステなら同スコア: Math.abs(scoreSubsOnSlot(0, JSON.parse(JSON.stringify(strong))) - echoScoreAt(0)) < 1e-9,
             // 状態は計算後に元へ戻っている
             状態が復元される: JSON.stringify(S.echoes[0].subs) === JSON.stringify(strong)
-                && S.total_stat === '2600' && S.crit_rate === '68' && S.crit_dmg === '245',
+                && S.other.stat === '2100' && S.other.cr === '68' && S.other.cd === '245',
             比較用に空にしても壊れない: eWithSlotSubs(0, empty) > 0,
         };
     }, BUILD);
@@ -402,10 +403,9 @@ await withPage(async page => {
     checkTrue('スロットを空にした計算が成立する', r.比較用に空にしても壊れない);
 });
 
-suite('項目別モードでも厳密差分が成立する');
+suite('厳密差分が積み上げ計算と一致する');
 await withPage(async page => {
     const r = await page.evaluate(() => {
-        setInputMode('detail', null);
         S.other = { base: '500', cr: '40', cd: '190' };
         S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
         S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
@@ -911,6 +911,98 @@ await withPage(async page => {
     // そのタブの主目的にあたる入力欄が畳まれていると、何をすればいいか分からない
     checkTrue('新規判定タブのサブステ欄が開いている', r.新規判定のサブステ);
     checkTrue('サブステの入力欄が見えている', r.入力欄が見える);
+});
+
+suite('ハーモニー選択が畳まれていない');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        // 見出しが無いままだと直前の「ダメージ比率」の折りたたみに巻き込まれ、
+        // 一次入力であるハーモニー選択がページから消えていた
+        const d = [...document.querySelectorAll('#tab-stats details')]
+            .find(x => x.querySelector('summary')?.textContent.includes('ハーモニー'));
+        return { 開いている: d?.open, 見えている: document.getElementById('harmonyPicker').offsetParent !== null };
+    });
+    checkTrue('ハーモニーの見出しが開いた状態で始まる', r.開いている);
+    checkTrue('ハーモニー選択が見えている', r.見えている);
+});
+
+// ── 合計欄への直接入力 ──────────────────────────────────
+suite('合計欄が入力と自動計算の両方を受ける');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        S.other = {}; S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+        recalcAll();
+
+        // ゲーム画面の数字をそのまま打ち込める
+        setDetailTotal('dt_cr', '68');
+        o.打った値がそのまま合計になる = detailBreakdown().cr.total;
+        o.直接入力に入る = S.other.cr;
+        o.注釈が出る = document.getElementById('dt_cr_note').textContent;
+
+        // 合計は固定値ではなく差分として持つので、あとからバフが増えれば追従する
+        S.harmony[0] = { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) };
+        buildHarmonyPicker(); recalcAll();
+        const h = detailBreakdown().cr.h;
+        o.バフ分だけ増える = Math.round((detailBreakdown().cr.total - (68 + h)) * 1e6);
+        o.ハーモニー分がある = h;
+
+        // 自動加算のほうが打った値より大きい場合、差分は負になる（正しい状態）
+        setDetailTotal('dt_cr', '5');
+        o.負の直接入力 = n(S.other.cr) < 0;
+        o.負でも合計は打った値 = Math.round(detailBreakdown().cr.total * 1e6) / 1e6;
+        o.負の注釈 = document.getElementById('dt_cr_note').className.includes('neg');
+
+        // 空にすれば自動計算だけに戻る
+        setDetailTotal('dt_cr', '');
+        o.空にすると自動分のみ = detailBreakdown().cr.total;
+        o.注釈も消える = document.getElementById('dt_cr_note').textContent;
+        return o;
+    });
+    check('打った値がそのまま合計になる', r.打った値がそのまま合計になる, 68);
+    check('差は「直接入力」へ回る', r.直接入力に入る, '68');
+    checkTrue('直接入力を含む旨の注釈が出る', r.注釈が出る.includes('直接入力'));
+    checkTrue('ハーモニーのクリ率が加算されている', r.ハーモニー分がある > 0);
+    check('あとから増えたバフに合計が追従する', r.バフ分だけ増える, 0);
+    checkTrue('自動分が上回ると直接入力は負になる', r.負の直接入力);
+    check('負でも合計は打った値のまま', r.負でも合計は打った値, 5);
+    checkTrue('負の直接入力は色を変えて示す', r.負の注釈);
+    check('空にすると自動計算分だけに戻る', r.空にすると自動分のみ, r.ハーモニー分がある);
+    check('注釈も消える', r.注釈も消える, '');
+});
+
+suite('合計値入力モードが無い');
+await withPage(async page => {
+    const r = await page.evaluate(() => ({
+        モード切替ボタン: !!document.getElementById('inputModeBtn_total'),
+        合計値モードのブロック: !!document.getElementById('block_total'),
+        切替関数: typeof setInputMode,
+        内訳が最初から見えている: document.getElementById('block_detail').offsetParent !== null,
+        キャラ武器の選択も見えている: document.getElementById('cw_select_block').offsetParent !== null,
+        属性バフの内訳が見えている: document.getElementById('di_attr_rows').children.length,
+    }));
+    checkTrue('モード切替ボタンは無い', !r.モード切替ボタン);
+    checkTrue('合計値モードの入力欄は無い', !r.合計値モードのブロック);
+    check('切替関数も残っていない', r.切替関数, 'undefined');
+    checkTrue('内訳入力が最初から表示される', r.内訳が最初から見えている);
+    checkTrue('キャラ・武器の選択が最初から表示される', r.キャラ武器の選択も見えている);
+    check('属性バフの内訳が6属性ぶん生成される', r.属性バフの内訳が見えている, 6);
+});
+
+suite('タブのリセットが動く');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        window.confirmDialog = (msg, fn) => fn();
+        recalcAll();
+        const before = detailBreakdown().cr.total;
+        resetStatsTab();
+        // セレクタ不正で querySelectorAll が例外を投げ、リセットが丸ごと落ちていた
+        return { before, after: detailBreakdown().cr.total, other: JSON.stringify(S.other) };
+    }, BUILD);
+    check('リセット前はクリ率が入っている', r.before, 68);
+    check('リセットで0に戻る', r.after, 0);
+    check('直接入力も空になる', r.other, '{}');
 });
 
 await finish();
