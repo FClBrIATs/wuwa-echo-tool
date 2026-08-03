@@ -971,6 +971,35 @@ await withPage(async page => {
     check('注釈も消える', r.注釈も消える, '');
 });
 
+suite('手入力と自動計算が見分けられる');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const items = [...document.querySelectorAll('#tab-stats .detail-item')];
+        const manual = items.filter(x => x.classList.contains('manual'));
+        return {
+            欄がある: items.length,
+            // 編集できる欄には必ず印が付いていること（逆も同じ）
+            印の無い入力欄: items.filter(x => !x.classList.contains('manual') && !x.querySelector('input[readonly]')).length,
+            編集できない手入力欄: manual.filter(x => x.querySelector('input[readonly]')).length,
+            手入力の見出し: manual.length && getComputedStyle(manual[0].querySelector('label'), '::before').content,
+            自動欄は点線: getComputedStyle(document.getElementById('di_cr_h')).borderStyle,
+            手入力欄は実線: getComputedStyle(document.getElementById('di_cr_other')).borderStyle,
+            色が違う: getComputedStyle(document.getElementById('di_cr_h')).backgroundColor
+                !== getComputedStyle(document.getElementById('di_cr_other')).backgroundColor,
+            凡例: [...document.querySelectorAll('#block_detail .input-legend span')].map(x => x.className),
+        };
+    });
+    checkTrue('内訳の入力欄がある', r.欄がある > 20);
+    check('編集できる欄には必ず印が付く', r.印の無い入力欄, 0);
+    check('印の付いた欄は必ず編集できる', r.編集できない手入力欄, 0);
+    checkTrue('手入力の見出しに印が入る', r.手入力の見出し.includes('✎'));
+    // 色覚に依存しないよう、枠線の種類でも区別する
+    check('自動計算の欄は点線', r.自動欄は点線, 'dashed');
+    check('手入力の欄は実線', r.手入力欄は実線, 'solid');
+    checkTrue('背景色も変える', r.色が違う);
+    check('凡例が3種類出る', r.凡例, ['lg-auto', 'lg-manual', 'lg-total']);
+});
+
 suite('合計値入力モードが無い');
 await withPage(async page => {
     const r = await page.evaluate(() => ({

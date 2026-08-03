@@ -503,12 +503,67 @@
         }
 
         /* 導出欄：登録データから自動計算される値。編集しても計算には使われないため
-           入力欄と見分けがつくようにする */
+           入力欄と見分けがつくようにする。
+           色だけに頼らず、枠線（点線／実線）と見出しの印でも区別する */
         .detail-item input[readonly] {
             background: transparent;
             border-style: dashed;
             color: var(--text2);
             cursor: default;
+        }
+
+        .detail-item.manual input {
+            background: var(--p-light);
+            border-color: var(--p2);
+            color: var(--text);
+        }
+
+        .detail-item.manual input:focus {
+            border-color: var(--p);
+            outline: none;
+        }
+
+        .detail-item.manual label {
+            color: var(--p);
+        }
+
+        .detail-item.manual label::before {
+            content: '✎ ';
+        }
+
+        /* 手入力と自動計算の凡例。内訳の先頭に一度だけ出す */
+        .input-legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 2px 0 8px;
+            font-size: 10px;
+            color: var(--text3);
+        }
+
+        .input-legend span::before {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 10px;
+            border-radius: 3px;
+            margin-right: 4px;
+            vertical-align: -1px;
+        }
+
+        .input-legend .lg-auto::before {
+            border: 1px dashed var(--border2);
+        }
+
+        .input-legend .lg-manual::before {
+            border: 1px solid var(--p2);
+            background: var(--p-light);
+        }
+
+        .input-legend .lg-total::before {
+            border: 1px solid var(--border);
+            background: var(--bg);
         }
 
         .detail-item .unit {
@@ -544,7 +599,7 @@
             width: 5.5em;
             margin-left: auto;
             background: transparent;
-            border: 1px solid transparent;
+            border: 1px solid var(--border);
             border-radius: 4px;
             padding: 1px 4px;
             color: var(--p);
@@ -2214,6 +2269,11 @@
 
                         <!-- ===== 内訳入力 ===== -->
                         <div id="block_detail">
+                            <div class="input-legend">
+                                <span class="lg-auto">自動計算（登録データ・②タブから）</span>
+                                <span class="lg-manual">手入力</span>
+                                <span class="lg-total">合計（自動計算・上書き可）</span>
+                            </div>
                             <!-- 基礎攻撃力 内訳 -->
                             <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
                             <div class="detail-grid">
@@ -2221,7 +2281,7 @@
                                         id="di_base_weapon" placeholder="0" readonly tabindex="-1"></div>
                                 <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_chara" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
                                         id="di_base_other" placeholder="0" oninput="onDetailOther('base',this.value);autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_base"></div>
@@ -2251,7 +2311,7 @@
                                         id="di_stat_flat_em" placeholder="0" readonly tabindex="-1"></div>
                                 <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_flat_es" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
                                         id="di_stat_other" placeholder="0" oninput="onDetailOther('stat',this.value);autoSize(this)"></div>
                             </div>
                             <div class="detail-total" id="dt_total"></div>
@@ -2274,7 +2334,7 @@
                                 <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_es" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cr_other" placeholder="0" oninput="onDetailOther('cr',this.value);autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -2298,7 +2358,7 @@
                                 <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_es" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
                                         id="di_cd_other" placeholder="0" oninput="onDetailOther('cd',this.value);autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -2372,7 +2432,11 @@
                         <div class="sec-title">属性バフ</div>
 
                         <div id="dmgbuf_detail">
-                            <div class="sub-note" style="margin-bottom:6px;">各属性の内訳を入力してください。登録データは自動入力されます。</div>
+                            <div class="input-legend">
+                                <span class="lg-auto">自動計算</span>
+                                <span class="lg-manual">手入力</span>
+                                <span class="lg-total">合計（上書き可）</span>
+                            </div>
                             <!-- 属性ループはJSで生成 -->
                             <div id="di_attr_rows"></div>
                             <div class="sec-title" style="margin-top:8px;">全属性バフ</div>
@@ -2386,7 +2450,7 @@
                                 <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_c" placeholder="0" readonly tabindex="-1"><span
                                         class="unit">%</span></div>
-                                <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
                                         id="di_dall_other" placeholder="0" oninput="onDetailOther('dall',this.value);autoSize(this)"><span
                                         class="unit">%</span></div>
                             </div>
@@ -4631,7 +4695,7 @@
           <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_w" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_c" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_em" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
-          <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="onDetailOther('d${a.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any" id="di_d${a.key}_other" placeholder="0" oninput="onDetailOther('d${a.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_d${a.key}"></div>
       </div>`).join('');
@@ -4648,7 +4712,7 @@
           <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_w" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_c" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
           <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_es" placeholder="0" readonly tabindex="-1"><span class="unit">%</span></div>
-          <div class="detail-item"><label>直接入力</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="onDetailOther('s${s.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
+          <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any" id="di_s${s.key}_other" placeholder="0" oninput="onDetailOther('s${s.key}',this.value);autoSize(this)"><span class="unit">%</span></div>
         </div>
         <div class="detail-total" id="dt_s${s.key}"></div>
       </div>`).join('');
