@@ -1043,4 +1043,75 @@ await withPage(async page => {
     check('直接入力も空になる', r.other, '{}');
 });
 
+// ── 配色 ────────────────────────────────────────────────
+suite('白地で文字が読める');
+await withPage(async page => {
+    // 暗地から白基調へ戻したとき、暗地前提の色（淡い黄・淡い緑など）が
+    // そのまま残っていると文字が沈む。目視では見落とすので機械的に測る。
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.harmony[0] = { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) };
+        S.echoes.forEach((e, i) => {
+            e.main = { cost: i ? 3 : 4, key1: 'crit_rate', val1: 22, key2: 'flat_atk', val2: 150 };
+            e.subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+            { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '9.4' }, { key: 'flat_atk', val: '50' }];
+        });
+        buildHarmonyPicker(); buildEchoGrid(); recalcAll();
+        document.querySelectorAll('details').forEach(d => d.open = true);
+
+        const lum = c => { const [r2, g, bl] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r2 + 0.7152 * g + 0.0722 * bl; };
+        const nums = x => (x.match(/[\d.]+/g) || []).map(Number);
+        const rgb = x => nums(x).slice(0, 3);
+        const alp = x => { const n = nums(x); return n.length > 3 ? n[3] : 1; };
+        const over = (f, a, bk) => f.map((v, i) => v * a + bk[i] * (1 - a));
+        const ratio = (a, bk) => { const l1 = lum(a), l2 = lum(bk); return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05); };
+        const bgOf = el => {
+            let n = el, st = [], acc = [240, 244, 248];
+            while (n && n !== document.documentElement) { const cs = getComputedStyle(n); if (cs.backgroundColor && alp(cs.backgroundColor) > 0) st.push([rgb(cs.backgroundColor), alp(cs.backgroundColor)]); n = n.parentElement; }
+            for (let i = st.length - 1; i >= 0; i--) acc = over(st[i][0], st[i][1], acc);
+            return acc;
+        };
+        const bad = [];
+        for (const el of document.querySelectorAll('body *')) {
+            if (!el.offsetParent) continue;
+            const box = el.getBoundingClientRect(); if (!box.width || !box.height) continue;
+            const hasText = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+            if (!hasText && !(el.tagName === 'INPUT' && el.value)) continue;
+            const cs = getComputedStyle(el);
+            const fs = parseFloat(cs.fontSize);
+            const need = (fs >= 24 || (fs >= 18.66 && parseInt(cs.fontWeight) >= 700)) ? 3 : 4.5;
+            const bk = bgOf(el);
+            const c = ratio(over(rgb(cs.color), alp(cs.color), bk), bk);
+            if (c < need) bad.push(`${el.tagName}.${(el.className || '').toString().split(' ')[0]} ${cs.color} ${fs}px ${c.toFixed(2)}`);
+        }
+        return [...new Set(bad)];
+    }, BUILD);
+    check('コントラスト不足の文字は無い', r, []);
+});
+
+suite('段階表示は濃いほど強い');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+        const cs = getComputedStyle(document.documentElement);
+        const ramp = [1, 2, 3, 4, 5].map(i => cs.getPropertyValue('--g' + i + 'x').trim());
+        return {
+            段: ramp.length,
+            単調に濃くなる: ramp.every((c, i) => i === 0 || lum(c) < lum(ramp[i - 1])),
+            // 上位◯%の文字色にも使うので、濃い側は白地で読める必要がある
+            文字に使う段: ramp.slice(2).map(c => +(( 1.05) / (lum(c) + 0.05)).toFixed(2)),
+            価値0の文字色: cellTone(0, 1).fg,
+            濃い段の文字色: [0.1, 0.3, 0.5, 0.7, 0.9].map(x => cellTone(x, 1).fg),
+        };
+    });
+    check('5段ある', r.段, 5);
+    // 白地なので「淡い→濃い」。暗地の並び（明るいほど強い）のままだと最上位が消える
+    checkTrue('段が進むほど濃くなる', r.単調に濃くなる);
+    checkTrue('文字にも使う段は白地で4.5:1以上', r.文字に使う段.every(v => v >= 4.5));
+    // 段と文字色の境目がずれると、濃い地に濃い文字が載る
+    check('濃い段には明色の文字を載せる', r.濃い段の文字色,
+        ['var(--text)', 'var(--text)', 'var(--on-g)', 'var(--on-g)', 'var(--on-g)']);
+    check('価値0のセルは灰色のまま', r.価値0の文字色, 'var(--text3)');
+});
+
 await finish();
