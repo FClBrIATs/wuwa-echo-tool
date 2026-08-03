@@ -10,32 +10,39 @@
         rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0b0e;
-            --card: #14161c;
-            --card2: #1b1e26;
-            --border: #2a2e38;
-            --border2: #3a3f4c;
-            --p: #d4af37;
-            --p2: #b8952c;
-            --p-light: rgba(212, 175, 55, .12);
-            --p-rgb: 212, 175, 55;
-            --gold: #d4af37;
-            --green: #22c55e;
-            --red: #ef4444;
-            --orange: #f59e0b;
-            --text: #e8e6e1;
-            --text2: #a3a6b0;
-            --text3: #686c78;
-            --shadow: 0 2px 14px rgba(0, 0, 0, .55), 0 0 0 1px rgba(212, 175, 55, .04);
-            /* 入れ替え難易度の段階表示（暗い順→明るい順、最暗でも背景比3:1を確保） */
-            --g1x: #7a6226;
-            --g2x: #9c7d2c;
-            --g3x: #bd9a35;
-            --g4x: #d9b944;
-            --g5x: #f0d670;
+            --bg: #f0f4f8;
+            --card: #fff;
+            --card2: #f1f5f9;
+            --border: #dde3ec;
+            --border2: #c4cdd9;
+            /* 入力欄など「意味のある境界」は 3:1 を満たす線で引く */
+            --ui-line: #8b95a5;
+            --p: #2563eb;
+            --p2: #1d4ed8;
+            --p-light: rgba(37, 99, 235, .08);
+            --p-rgb: 37, 99, 235;
+            --on-p: #fff;
+            --gold: #b45309;
+            --green: #15803d;
+            --red: #dc2626;
+            --orange: #c2410c;
+            --info: #0e7490;
+            --text: #0f172a;
+            --text2: #475569;
+            --text3: #5a6779;
+            --shadow: 0 1px 3px rgba(15, 23, 42, .07), 0 1px 2px rgba(15, 23, 42, .04);
+            /* 入れ替え難易度の段階表示。白地なので「淡い順→濃い順」＝強いほど濃い。
+               g3x以降は文字色にも使うため、白地で4.5:1以上を確保する */
+            --g1x: #dbeafe;
+            --g2x: #93c5fd;
+            --g3x: #2563eb;
+            --g4x: #1d4ed8;
+            --g5x: #172554;
+            /* 濃い段の上に載せる文字 */
+            --on-g: #fff;
             /* 分布図：合格ラインに届かない部分と、ライン自体 */
-            --dc-dim: #3a3f4c;
-            --dc-line: #5eead4;
+            --dc-dim: #cbd5e1;
+            --dc-line: #0f766e;
         }
 
         * {
@@ -48,7 +55,6 @@
             background:
                 radial-gradient(ellipse 900px 500px at 15% -10%, rgba(var(--p-rgb), .06), transparent 60%),
                 radial-gradient(ellipse 700px 500px at 100% 10%, rgba(6, 182, 212, .05), transparent 55%),
-                repeating-linear-gradient(0deg, rgba(255, 255, 255, .012) 0px, rgba(255, 255, 255, .012) 1px, transparent 1px, transparent 3px),
                 var(--bg);
             color: var(--text);
             font-family: 'Noto Sans JP', 'IBM Plex Sans', sans-serif;
@@ -127,7 +133,6 @@
         .tab-btn.active {
             color: var(--p);
             border-bottom-color: var(--p);
-            text-shadow: 0 0 10px rgba(var(--p-rgb), .5);
         }
 
         /* LAYOUT */
@@ -226,7 +231,6 @@
             color: var(--p);
             text-transform: uppercase;
             font-family: 'IBM Plex Sans', sans-serif;
-            text-shadow: 0 0 8px rgba(var(--p-rgb), .35);
             position: relative;
             padding-left: 10px;
         }
@@ -240,7 +244,6 @@
             width: 4px;
             height: 4px;
             background: var(--p);
-            box-shadow: 0 0 6px 1px rgba(var(--p-rgb), .8);
         }
 
         .card-body {
@@ -508,6 +511,7 @@
         .detail-item input[readonly] {
             background: transparent;
             border-style: dashed;
+            border-color: var(--ui-line);
             color: var(--text2);
             cursor: default;
         }
@@ -553,7 +557,7 @@
         }
 
         .input-legend .lg-auto::before {
-            border: 1px dashed var(--border2);
+            border: 1px dashed var(--ui-line);
         }
 
         .input-legend .lg-manual::before {
@@ -562,8 +566,8 @@
         }
 
         .input-legend .lg-total::before {
-            border: 1px solid var(--border);
-            background: var(--bg);
+            border: 1px solid var(--ui-line);
+            background: var(--card);
         }
 
         .detail-item .unit {
@@ -598,8 +602,8 @@
             flex: 0 1 auto;
             width: 5.5em;
             margin-left: auto;
-            background: transparent;
-            border: 1px solid var(--border);
+            background: var(--card);
+            border: 1px solid var(--ui-line);
             border-radius: 4px;
             padding: 1px 4px;
             color: var(--p);
@@ -674,17 +678,17 @@
         }
 
         .si-fire {
-            background: #ef4444;
+            background: #dc2626;
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
         }
 
         .si-ice {
-            background: #3b82f6;
+            background: #2563eb;
             clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
         }
 
         .si-thunder {
-            background: #a855f7;
+            background: #7c3aed;
             clip-path: polygon(60% 0%, 38% 48%, 68% 48%, 28% 100%, 54% 52%, 22% 52%);
         }
 
@@ -694,12 +698,12 @@
         }
 
         .si-light {
-            background: #eab308;
+            background: #8f5a06;
             clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
         }
 
         .si-dark {
-            background: #ec4899;
+            background: #be185d;
             clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
         }
 
@@ -826,7 +830,7 @@
         .set-btn.active {
             background: var(--p);
             border-color: var(--p);
-            color: #0a0b0e;
+            color: var(--on-p);
             font-weight: 700;
         }
 
@@ -1099,13 +1103,13 @@
         }
 
         .echo-card.worst {
-            border-color: #f87171;
-            box-shadow: 0 0 10px rgba(248, 113, 113, .15);
+            border-color: var(--red);
+            box-shadow: 0 0 0 1px rgba(220, 38, 38, .25);
         }
 
         .echo-card.best {
-            border-color: #4ade80;
-            box-shadow: 0 0 10px rgba(74, 222, 128, .12);
+            border-color: var(--green);
+            box-shadow: 0 0 0 1px rgba(21, 128, 61, .25);
         }
 
         .echo-head {
@@ -1213,7 +1217,7 @@
         .ratio-preset.on {
             background: var(--p);
             border-color: var(--p);
-            color: #0a0b0e;
+            color: var(--on-p);
             font-weight: 600;
         }
 
@@ -1244,7 +1248,7 @@
             flex-shrink: 0;
             font-size: 10px;
             font-weight: 700;
-            color: #0a0b0e;
+            color: var(--on-p);
             background: var(--p);
             border-radius: 3px;
             padding: 1px 5px;
@@ -1441,11 +1445,11 @@
         .pk-chip.on {
             background: var(--p);
             border-color: var(--p);
-            color: #0a0b0e;
+            color: var(--on-p);
         }
 
         .pk-chip.on b {
-            color: #0a0b0e;
+            color: var(--on-p);
         }
 
         .pk-note {
@@ -1655,8 +1659,8 @@
         .mode-btn.active {
             background: var(--p);
             border-color: var(--p);
-            color: #0a0b0e;
-            box-shadow: 0 0 12px rgba(var(--p-rgb), .45), inset 0 0 0 1px rgba(255, 255, 255, .15);
+            color: var(--on-p);
+            box-shadow: 0 1px 2px rgba(var(--p-rgb), .35);
         }
 
         /* RATIO VIS */
@@ -1675,12 +1679,12 @@
 
         /* MISC */
         .info-box {
-            background: rgba(6, 182, 212, .08);
-            border: 1px solid rgba(6, 182, 212, .35);
+            background: rgba(14, 116, 144, .06);
+            border: 1px solid rgba(14, 116, 144, .35);
             border-radius: 6px;
             padding: 9px 11px;
             font-size: 10px;
-            color: #67e8f9;
+            color: var(--info);
             line-height: 1.6;
             margin-bottom: 10px;
         }
@@ -1691,7 +1695,7 @@
             border-radius: 6px;
             padding: 8px 11px;
             font-size: 10px;
-            color: #fbbf24;
+            color: #8f5a06;
             line-height: 1.6;
         }
 
@@ -1724,14 +1728,14 @@
 
         .btn-p {
             background: var(--p);
-            color: #0a0b0e;
+            color: var(--on-p);
             font-weight: 700;
-            box-shadow: 0 0 12px rgba(var(--p-rgb), .4);
+            box-shadow: 0 1px 2px rgba(var(--p-rgb), .35);
         }
 
         .btn-p:hover {
             background: var(--p2);
-            box-shadow: 0 0 18px rgba(var(--p-rgb), .6);
+            box-shadow: 0 2px 5px rgba(var(--p-rgb), .45);
         }
 
         .btn-s {
@@ -1741,13 +1745,13 @@
         }
 
         .btn-d {
-            background: rgba(239, 68, 68, .12);
+            background: rgba(220, 38, 38, .12);
             color: var(--red);
-            border: 1px solid rgba(239, 68, 68, .4);
+            border: 1px solid rgba(220, 38, 38, .4);
         }
 
         .btn-d:hover {
-            background: rgba(239, 68, 68, .22);
+            background: rgba(220, 38, 38, .22);
         }
 
         .prob-display {
@@ -1800,8 +1804,8 @@
 
         /* HOW-TO */
         .how-to {
-            background: rgba(6, 182, 212, .07);
-            border: 1px solid rgba(6, 182, 212, .3);
+            background: rgba(14, 116, 144, .05);
+            border: 1px solid rgba(14, 116, 144, .3);
             border-radius: 6px;
             margin-bottom: 10px;
             font-size: 10px;
@@ -1814,7 +1818,7 @@
         details.how-to summary {
             padding: 7px 11px;
             cursor: pointer;
-            color: #67e8f9;
+            color: var(--info);
             font-weight: 600;
             user-select: none;
             list-style: none;
@@ -1850,7 +1854,7 @@
 
         .how-to-body {
             padding: 8px 12px 10px;
-            color: #a5f3fc;
+            color: var(--info);
             line-height: 1.85;
             border-top: 1px solid rgba(6, 182, 212, .25);
         }
@@ -2197,7 +2201,7 @@
                     <button class="btn" onclick="doCopy()" style="padding:6px 12px;font-size:11px;">クリップボードにコピー</button>
                     <button class="btn" onclick="doPaste()" style="padding:6px 12px;font-size:11px;">クリップボードから貼り付け</button>
                     <button class="btn" onclick="doImport()"
-                        style="padding:6px 12px;font-size:11px;background:var(--p);color:#0a0b0e;font-weight:700;border-color:var(--p2);">この内容で復元する</button>
+                        style="padding:6px 12px;font-size:11px;background:var(--p);color:var(--on-p);font-weight:700;border-color:var(--p2);">この内容で復元する</button>
                 </div>
                 <div class="modal-msg" id="backupMsg"></div>
             </div>
@@ -2227,7 +2231,7 @@
                     <div class="card-head" style="gap:10px;">
                         <h2>参照ステータス</h2>
                         <button class="btn" onclick="resetStatsTab()"
-                            style="margin-left:auto;padding:4px 10px;font-size:10px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">↺ このタブをリセット</button>
+                            style="margin-left:auto;padding:4px 10px;font-size:10px;background:rgba(220,38,38,.12);color:#b91c1c;border-color:rgba(220,38,38,.4);">↺ このタブをリセット</button>
                     </div>
                     <div class="card-body">
                         <details class="how-to">
@@ -2375,17 +2379,17 @@
                         <div class="sec-title">使用属性</div>
                         <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
                             <button class="attr-sel-btn" data-attr="fire" onclick="setUseAttr('fire',this)"
-                                style="border-color:#ef4444;color:#ef4444">焦熱</button>
+                                style="border-color:#dc2626;color:#dc2626">焦熱</button>
                             <button class="attr-sel-btn" data-attr="ice" onclick="setUseAttr('ice',this)"
-                                style="border-color:#3b82f6;color:#3b82f6">凝縮</button>
+                                style="border-color:#2563eb;color:#2563eb">凝縮</button>
                             <button class="attr-sel-btn" data-attr="thunder" onclick="setUseAttr('thunder',this)"
-                                style="border-color:#a855f7;color:#a855f7">電導</button>
+                                style="border-color:#7c3aed;color:#7c3aed">電導</button>
                             <button class="attr-sel-btn" data-attr="wind" onclick="setUseAttr('wind',this)"
-                                style="border-color:#22c55e;color:#22c55e">気動</button>
+                                style="border-color:#15803d;color:#15803d">気動</button>
                             <button class="attr-sel-btn" data-attr="light" onclick="setUseAttr('light',this)"
-                                style="border-color:#eab308;color:#eab308">回折</button>
+                                style="border-color:#8f5a06;color:#8f5a06">回折</button>
                             <button class="attr-sel-btn" data-attr="dark" onclick="setUseAttr('dark',this)"
-                                style="border-color:#ec4899;color:#ec4899">消滅</button>
+                                style="border-color:#be185d;color:#be185d">消滅</button>
                         </div>
                         <div class="sub-note" id="note_useattr"></div>
                         <div class="hint">選択した属性バフのみ計算に使用します。</div>
@@ -2501,7 +2505,7 @@
                 <b>メインステ</b>：コストを選択すると対応する値の選択肢が表示されます。①タブのバフ計算に自動反映されます。<br>
                 <b>サブステ</b>：種類→値の順に選択します（最大5枠）。<br>
                 <b>スコア</b>：①タブのステータスを基準にした期待ダメージへの貢献度。<span style="color:#dc2626">赤枠が最弱</span>、<span
-                    style="color:#22c55e">緑枠が最強</span>スロットです。
+                    style="color:#15803d">緑枠が最強</span>スロットです。
             </div>
         </details>
         <div class="card">
@@ -2523,11 +2527,11 @@
                 </select>
                 <button class="btn" onclick="loadEchoPreset()" style="padding:5px 12px;font-size:11px;">呼び出し</button>
                 <button class="btn" onclick="deleteEchoPreset()"
-                    style="padding:5px 12px;font-size:11px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">削除</button>
+                    style="padding:5px 12px;font-size:11px;background:rgba(220,38,38,.12);color:#b91c1c;border-color:rgba(220,38,38,.4);">削除</button>
                 <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
                     <input type="text" id="echoPresetName" placeholder="セット名を入力" style="width:140px;">
                     <button class="btn" onclick="saveEchoPreset()"
-                        style="padding:5px 12px;font-size:11px;background:var(--p);color:#0a0b0e;font-weight:700;border-color:var(--p2);">保存</button>
+                        style="padding:5px 12px;font-size:11px;background:var(--p);color:var(--on-p);font-weight:700;border-color:var(--p2);">保存</button>
                 </div>
                 <span id="echoPresetMsg" style="font-size:10px;color:var(--green);"></span>
             </div>
@@ -2535,7 +2539,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
             <div class="sec-title" style="margin:0;">装備音骸 5スロット</div>
             <button class="btn" onclick="resetEquipTab()"
-                style="padding:4px 10px;font-size:10px;background:rgba(239,68,68,.12);color:var(--red);border-color:rgba(239,68,68,.4);">↺ このタブをリセット</button>
+                style="padding:4px 10px;font-size:10px;background:rgba(220,38,38,.12);color:#b91c1c;border-color:rgba(220,38,38,.4);">↺ このタブをリセット</button>
         </div>
         <div class="grid5" id="echoGrid"></div>
     </div>
@@ -2684,28 +2688,28 @@
                             </div>
                             <div id="cAttrBtns"
                                 style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;margin-bottom:6px;">
-                                <button type="button" class="attr-sel-btn active" data-attr="fire" data-color="#ef4444"
-                                    style="border-color:#ef4444;background:#ef4444;color:#fff;padding:2px 5px;font-size:10px;"
+                                <button type="button" class="attr-sel-btn active" data-attr="fire" data-color="#dc2626"
+                                    style="border-color:#dc2626;background:#dc2626;color:#fff;padding:2px 5px;font-size:10px;"
                                     onclick="setCAttr('fire',this,'cAttrBtns')"><span class="attr-icon si-fire"
                                         style="width:10px;height:10px;margin-right:2px;"></span>焦熱</button>
-                                <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#3b82f6"
-                                    style="border-color:#3b82f6;color:#3b82f6;padding:2px 5px;font-size:10px;"
+                                <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#2563eb"
+                                    style="border-color:#2563eb;color:#2563eb;padding:2px 5px;font-size:10px;"
                                     onclick="setCAttr('ice',this,'cAttrBtns')"><span class="attr-icon si-ice"
                                         style="width:10px;height:10px;margin-right:2px;"></span>凝縮</button>
-                                <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#a855f7"
-                                    style="border-color:#a855f7;color:#a855f7;padding:2px 5px;font-size:10px;"
+                                <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#7c3aed"
+                                    style="border-color:#7c3aed;color:#7c3aed;padding:2px 5px;font-size:10px;"
                                     onclick="setCAttr('thunder',this,'cAttrBtns')"><span class="attr-icon si-thunder"
                                         style="width:10px;height:10px;margin-right:2px;"></span>電導</button>
-                                <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#22c55e"
-                                    style="border-color:#22c55e;color:#22c55e;padding:2px 5px;font-size:10px;"
+                                <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#15803d"
+                                    style="border-color:#15803d;color:#15803d;padding:2px 5px;font-size:10px;"
                                     onclick="setCAttr('wind',this,'cAttrBtns')"><span class="attr-icon si-wind"
                                         style="width:10px;height:10px;margin-right:2px;"></span>気動</button>
-                                <button type="button" class="attr-sel-btn" data-attr="light" data-color="#eab308"
-                                    style="border-color:#eab308;color:#eab308;padding:2px 5px;font-size:10px;"
+                                <button type="button" class="attr-sel-btn" data-attr="light" data-color="#8f5a06"
+                                    style="border-color:#8f5a06;color:#8f5a06;padding:2px 5px;font-size:10px;"
                                     onclick="setCAttr('light',this,'cAttrBtns')"><span class="attr-icon si-light"
                                         style="width:10px;height:10px;margin-right:2px;"></span>回折</button>
-                                <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#ec4899"
-                                    style="border-color:#ec4899;color:#ec4899;padding:2px 5px;font-size:10px;"
+                                <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#be185d"
+                                    style="border-color:#be185d;color:#be185d;padding:2px 5px;font-size:10px;"
                                     onclick="setCAttr('dark',this,'cAttrBtns')"><span class="attr-icon si-dark"
                                         style="width:10px;height:10px;margin-right:2px;"></span>消滅</button>
                                 <button type="button" class="attr-sel-btn" data-attr="other" data-color="#94a3b8"
@@ -2766,28 +2770,28 @@
                         </div>
                         <div id="cAttrBtns2"
                             style="display:flex;flex-wrap:wrap;gap:3px;margin-top:2px;margin-bottom:6px;">
-                            <button type="button" class="attr-sel-btn active" data-attr="fire" data-color="#ef4444"
-                                style="border-color:#ef4444;background:#ef4444;color:#fff;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn active" data-attr="fire" data-color="#dc2626"
+                                style="border-color:#dc2626;background:#dc2626;color:#fff;padding:2px 5px;font-size:10px;"
                                 onclick="setCAttr('fire',this,'cAttrBtns2')"><span class="attr-icon si-fire"
                                     style="width:10px;height:10px;margin-right:2px;"></span>焦熱</button>
-                            <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#3b82f6"
-                                style="border-color:#3b82f6;color:#3b82f6;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#2563eb"
+                                style="border-color:#2563eb;color:#2563eb;padding:2px 5px;font-size:10px;"
                                 onclick="setCAttr('ice',this,'cAttrBtns2')"><span class="attr-icon si-ice"
                                     style="width:10px;height:10px;margin-right:2px;"></span>凝縮</button>
-                            <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#a855f7"
-                                style="border-color:#a855f7;color:#a855f7;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#7c3aed"
+                                style="border-color:#7c3aed;color:#7c3aed;padding:2px 5px;font-size:10px;"
                                 onclick="setCAttr('thunder',this,'cAttrBtns2')"><span class="attr-icon si-thunder"
                                     style="width:10px;height:10px;margin-right:2px;"></span>電導</button>
-                            <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#22c55e"
-                                style="border-color:#22c55e;color:#22c55e;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#15803d"
+                                style="border-color:#15803d;color:#15803d;padding:2px 5px;font-size:10px;"
                                 onclick="setCAttr('wind',this,'cAttrBtns2')"><span class="attr-icon si-wind"
                                     style="width:10px;height:10px;margin-right:2px;"></span>気動</button>
-                            <button type="button" class="attr-sel-btn" data-attr="light" data-color="#eab308"
-                                style="border-color:#eab308;color:#eab308;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="light" data-color="#8f5a06"
+                                style="border-color:#8f5a06;color:#8f5a06;padding:2px 5px;font-size:10px;"
                                 onclick="setCAttr('light',this,'cAttrBtns2')"><span class="attr-icon si-light"
                                     style="width:10px;height:10px;margin-right:2px;"></span>回折</button>
-                            <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#ec4899"
-                                style="border-color:#ec4899;color:#ec4899;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#be185d"
+                                style="border-color:#be185d;color:#be185d;padding:2px 5px;font-size:10px;"
                                 onclick="setCAttr('dark',this,'cAttrBtns2')"><span class="attr-icon si-dark"
                                     style="width:10px;height:10px;margin-right:2px;"></span>消滅</button>
                             <button type="button" class="attr-sel-btn" data-attr="other" data-color="#94a3b8"
@@ -2893,27 +2897,27 @@
                         </div>
                         <div class="sec-title">属性バフ</div>
                         <div class="cw-grid">
-                            <div class="cw-field"><label style="color:#ef4444">焦熱</label>
+                            <div class="cw-field"><label style="color:#dc2626">焦熱</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#3b82f6">凝縮</label>
+                            <div class="cw-field"><label style="color:#2563eb">凝縮</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#a855f7">電導</label>
+                            <div class="cw-field"><label style="color:#7c3aed">電導</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#22c55e">気動</label>
+                            <div class="cw-field"><label style="color:#15803d">気動</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#eab308">回折</label>
+                            <div class="cw-field"><label style="color:#8f5a06">回折</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#ec4899">消滅</label>
+                            <div class="cw-field"><label style="color:#be185d">消滅</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
@@ -2969,23 +2973,23 @@
                         <div class="sec-title">属性（任意・①タブの使用属性に自動反映）</div>
                         <input type="hidden" id="ch_attr_c" value="">
                         <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px;" id="chAttrBtns">
-                            <button type="button" class="attr-sel-btn" data-attr="fire" data-color="#ef4444"
-                                style="border-color:#ef4444;color:#ef4444;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="fire" data-color="#dc2626"
+                                style="border-color:#dc2626;color:#dc2626;padding:2px 5px;font-size:10px;"
                                 onclick="setCharaAttr('fire',this)">焦熱</button>
-                            <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#3b82f6"
-                                style="border-color:#3b82f6;color:#3b82f6;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="ice" data-color="#2563eb"
+                                style="border-color:#2563eb;color:#2563eb;padding:2px 5px;font-size:10px;"
                                 onclick="setCharaAttr('ice',this)">凝縮</button>
-                            <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#a855f7"
-                                style="border-color:#a855f7;color:#a855f7;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="thunder" data-color="#7c3aed"
+                                style="border-color:#7c3aed;color:#7c3aed;padding:2px 5px;font-size:10px;"
                                 onclick="setCharaAttr('thunder',this)">電導</button>
-                            <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#22c55e"
-                                style="border-color:#22c55e;color:#22c55e;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="wind" data-color="#15803d"
+                                style="border-color:#15803d;color:#15803d;padding:2px 5px;font-size:10px;"
                                 onclick="setCharaAttr('wind',this)">気動</button>
-                            <button type="button" class="attr-sel-btn" data-attr="light" data-color="#eab308"
-                                style="border-color:#eab308;color:#eab308;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="light" data-color="#8f5a06"
+                                style="border-color:#8f5a06;color:#8f5a06;padding:2px 5px;font-size:10px;"
                                 onclick="setCharaAttr('light',this)">回折</button>
-                            <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#ec4899"
-                                style="border-color:#ec4899;color:#ec4899;padding:2px 5px;font-size:10px;"
+                            <button type="button" class="attr-sel-btn" data-attr="dark" data-color="#be185d"
+                                style="border-color:#be185d;color:#be185d;padding:2px 5px;font-size:10px;"
                                 onclick="setCharaAttr('dark',this)">消滅</button>
                             <button type="button" class="attr-sel-btn" data-attr="" data-color="#94a3b8"
                                 style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
@@ -3029,27 +3033,27 @@
                         </div>
                         <div class="sec-title">属性バフ</div>
                         <div class="cw-grid">
-                            <div class="cw-field"><label style="color:#ef4444">焦熱</label>
+                            <div class="cw-field"><label style="color:#dc2626">焦熱</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#3b82f6">凝縮</label>
+                            <div class="cw-field"><label style="color:#2563eb">凝縮</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#a855f7">電導</label>
+                            <div class="cw-field"><label style="color:#7c3aed">電導</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#22c55e">気動</label>
+                            <div class="cw-field"><label style="color:#15803d">気動</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#eab308">回折</label>
+                            <div class="cw-field"><label style="color:#8f5a06">回折</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
-                            <div class="cw-field"><label style="color:#ec4899">消滅</label>
+                            <div class="cw-field"><label style="color:#be185d">消滅</label>
                                 <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark_c"
                                         placeholder="0"><span class="unit">%</span></div>
                             </div>
@@ -3159,12 +3163,12 @@
         // ATTR
         // ================================================================
         const ATTR = {
-            fire: { cls: 'si-fire', color: '#ef4444', label: '焦熱', emoji: '🔴' },
-            ice: { cls: 'si-ice', color: '#3b82f6', label: '凝縮', emoji: '🔵' },
-            thunder: { cls: 'si-thunder', color: '#a855f7', label: '電導', emoji: '🟣' },
-            wind: { cls: 'si-wind', color: '#22c55e', label: '気動', emoji: '🟢' },
-            light: { cls: 'si-light', color: '#eab308', label: '回折', emoji: '🟡' },
-            dark: { cls: 'si-dark', color: '#ec4899', label: '消滅', emoji: '🩷' },
+            fire: { cls: 'si-fire', color: '#dc2626', label: '焦熱', emoji: '🔴' },
+            ice: { cls: 'si-ice', color: '#2563eb', label: '凝縮', emoji: '🔵' },
+            thunder: { cls: 'si-thunder', color: '#7c3aed', label: '電導', emoji: '🟣' },
+            wind: { cls: 'si-wind', color: '#15803d', label: '気動', emoji: '🟢' },
+            light: { cls: 'si-light', color: '#8f5a06', label: '回折', emoji: '🟡' },
+            dark: { cls: 'si-dark', color: '#be185d', label: '消滅', emoji: '🩷' },
             other: { cls: 'si-other', color: '#94a3b8', label: 'その他', emoji: '⬜' },
         };
 
@@ -3945,7 +3949,7 @@
             // 状態に載っていない音骸は厳密差分が定義できないため従来どおり合算する
             return echo.subs.reduce((s, sub) => s + (sub.key && sub.val !== '' ? mv(sub.key, sub.val) : 0), 0);
         }
-        function mvColor(v, mx) { const r = v / (mx || 1); return r > .7 ? '#15803d' : r > .4 ? '#2563eb' : r > .2 ? '#d97706' : '#dc2626'; }
+        function mvColor(v, mx) { const r = v / (mx || 1); return r > .7 ? '#15803d' : r > .4 ? '#2563eb' : r > .2 ? '#8f5a06' : '#dc2626'; }
         function pctStr(v, E) { return E > 0 ? (v / E * 100).toFixed(2) + '%' : ''; }
 
         // ================================================================
@@ -4052,8 +4056,8 @@
     <div class="ratio-seg" style="width:${r.normal / t * 100}%;background:#2563eb" title="通常"></div>
     <div class="ratio-seg" style="width:${r.heavy / t * 100}%;background:#7c3aed" title="重撃"></div>
     <div class="ratio-seg" style="width:${r.skill / t * 100}%;background:#16a34a" title="スキル"></div>
-    <div class="ratio-seg" style="width:${r.lib / t * 100}%;background:#d97706" title="解放"></div>
-    <div class="ratio-seg" style="width:${r.echo / t * 100}%;background:#ec4899" title="音骸スキル"></div>
+    <div class="ratio-seg" style="width:${r.lib / t * 100}%;background:#8f5a06" title="解放"></div>
+    <div class="ratio-seg" style="width:${r.echo / t * 100}%;background:#be185d" title="音骸スキル"></div>
   `;
             const total = S.ratio.normal + S.ratio.heavy + S.ratio.skill + S.ratio.lib + S.ratio.echo;
             document.querySelectorAll('.ratio-preset').forEach((b, i) => {
@@ -4077,7 +4081,7 @@
     <div class="ed-box"><div class="ed-val">${p.E > 0 ? p.E.toFixed(0) : ''}</div><div class="ed-label">期待ダメージ指数 (E)</div></div>
     <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#2563eb">${p.stat_eff > 0 ? p.stat_eff.toFixed(0) : ''}</div><div class="ed-label">${ml}</div></div>
     <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#15803d">${p.crit_factor > 1 ? (p.crit_factor * 100 - 100).toFixed(1) + '%' : ''}</div><div class="ed-label">クリ期待値ボーナス</div></div>
-    <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#d97706">${p.DMG_eff > 0 ? (p.DMG_eff * 100).toFixed(1) + '%' : ''}</div><div class="ed-label">全体ダメバフ</div></div>
+    <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#8f5a06">${p.DMG_eff > 0 ? (p.DMG_eff * 100).toFixed(1) + '%' : ''}</div><div class="ed-label">全体ダメバフ</div></div>
   `;
             const bn = document.getElementById('balanceNote'); if (!bn) return;
             const box = (col, txt) => `<div style="font-size:10px;color:${col};padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:5px;margin-top:6px;">${txt}</div>`;
@@ -4668,12 +4672,12 @@
         }
         // 項目別：属性バフ・スキルバフの内訳行をJS生成
         const ATTR_DETAIL = [
-            { key: 'fire', label: '焦熱', color: '#ef4444' },
-            { key: 'ice', label: '凝縮', color: '#3b82f6' },
-            { key: 'thunder', label: '電導', color: '#a855f7' },
-            { key: 'wind', label: '気動', color: '#22c55e' },
-            { key: 'light', label: '回折', color: '#eab308' },
-            { key: 'dark', label: '消滅', color: '#ec4899' },
+            { key: 'fire', label: '焦熱', color: '#dc2626' },
+            { key: 'ice', label: '凝縮', color: '#2563eb' },
+            { key: 'thunder', label: '電導', color: '#7c3aed' },
+            { key: 'wind', label: '気動', color: '#15803d' },
+            { key: 'light', label: '回折', color: '#8f5a06' },
+            { key: 'dark', label: '消滅', color: '#be185d' },
         ];
         const SKILL_DETAIL = [
             { key: 'normal', label: '通常攻撃' },
@@ -4983,7 +4987,7 @@
                 presets.splice(idx, 1);
                 if (!saveEchoPresets(presets)) return;
                 rebuildPresetSelect();
-                showPresetMsg(`「${name}」を削除しました`, '#d97706');
+                showPresetMsg(`「${name}」を削除しました`, '#8f5a06');
             });
         }
 
@@ -5116,7 +5120,10 @@
             if (pct <= 0) return { bg: 'var(--dc-dim)', fg: 'var(--text3)' };
             const r = Math.min(1, pct / (max || 1));
             const ramp = ['var(--g1x)', 'var(--g2x)', 'var(--g3x)', 'var(--g4x)', 'var(--g5x)'];
-            return { bg: ramp[Math.min(4, Math.floor(r * 5))], fg: r > 0.55 ? '#0a0b0e' : 'var(--text)' };
+            // 文字色は段そのものから決める。閾値を別に持つと、
+            // 段の境目と文字色の境目がずれて濃い地に濃い文字が載る
+            const i = Math.min(4, Math.floor(r * 5));
+            return { bg: ramp[i], fg: i >= 2 ? 'var(--on-g)' : 'var(--text)' };
         }
 
         function subMatrixHTML(ei, si) {
@@ -5149,7 +5156,7 @@
                 h += '</tr>';
             });
             return h + `</tbody></table></div>
-    <div class="pk-note">明るいセルほど今のビルドで価値が高いロールです。灰色は価値0。押すと次の枠へ進みます。</div>`;
+    <div class="pk-note">色が濃いセルほど今のビルドで価値が高いロールです。灰色は価値0。押すと次の枠へ進みます。</div>`;
         }
 
         function pickSub(ei, si, key, vi) {
@@ -5321,7 +5328,7 @@
                 const badge = document.getElementById(`esb_${idx}`);
                 const card = document.getElementById(`ec_${idx}`);
                 const pctR = score / maxScore;
-                const col = pctR > .75 ? '#15803d' : pctR > .5 ? '#2563eb' : pctR > .25 ? '#d97706' : '#dc2626';
+                const col = pctR > .75 ? '#15803d' : pctR > .5 ? '#2563eb' : pctR > .25 ? '#8f5a06' : '#dc2626';
                 const disp = E > 0 ? (score / E * 100).toFixed(2) + '%' : (score * 10000).toFixed(0);
                 if (badge) { badge.textContent = disp; badge.style.background = col + '18'; badge.style.color = col; badge.style.border = `1px solid ${col}40`; }
                 if (card) card.classList.remove('worst', 'best');
@@ -5473,7 +5480,7 @@
                 }
                 h += '</tr>';
             });
-            return h + '</tbody></table></div><div class="pk-note">明るいセルほど今のビルドで価値が高いロールです。押すと次の枠へ進みます。</div>';
+            return h + '</tbody></table></div><div class="pk-note">色が濃いセルほど今のビルドで価値が高いロールです。押すと次の枠へ進みます。</div>';
         }
 
         function buildNewSubs() {
@@ -5596,7 +5603,7 @@
         🔄 スロット${slotNo}を新規音骸で上書き
       </button>
       <button id="swapCancelBtn" class="btn" onclick="cancelSwap()"
-        style="display:none;font-size:11px;padding:6px 10px;background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.4);">
+        style="display:none;font-size:11px;padding:6px 10px;background:rgba(220,38,38,.12);color:#b91c1c;border:1px solid rgba(220,38,38,.4);">
         キャンセル
       </button>
     </div>`;
@@ -5735,7 +5742,7 @@
     <div style="font-size:10px;color:var(--text2);line-height:1.9;">
       合格ラインを超える音骸は <b>${oneIn ? `${oneIn}個に1個` : '1万個に1個未満'}</b><br>
       新規音骸の最終スコア中央値：<b>${(median / E * 100).toFixed(2)}%</b><br>
-      <span style="font-size:9px;color:var(--text3)">※ 各${JUDGE_SAMPLES.toLocaleString()}件の標本による推定。棒が明るい部分が合格ラインを超えた割合です。</span>
+      <span style="font-size:9px;color:var(--text3)">※ 各${JUDGE_SAMPLES.toLocaleString()}件の標本による推定。色の付いた棒が合格ラインを超えた部分です。</span>
     </div>`;
         }
 
@@ -5778,7 +5785,7 @@
                 const slotName = S.echoes[targetIdx].name || `スロット${targetIdx + 1}`;
                 btn.innerHTML = `⚠️ もう一度押すと「${esc(slotName)}」を上書き`;
                 btn.style.background = 'rgba(245,158,11,.15)';
-                btn.style.color = '#fbbf24';
+                btn.style.color = '#8f5a06';
                 btn.style.borderColor = 'rgba(245,158,11,.5)';
                 if (cancelBtn) { cancelBtn.style.display = ''; }
                 return;

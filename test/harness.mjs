@@ -48,11 +48,19 @@ export function checkTrue(name, actual) { check(name, !!actual, true); }
 export async function withPage(fn) {
     if (!browser) browser = await chromium.launch({ executablePath: EXECUTABLE });
     const ctx = await browser.newContext();
+    // 本体は Google Fonts を <link> で読む。読み込みが詰まると、
+    // その後ろにある <script> の実行まで止まり、1ページあたり最大30秒待たされる。
+    // 検証に必要なのはページ内の関数なので、フォントは取りに行かせない。
+    await ctx.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
     const page = await ctx.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(String(e.message)));
-    page.on('console', m => { if (m.type() === 'error' && !/ERR_(CONNECTION|NAME|INTERNET)/.test(m.text())) errors.push('console: ' + m.text()); });
-    await page.goto(TOOL_URL);
+    // ネットワーク由来の失敗（上で止めたフォント読み込みを含む）は本体の不具合ではない
+    page.on('console', m => { if (m.type() === 'error' && !/ERR_(CONNECTION|NAME|INTERNET|FAILED)/.test(m.text())) errors.push('console: ' + m.text()); });
+    // 本体は Google Fonts を参照している。load を待つとネットワーク次第で
+    // 1ページあたり最大30秒止まり、テスト全体が時間切れになる。
+    // 検証に必要なのはページ内の関数なので domcontentloaded で十分。
+    await page.goto(TOOL_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
     try {
         await fn(page);
