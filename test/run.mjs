@@ -692,7 +692,8 @@ await withPage(async page => {
             到達できない数: unreachable.length,
             // 残るのはモーダルの背景（Escで閉じられる）だけ
             残りの内訳: [...new Set(unreachable.map(e => String(e.className).split(' ')[0]))],
-            選択肢がbutton: document.querySelectorAll('button.custom-sel-option').length,
+            // グリッド選択パネル化（gpk-*）でクラス名が変わった。選択肢自体は引き続きbutton
+            選択肢がbutton: document.querySelectorAll('button.gpk-cell, button.gpk-tab, button.gpk-none').length,
         };
     });
     checkTrue('ハーモニー選択肢がボタンになっている', r.選択肢がbutton > 0);
@@ -1239,6 +1240,100 @@ await withPage(async page => {
     checkTrue('全武器に武器種別が設定されている', r.武器種別が全件にある);
     check('武器種別は5種類（長刃・迅刀・拳銃・手甲・増幅器）', r.武器種別の種類数, 5);
     check('属性未設定のキャラは無い（カルテジアは気動）', r.属性なしキャラ, []);
+});
+
+// ── グリッド選択パネル ──────────────────────────────────
+suite('ハーモニー選択がグリッドパネルになっている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        document.getElementById('hsel_wrap_0').querySelector('.custom-sel-btn').click();
+        const list = document.getElementById('hsel_list_0');
+        const tabs = [...list.querySelectorAll('.gpk-tab')].map(t => t.textContent.trim());
+        const activeTab = list.querySelector('.gpk-tab.active')?.textContent.trim();
+        const cellsBeforeSwitch = list.querySelector('.gpk-grid[style=""]')?.querySelectorAll('.gpk-cell').length
+            ?? [...list.querySelectorAll('.gpk-grid')].find(g => g.style.display !== 'none').querySelectorAll('.gpk-cell').length;
+        // 「気動」タブに切り替える
+        const windTab = [...list.querySelectorAll('.gpk-tab')].find(t => t.textContent.includes('気動'));
+        windTab.click();
+        const visibleAfter = [...list.querySelectorAll('.gpk-grid')].filter(g => g.style.display !== 'none');
+        const windCell = visibleAfter[0]?.querySelector('.gpk-cell');
+        windCell.click();
+        return {
+            タブ件数: tabs.length,
+            初期タブ: activeTab,
+            初期セル数: cellsBeforeSwitch,
+            切替後に表示されるグリッドは1つ: visibleAfter.length,
+            選択後にパネルが閉じる: !document.getElementById('hsel_list_0').classList.contains('open'),
+            選択後のハーモニー: allHarmonies().find(x => x.id === S.harmony[0].id)?.attr,
+        };
+    });
+    checkTrue('属性タブが複数ある', r.タブ件数 >= 5);
+    checkTrue('最初のタブが開いている', !!r.初期タブ);
+    checkTrue('最初のタブにセルがある', r.初期セル数 > 0);
+    check('タブ切替で表示されるグリッドは1つだけ', r.切替後に表示されるグリッドは1つ, 1);
+    checkTrue('セルを選ぶとパネルが閉じる', r.選択後にパネルが閉じる);
+    check('選んだタブの属性が実際に反映される', r.選択後のハーモニー, 'wind');
+});
+
+suite('キャラ・武器選択もグリッドパネルになっている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        // キャラ：属性タブで絞ってから選ぶ
+        document.querySelector('#cwPicker_chara .custom-sel-btn').click();
+        const charaList = document.getElementById('cwsel_list_chara');
+        o.キャラのタブがある = charaList.querySelectorAll('.gpk-tab').length > 0;
+        const iceTab = [...charaList.querySelectorAll('.gpk-tab')].find(t => t.textContent.includes('凝縮'));
+        iceTab.click();
+        const iceCell = [...charaList.querySelectorAll('.gpk-grid')].find(g => g.style.display !== 'none').querySelector('.gpk-cell');
+        const pickedName = iceCell.textContent.trim();
+        iceCell.click();
+        o.キャラ選択が隠しselectに反映される = document.getElementById('sel_chara').value !== '';
+        o.選んだキャラ名が一致 = getCharaEntries('chara').find(e => e.id === document.getElementById('sel_chara').value)?.name === pickedName;
+        o.加算欄に反映される = document.getElementById('note_charaweapon').textContent.includes('基礎攻撃力');
+
+        // 武器：武器種別タブで絞ってから選ぶ
+        document.querySelector('#cwPicker_weapon .custom-sel-btn').click();
+        const weaponList = document.getElementById('cwsel_list_weapon');
+        const tabNames = [...weaponList.querySelectorAll('.gpk-tab')].map(t => t.textContent.trim());
+        o.武器タブが武器種別 = ['長刃', '迅刀', '拳銃', '手甲', '増幅器'].every(t => tabNames.includes(t));
+        const gunTab = [...weaponList.querySelectorAll('.gpk-tab')].find(t => t.textContent.includes('拳銃'));
+        gunTab.click();
+        const gunCell = [...weaponList.querySelectorAll('.gpk-grid')].find(g => g.style.display !== 'none').querySelector('.gpk-cell');
+        gunCell.click();
+        o.武器選択も隠しselectに反映される = document.getElementById('sel_weapon').value !== '';
+
+        // 「なし」で解除できる
+        document.querySelector('#cwPicker_chara .custom-sel-btn').click();
+        document.getElementById('cwsel_list_chara').querySelector('.gpk-none').click();
+        o.なしで解除できる = document.getElementById('sel_chara').value === '';
+        return o;
+    });
+    checkTrue('キャラ選択に属性タブがある', r.キャラのタブがある);
+    checkTrue('キャラ選択が隠しselectに反映される', r.キャラ選択が隠しselectに反映される);
+    checkTrue('選んだキャラ名が一致する', r.選んだキャラ名が一致);
+    checkTrue('選ぶと加算欄に反映される', r.加算欄に反映される);
+    checkTrue('武器選択のタブが武器種別になっている', r.武器タブが武器種別);
+    checkTrue('武器選択も隠しselectに反映される', r.武器選択も隠しselectに反映される);
+    checkTrue('「なし」を選ぶと解除できる', r.なしで解除できる);
+});
+
+suite('グリッドパネルが画面内に収まる');
+await withPage(async page => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    const r = await page.evaluate(() => {
+        document.querySelector('#cwPicker_chara .custom-sel-btn').click();
+        const list = document.getElementById('cwsel_list_chara');
+        const rect = list.getBoundingClientRect();
+        return {
+            画面右にはみ出さない: rect.right <= window.innerWidth + 1,
+            画面左にはみ出さない: rect.left >= -1,
+            ページ横スクロールなし: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        };
+    });
+    checkTrue('パネルが画面右にはみ出さない', r.画面右にはみ出さない);
+    checkTrue('パネルが画面左にはみ出さない', r.画面左にはみ出さない);
+    checkTrue('ページ自体は横スクロールしない', r.ページ横スクロールなし);
 });
 
 await finish();
