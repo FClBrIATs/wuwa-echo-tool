@@ -1420,4 +1420,27 @@ await withPage(async page => {
     check('共鳴解放ダメージ+36%のまま', r.dmg_lib, 36);
 });
 
+suite('追加の資料照合で見つかった3件の修正が反映されている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const phoebe = BUILTIN_CHARA.find(e => e.name === 'フィービーS0');
+        const kori = BUILTIN_WEAPON.find(e => e.name === '氷華の雅印R1');
+        const ito = BUILTIN_WEAPON.find(e => e.name === '糸繰りの奇術R1');
+        const yugasumi = BUILTIN_WEAPON.find(e => e.name === '夕霞の飲露R1');
+        return {
+            フィービーratio: phoebe.ratio,
+            氷華dmg_normal: kori.dmg_normal,
+            糸繰りatk_pct: ito.atk_pct,
+            夕霞desc: yugasumi.desc,
+        };
+    });
+    // 「共鳴スキル：清浄なるコンフェッション」はモード切替名でありダメージ種別ではない。
+    // 実際の出力は通常攻撃+重撃（武器「光のハルモニア」の対応バフとも整合）
+    check('フィービーのratioは通常攻撃+重撃', r.フィービーratio, { normal: 100, heavy: 100 });
+    check('氷華の雅印は未登場時の最大値52', r.氷華dmg_normal, 52);
+    check('糸繰りの奇術に登場時のatk_pct24が入っている', r.糸繰りatk_pct, 24);
+    checkTrue('夕霞の飲露はルシラーではなく穂穂の武器と訂正されている', r.夕霞desc.includes('穂穂'));
+    checkTrue('夕霞の飲露にルシラーの記載は残っていない', !r.夕霞desc.includes('ルシラー'));
+});
+
 await finish();
