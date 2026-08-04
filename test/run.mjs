@@ -1443,4 +1443,49 @@ await withPage(async page => {
     checkTrue('夕霞の飲露にルシラーの記載は残っていない', !r.夕霞desc.includes('ルシラー'));
 });
 
+suite('3回目の資料照合で見つかった条件付きバフの欠落14件を修正');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const w = name => BUILTIN_WEAPON.find(e => e.name === name);
+        return {
+            定めを覆す荊冠: w('定めを覆す荊冠R1').dmg_all,
+            スターキャリブレーター: w('スターキャリブレーターR1').crit_dmg,
+            闘炎の爪痕: w('闘炎の爪痕R1').dmg_fire,
+            破敵の鋭竹: w('破敵の鋭竹R1').dmg_echo,
+            赫く燃ゆる流光: w('赫く燃ゆる流光R1').dmg_skill,
+            スペクトラルトリガー: w('スペクトラル・トリガーR1').dmg_light,
+            スカルポッパーatk: w('スカル・ポッパーR1').atk_pct,
+            スカルポッパーnormal: w('スカル・ポッパーR1').dmg_normal,
+            スペクトルブラスター: w('スペクトル・ブラスターR1').dmg_all,
+            デイブレイカースパイン: w('デイブレイカースパインR1').dmg_normal,
+            パルスの機腕: w('パルスの機腕R1').dmg_normal,
+            夕霞の飲露atk: w('夕霞の飲露R1').atk_pct,
+            ボゾンの観測器: w('ボゾンの観測器R1').atk_pct,
+            光のハルモニアnormal: w('光のハルモニアR1').dmg_normal,
+            光のハルモニアheavy: w('光のハルモニアR1').dmg_heavy,
+            星々のコンチェルト: w('星々のコンチェルトR1').atk_pct,
+            栄枯の湖岸: w('栄枯の湖岸R1').dmg_normal,
+        };
+    });
+    // 単発の見落とし（それまで0だった条件付きバフの追加）
+    check('定めを覆す荊冠：風蝕デバフ対象へのdmg_all+20', r.定めを覆す荊冠, 20);
+    check('スターキャリブレーター：crit_dmg+20', r.スターキャリブレーター, 20);
+    check('闘炎の爪痕：dmg_fire+24', r.闘炎の爪痕, 24);
+    check('破敵の鋭竹：dmg_echo+20', r.破敵の鋭竹, 20);
+    check('スペクトラル・トリガー：dmg_light+40', r.スペクトラルトリガー, 40);
+    check('スペクトル・ブラスター：dmg_all+24', r.スペクトルブラスター, 24);
+    check('デイブレイカースパイン：dmg_normal+20', r.デイブレイカースパイン, 20);
+    check('夕霞の飲露：atk_pct+20', r.夕霞の飲露atk, 20);
+    check('星々のコンチェルト：atk_pct+14', r.星々のコンチェルト, 14);
+    // 常時分+条件付き分の合算漏れ
+    check('スカル・ポッパー：atk_pctは常時12+条件付き24', r.スカルポッパーatk, 36);
+    check('スカル・ポッパー：dmg_normalも同様に36', r.スカルポッパーnormal, 36);
+    check('ボゾンの観測器：atk_pctは常時12+条件付き12', r.ボゾンの観測器, 24);
+    // スタック数の見落とし（1スタック分だけを登録していた）
+    check('赫く燃ゆる流光：最大14スタックで56', r.赫く燃ゆる流光, 56);
+    check('パルスの機腕：最大4スタックで24', r.パルスの機腕, 24);
+    check('光のハルモニア：最大3スタックでnormal/heavyとも42', [r.光のハルモニアnormal, r.光のハルモニアheavy], [42, 42]);
+    check('栄枯の湖岸：最大5スタックで16', r.栄枯の湖岸, 16);
+});
+
 await finish();
