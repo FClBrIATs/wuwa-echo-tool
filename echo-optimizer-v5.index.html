@@ -1009,6 +1009,119 @@
             border-bottom: 1px solid var(--border);
         }
 
+        /* グリッド選択パネル（ハーモニー・キャラ・武器で共通）。
+           属性 or 武器種別のタブで絞ってから、名前だけのグリッドから選ぶ。
+           件数が増えても目当ての1件を探しやすくするための形。 */
+        .custom-sel-list.gpk {
+            max-height: none;
+            overflow: visible;
+            width: max-content;
+            min-width: 100%;
+            max-width: min(420px, 90vw);
+        }
+
+        /* トリガーボタンが画面の左寄りに無い場合、左揃えのままだと
+           画面右端からはみ出すことがある。その場合だけ右揃えに切り替える
+           （positionDropdown()がJSで判定してこのクラスを付ける） */
+        .custom-sel-list.gpk.align-right {
+            left: auto;
+            right: 0;
+        }
+
+        .gpk-none {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 6px 9px;
+            font-size: 11px;
+            border: 0;
+            border-bottom: 1px solid var(--border);
+            background: transparent;
+            color: var(--text3);
+            cursor: pointer;
+        }
+
+        .gpk-none:hover {
+            background: var(--p-light);
+        }
+
+        .gpk-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            padding: 6px 9px 4px;
+        }
+
+        .gpk-tab {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 7px;
+            font-size: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text2);
+            cursor: pointer;
+        }
+
+        .gpk-tab:hover {
+            border-color: var(--border2);
+        }
+
+        .gpk-tab.active {
+            background: var(--p);
+            border-color: var(--p);
+            color: var(--on-p);
+            font-weight: 600;
+        }
+
+        .gpk-panes {
+            padding: 0 9px 9px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .gpk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+            gap: 4px;
+        }
+
+        .gpk-cell {
+            padding: 5px 6px;
+            font-size: 10.5px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--card2);
+            color: var(--text);
+            cursor: pointer;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: border-color .1s, background .1s;
+        }
+
+        .gpk-cell:hover {
+            border-color: var(--p2);
+            background: var(--p-light);
+        }
+
+        .gpk-cell.selected {
+            border-color: var(--p);
+            background: var(--p-light);
+            color: var(--p);
+            font-weight: 600;
+        }
+
+        .gpk-empty {
+            grid-column: 1 / -1;
+            font-size: 10px;
+            color: var(--text3);
+            padding: 8px 0;
+        }
+
         /* ED DISPLAY */
         .ed-grid {
             display: grid;
@@ -2249,17 +2362,11 @@
                             <div class="sec-title">キャラ / 武器</div>
                             <div class="stat-row">
                                 <span class="sname">キャラ</span>
-                                <select id="sel_chara" onchange="onCharaWeaponChange();recalcAll()"
-                                    style="flex:1;font-size:11px;">
-                                    <option value="">なし</option>
-                                </select>
+                                <div id="cwPicker_chara" style="flex:1;"></div>
                             </div>
                             <div class="stat-row" style="margin-bottom:6px;">
                                 <span class="sname">武器</span>
-                                <select id="sel_weapon" onchange="onCharaWeaponChange();recalcAll()"
-                                    style="flex:1;font-size:11px;">
-                                    <option value="">なし</option>
-                                </select>
+                                <div id="cwPicker_weapon" style="flex:1;"></div>
                             </div>
                             <div class="sub-note" id="note_charaweapon"></div>
                             <div class="sec-title" style="margin-top:10px;">ハーモニー</div>
@@ -3346,6 +3453,34 @@
                 set2: B({ atk_pct: 10 }), set5: B({ atk_pct: 30 }),
                 desc: '場にいる時 攻撃力+5%/1.5s（最大4スタック）; 終奏スキルダメ+60%'
             },
+            // Ver3.4〜3.5で追加された分。鳴潮wiki(wikiwiki.jp/w-w/)の
+            // 「音骸/ハーモニー効果」一覧と突き合わせて未収録だった4種。
+            {
+                id: '冥夜', name: '冥夜を導く灯', attr: 'other', setType: '2+5',
+                set2: B({ hp_pct: 10 }), set5: B({ hp_pct: 10, crit_rate: 20, dmg_fire: 15 }),
+                desc: 'HP上限+10%。シールド獲得時クリ率+5%(最大4スタック,5秒,0.5秒毎)。最大スタック到達時、焦熱ダメ+15%'
+            },
+            {
+                id: '浄心', name: '煞を祓う浄心', attr: 'wind', setType: '2+5',
+                set2: B({ dmg_wind: 10 }), set5: B({ dmg_wind: 40, crit_dmg: 20 }),
+                desc: '気動ダメ+10%。密集協和・オフセット付与時、クリダメ+20%、気動ダメ+30%(15秒)'
+            },
+            // 「羽舞う塵世の歌」は5セット効果が編成（虚滅編成／結霜編成）で別物になるため、
+            // 1つのハーモニーとしてではなく、用途ごとに別IDで登録する。
+            // 2セット効果（共鳴効率+10%）はどちらも本ツール未対応のフィールドなので反映されない。
+            {
+                id: '玄翎虚滅', name: '羽舞う塵世の歌(虚滅編成)', attr: 'other', setType: '2+5',
+                set2: B(), set5: B({ crit_rate: 20, dmg_heavy: 35 }),
+                desc: '本来2セット:共鳴効率+10%(本ツール未対応)。5セット:敵に虚滅効果付与時 クリ率+20%・重撃ダメ+35%(15秒)。秧秧・玄翎/仇遠など虚滅編成向け'
+            },
+            {
+                id: '玄翎結霜', name: '羽舞う塵世の歌(結霜編成)', attr: 'other', setType: '2+5',
+                // 5セット効果は「共鳴効率1%につきチーム攻撃力+0.1%、最大+25%」という
+                // 共鳴効率依存の効果。厳選ツールという用途上、共鳴効率は十分確保されている
+                // （バフが上限の+25%に達している）前提で固定値として登録する。
+                set2: B(), set5: B({ atk_pct: 25 }),
+                desc: '本来2セット:共鳴効率+10%(本ツール未対応)。5セット:敵に結霜効果付与時 共鳴効率1%につきチーム攻撃力+0.1%、最大+25%(10秒)。atk_pct:25は上限到達（共鳴効率250%相当）を前提とした値。緋雪/ルシラー(結霜モード)など結霜編成向け'
+            },
         ];
 
         // ================================================================
@@ -3734,19 +3869,70 @@
             }
         }
 
+        // 武器種別タブの並び。未収録（ユーザー登録の古いデータ等）は「その他」に落ちる
+        const WEAPON_TYPES = ['長刃', '迅刀', '拳銃', '手甲', '増幅器'];
+        function weaponTabs() {
+            return [...WEAPON_TYPES, 'その他'].map(k => ({ key: k, label: k }));
+        }
+
+        // キャラ・武器の選択もハーモニーと同じグリッド選択パネルにする。
+        // 内部状態は引き続き隠しselect（id="sel_chara"/"sel_weapon"）で持つ。
+        // getCharaWeaponBuff() 等の既存コードがこの2つのselectをそのまま読むため。
         function rebuildCharaWeaponSelects() {
-            ['chara', 'weapon'].forEach(type => {
-                const sel = document.getElementById('sel_' + type); if (!sel) return;
-                const prev = sel.value;
-                sel.innerHTML = '<option value="">なし</option>';
-                getCharaEntries(type).forEach(e => {
-                    const opt = document.createElement('option');
-                    opt.value = e.id; opt.textContent = e.name;
-                    if (e.id === prev) opt.selected = true;
-                    sel.appendChild(opt);
-                });
-            });
+            ['chara', 'weapon'].forEach(type => buildCWPicker(type));
             onCharaWeaponChange();
+        }
+
+        function buildCWPicker(type) {
+            const container = document.getElementById('cwPicker_' + type); if (!container) return;
+            const prevSel = document.getElementById('sel_' + type);
+            const prevId = prevSel ? prevSel.value : '';
+            const entries = getCharaEntries(type);
+            const stillExists = entries.some(e => e.id === prevId);
+            const selectedId = stillExists ? prevId : '';
+            const selected = entries.find(e => e.id === selectedId);
+
+            const items = entries.map(e => {
+                if (type === 'chara') {
+                    const attrKey = e.attr || inferCharaAttr(e);
+                    return { id: e.id, name: e.name, tabKey: (attrKey && ATTR[attrKey]) ? attrKey : 'other' };
+                }
+                return { id: e.id, name: e.name, tabKey: WEAPON_TYPES.includes(e.weaponType) ? e.weaponType : 'その他' };
+            });
+            const tabs = type === 'chara' ? attrTabs() : weaponTabs();
+            const panelInner = gpkPanelHTML(items, tabs, selectedId, `pickCharaWeapon('${type}','__ID__')`);
+
+            container.innerHTML = `
+    <select id="sel_${type}" style="display:none;">
+      <option value=""${!selectedId ? ' selected' : ''}>なし</option>
+      ${entries.map(e => `<option value="${esc(e.id)}"${e.id === selectedId ? ' selected' : ''}>${esc(e.name)}</option>`).join('')}
+    </select>
+    <div class="custom-sel-wrap" id="cwsel_wrap_${type}">
+      <button class="custom-sel-btn" onclick="toggleCWDrop('${type}',event)" type="button">
+        ${selected ? esc(selected.name) : '<span style="color:var(--text3)">なし</span>'}
+        <span class="caret">▾</span>
+      </button>
+      <div class="custom-sel-list gpk" id="cwsel_list_${type}">
+        <button type="button" class="gpk-none" onclick="pickCharaWeapon('${type}','')">なし</button>
+        ${panelInner}
+      </div>
+    </div>`;
+        }
+
+        function toggleCWDrop(type, e) {
+            e.stopPropagation();
+            const list = document.getElementById(`cwsel_list_${type}`); if (!list) return;
+            const wasOpen = list.classList.contains('open');
+            document.querySelectorAll('.custom-sel-list.open').forEach(l => l.classList.remove('open'));
+            if (!wasOpen) { list.classList.add('open'); positionDropdown(list); }
+        }
+
+        function pickCharaWeapon(type, id) {
+            const sel = document.getElementById('sel_' + type);
+            if (sel) sel.value = id;
+            buildCWPicker(type);
+            onCharaWeaponChange();
+            recalcAll();
         }
 
         function getPartials() {
@@ -4216,10 +4402,61 @@
             document.addEventListener('click', closeDropdowns, { once: false });
         }
 
+        function positionDropdown(list) {
+            list.classList.remove('align-right');
+            const rect = list.getBoundingClientRect();
+            if (rect.right > window.innerWidth) list.classList.add('align-right');
+        }
+
         function closeDropdowns(e) {
             if (!e.target.closest('.custom-sel-wrap')) {
                 document.querySelectorAll('.custom-sel-list.open').forEach(l => l.classList.remove('open'));
             }
+        }
+
+        // ================================================================
+        // グリッド選択パネル（ハーモニー・キャラ・武器で共通）
+        // ================================================================
+        // 属性 or 武器種別のタブで絞ってから、名前だけのグリッドから選ぶ形式。
+        // 件数が多くなっても（ハーモニー30件・キャラ43件・武器45件）目当ての
+        // 1件を探しやすくするため、ドロップダウンの縦一列リストから変更した。
+        //
+        // items: [{ id, name, tabKey }]
+        // tabs:  [{ key, label, iconHtml? }]（items が1件も無いタブは表示しない）
+        // onSelectTemplate: 選択時のonclick文字列。ID の場所に __ID__ を入れる
+        //   （例: "onHarmonySelect(0,'__ID__')"）。id はツール生成の安全な値のみを
+        //   想定しており、属性へ直接埋め込む（表示名は必ず esc() する）。
+        function gpkPanelHTML(items, tabs, selectedId, onSelectTemplate) {
+            const validTabs = tabs.filter(t => items.some(it => it.tabKey === t.key));
+            const activeItem = items.find(it => it.id === selectedId);
+            const activeKey = (activeItem && validTabs.some(t => t.key === activeItem.tabKey))
+                ? activeItem.tabKey
+                : (validTabs[0] ? validTabs[0].key : '');
+            const tabsHTML = validTabs.map(t =>
+                `<button type="button" class="gpk-tab${t.key === activeKey ? ' active' : ''}" data-tabkey="${esc(t.key)}" onclick="gpkSwitchTab(this)">${t.iconHtml || ''}<span>${esc(t.label)}</span></button>`
+            ).join('');
+            const panesHTML = validTabs.map(t => {
+                const cells = items.filter(it => it.tabKey === t.key).map(it =>
+                    `<button type="button" class="gpk-cell${it.id === selectedId ? ' selected' : ''}" title="${esc(it.name)}" onclick="${onSelectTemplate.replace('__ID__', it.id)}">${esc(it.name)}</button>`
+                ).join('') || '<div class="gpk-empty">登録なし</div>';
+                return `<div class="gpk-grid" data-pane="${esc(t.key)}" style="${t.key === activeKey ? '' : 'display:none'}">${cells}</div>`;
+            }).join('');
+            return `<div class="gpk-tabs">${tabsHTML}</div><div class="gpk-panes">${panesHTML}</div>`;
+        }
+
+        // タブ切り替えは既存パネルのDOMをそのまま使い回す（選択肢自体は
+        // 開いた時点で全タブぶん描画済みなので、表示/非表示の切り替えだけでよい）
+        function gpkSwitchTab(btn) {
+            const key = btn.dataset.tabkey;
+            const wrap = btn.closest('.custom-sel-list');
+            if (!wrap) return;
+            wrap.querySelectorAll('.gpk-tab').forEach(t => t.classList.toggle('active', t === btn));
+            wrap.querySelectorAll('.gpk-grid').forEach(g => { g.style.display = (g.dataset.pane === key) ? '' : 'none'; });
+        }
+
+        // 属性タブの並び（ハーモニー・キャラで共通）
+        function attrTabs() {
+            return Object.keys(ATTR).map(k => ({ key: k, label: ATTR[k].label, iconHtml: `<span class="attr-icon ${ATTR[k].cls}"></span>` }));
         }
 
         function buildHSlotEl(i) {
@@ -4233,21 +4470,12 @@
             const a = (filled && h ? ATTR[h.attr] : null) || ATTR.other;
             const iconHTML = `<span class="attr-icon ${a.cls}" style="${filled ? '' : 'opacity:.3'}"></span>`;
 
-            // カスタムドロップダウン
-            const allH = allHarmonies();
-            const g25 = allH.filter(x => x.setType === '2+5');
-            const g3 = allH.filter(x => x.setType === '3');
-            const makeOpts = arr => arr.map(x =>
-                // id はツールが生成する値（custom_<timestamp> 等）なので属性に直接埋めてよい。
-                // name は登録時のユーザー入力なので必ずエスケープする。
-                // attr も登録データ由来なので、未知の値でも落ちないよう other にフォールバックする。
-                `<button type="button" role="option" aria-selected="${x.id === slot.id}" class="custom-sel-option${x.id === slot.id ? ' selected' : ''}" onclick="onHarmonySelect(${i},'${x.id}')" data-id="${esc(x.id)}">
-      <span class="attr-icon ${(ATTR[x.attr] || ATTR.other).cls}"></span>
-      <span>${esc(x.name)}${x.unknown ? '*' : ''}</span>
-    </button>`).join('');
-            const noneOpt = `<button type="button" role="option" aria-selected="${!slot.id}" class="custom-sel-option${!slot.id ? ' selected' : ''}" onclick="clearHarmony(${i})" data-id="">
-    <span style="color:var(--text3);font-size:11px;">なし</span>
-  </button>`;
+            // グリッド選択パネル：属性タブ→名前グリッド
+            const items = allHarmonies().map(x => ({
+                id: x.id, name: x.name + (x.unknown ? '*' : ''),
+                tabKey: (x.attr && ATTR[x.attr]) ? x.attr : 'other',
+            }));
+            const panelInner = gpkPanelHTML(items, attrTabs(), slot.id, `onHarmonySelect(${i},'__ID__')`);
 
             const dropHTML = `
     <div class="custom-sel-wrap" id="hsel_wrap_${i}">
@@ -4255,10 +4483,9 @@
         ${filled && h ? `<span class="attr-icon ${a.cls}"></span><span>${esc(h.name)}</span>` : '<span style="color:var(--text3)">選択</span>'}
         <span class="caret">▾</span>
       </button>
-      <div class="custom-sel-list" id="hsel_list_${i}">
-        ${noneOpt}
-        <div class="sel-separator">2+5セット</div>${makeOpts(g25)}
-        <div class="sel-separator">3セット</div>${makeOpts(g3)}
+      <div class="custom-sel-list gpk" id="hsel_list_${i}">
+        <button type="button" class="gpk-none" onclick="clearHarmony(${i})">なし</button>
+        ${panelInner}
       </div>
     </div>`;
 
@@ -4359,7 +4586,7 @@
             if (!list) return;
             const wasOpen = list.classList.contains('open');
             document.querySelectorAll('.custom-sel-list.open').forEach(l => l.classList.remove('open'));
-            if (!wasOpen) list.classList.add('open');
+            if (!wasOpen) { list.classList.add('open'); positionDropdown(list); }
         }
 
         function onHarmonySelect(i, hId) {
