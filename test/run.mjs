@@ -1488,4 +1488,43 @@ await withPage(async page => {
     check('栄枯の湖岸：最大5スタックで16', r.栄枯の湖岸, 16);
 });
 
+// ── フッターとテキストの現状反映 ──────────────────────────
+suite('フッターが全タブ共通で表示され、Twitter IDが入っている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const before = { onTab1: document.querySelector('.credit')?.offsetParent !== null };
+        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('装備音骸')).click();
+        const onTab2 = document.querySelector('.credit')?.offsetParent !== null;
+        const link = document.querySelector('.credit a');
+        return {
+            タブ1で見える: before.onTab1,
+            タブ2でも見える: onTab2,
+            twitterリンクあり: !!link,
+            twitterhref: link?.getAttribute('href'),
+            twitter表示テキスト: link?.textContent.trim(),
+        };
+    });
+    checkTrue('①タブでフッターが見える', r.タブ1で見える);
+    checkTrue('②タブでもフッターが見える（ページ固有ではない）', r.タブ2でも見える);
+    checkTrue('フッターにTwitterへのリンクがある', r.twitterリンクあり);
+    check('リンク先がx.com/FCIBrIAtTs', r.twitterhref, 'https://x.com/FCIBrIAtTs');
+    check('表示テキストは@FCIBrIAtTs', r.twitter表示テキスト, '@FCIBrIAtTs');
+});
+
+suite('使い方テキストが現在の入力方式を説明している');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const t1 = document.querySelector('#tab-stats .how-to-body').textContent;
+        const t2 = document.querySelector('#tab-equip .how-to-body').textContent;
+        const wReg = document.querySelector('#reg_weapon .how-to-body')?.textContent
+            ?? [...document.querySelectorAll('#tab-custom .how-to-body')].map(x => x.textContent).join('\n');
+        return { t1, t2, wReg };
+    });
+    checkTrue('①タブがドロップダウンに触れていない', !r.t1.includes('ドロップダウン'));
+    checkTrue('①タブが選択パネル（グリッド）に触れている', r.t1.includes('グリッド'));
+    checkTrue('②タブがマトリクス入力を説明している', r.t2.includes('マトリクス'));
+    checkTrue('②タブが「種類→値の順」という古い説明のままではない', !r.t2.includes('種類→値'));
+    checkTrue('登録タブの案内がドロップダウンに触れていない', !r.wReg.includes('ドロップダウン'));
+});
+
 await finish();
