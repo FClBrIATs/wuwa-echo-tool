@@ -1408,4 +1408,16 @@ await withPage(async page => {
     check('武器種別は増幅器', r.weaponType, '増幅器');
 });
 
+suite('偽物の矮星R1のスクリーンショット照合で見つかった欠落を修正');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const w = BUILTIN_WEAPON.find(e => e.name === '偽物の矮星R1');
+        return w ? { atk_pct: w.atk_pct, crit_rate: w.crit_rate, dmg_lib: w.dmg_lib } : null;
+    });
+    // 元データは常時分の12%だけで、条件付きのチーム攻撃力+24%が抜けていた
+    check('攻撃力%は常時12+条件付き24の合算', r.atk_pct, 36);
+    check('メインステはクリ率36%のまま', r.crit_rate, 36);
+    check('共鳴解放ダメージ+36%のまま', r.dmg_lib, 36);
+});
+
 await finish();
