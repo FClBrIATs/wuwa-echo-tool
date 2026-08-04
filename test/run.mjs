@@ -1390,4 +1390,22 @@ await withPage(async page => {
     checkTrue('結霜編成が選べる', r.names.some(n => n.includes('結霜編成')));
 });
 
+suite('フリーズフレームR1がスクリーンショットの実測値で収録されている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const w = BUILTIN_WEAPON.find(e => e.name === 'フリーズフレームR1');
+        return w ? {
+            あり: true, base_atk: w.base_atk, crit_rate: w.crit_rate,
+            atk_pct: w.atk_pct, dmg_ice: w.dmg_ice, weaponType: w.weaponType,
+        } : { あり: false };
+    });
+    checkTrue('フリーズフレームR1が収録されている', r.あり);
+    check('基礎攻撃力587', r.base_atk, 587);
+    check('メインステはクリ率24.3%', r.crit_rate, 24.3);
+    // 攻撃力+12%（常時）＋ チーム攻撃力+24%（結霜後）の合算
+    check('攻撃力%は常時12+条件付き24の合算', r.atk_pct, 36);
+    check('凝縮ダメージ+30%（結霜後、自身）', r.dmg_ice, 30);
+    check('武器種別は増幅器', r.weaponType, '増幅器');
+});
+
 await finish();

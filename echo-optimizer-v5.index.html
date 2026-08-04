@@ -6445,9 +6445,6 @@
             // ▼ここから武器を追記▼
             // weaponType は武器種別（長刃・迅刀・拳銃・手甲・増幅器）。将来のグリッド選択パネルで
             // タブの軸に使う想定。精錬ランクは特記無ければ1（R1、無凸）。
-            // 「ルシラーの限定武器」として伝わっていた「フリーズフレームR1」は出典側が
-            // 「ダーニャの偽物の矮星との混同の可能性、要確認」と明記していたため、
-            // 裏取りできるまでここには含めていない。
             { name: '千古の湖水R1', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 12 },
             { name: '千古の湖水R5', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 24 },
             { name: '歳華調和R1', weaponType: '長刃', desc: '全バフ発動時(限定・今汐)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_skill: 48 },
@@ -6485,6 +6482,11 @@
             { name: '怒涛の湖音R1', weaponType: '手甲', desc: '全バフ発動時(恒常)', base_atk: 587, flat_atk: 36.4, dmg_normal: 10, dmg_skill: 10 },
             { name: '夕霞の飲露R1', weaponType: '増幅器', desc: '全バフ発動時(限定・ルシラー)', base_atk: 412, hp_pct: 12 },
             { name: '偽物の矮星R1', weaponType: '増幅器', desc: '全バフ発動時(限定・ダーニャ)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_lib: 36 },
+            // ステータス画面のスクリーンショットで確認。武器効果「フェードアウト」：
+            // 攻撃力+12%（常時）。結霜効果付与後、自身の凝縮ダメージ+30%・
+            // チーム内キャラの攻撃力+24%（ともに条件付き、12/30秒持続）。
+            // atk_pct はこの2つを合算（12+24=36）。紐付くキャラ名はスクショに無いため未確認。
+            { name: 'フリーズフレームR1', weaponType: '増幅器', desc: '全バフ発動時(限定)。結霜効果付与後の効果込み', base_atk: 587, crit_rate: 24.3, atk_pct: 36, dmg_ice: 30 },
             { name: 'ボゾンの観測器R1', weaponType: '増幅器', desc: '全バフ発動時(恒常)', base_atk: 525, atk_pct: 12, dmg_normal: 12 },
             { name: '幽冥の忘憂曲R1', weaponType: '増幅器', desc: '全バフ発動時(限定・フローヴァ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_skill: 32, dmg_echo: 32 },
             { name: '深海の囁きR1', weaponType: '増幅器', desc: '全バフ発動時(限定・カンタレラ)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 40 },
