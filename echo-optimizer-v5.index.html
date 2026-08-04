@@ -1915,6 +1915,16 @@
             margin-top: 24px;
         }
 
+        .credit a {
+            color: var(--text2);
+            text-decoration: none;
+        }
+
+        .credit a:hover {
+            color: var(--p);
+            text-decoration: underline;
+        }
+
         /* HOW-TO */
         .how-to {
             background: rgba(14, 116, 144, .05);
@@ -2351,6 +2361,7 @@
                             <summary>📖 使い方</summary>
                             <div class="how-to-body">
                                 <b>入力の考え方</b>：ハーモニー・武器・キャラ・音骸メイン/サブは登録データと②タブから自動計算されます。手で入れるのは「直接入力」欄だけです。<br>
+                                <b>キャラ/武器/ハーモニー選択</b>：ボタンを押すと属性タブ→名前のグリッドから選べます。<br>
                                 <b>合計欄</b>：各項目の合計はゲーム内の数値と突き合わせられるよう大きく表示しています。ここに直接打ち込むと、自動計算との差が「直接入力」に入ります。<br>
                                 <b>使用属性</b>：選択した属性のバフのみ計算に使用します。<br>
                                 <b>ダメージ比率</b>：各スキルの比率に応じてスコアの重み付けが変わります。合計100を推奨。
@@ -2609,8 +2620,8 @@
             <summary>📖 使い方</summary>
             <div class="how-to-body">
                 <b>装備中の音骸5スロットのステータスを入力してスコアを比較します。</b><br>
-                <b>メインステ</b>：コストを選択すると対応する値の選択肢が表示されます。①タブのバフ計算に自動反映されます。<br>
-                <b>サブステ</b>：種類→値の順に選択します（最大5枠）。<br>
+                <b>コスト・メインステ</b>：ボタン1つで組み合わせ（全19通り）が決まります。①タブのバフ計算に自動反映されます。<br>
+                <b>サブステ</b>：種類×値のマトリクスから1タップで選択（最大5枠）。セルの色は今のビルドでの価値です。選ぶと次の空き枠へ自動で進みます。<br>
                 <b>スコア</b>：①タブのステータスを基準にした期待ダメージへの貢献度。<span style="color:#dc2626">赤枠が最弱</span>、<span
                     style="color:#15803d">緑枠が最強</span>スロットです。
             </div>
@@ -2665,7 +2676,8 @@
                             <b>新規音骸のスコアが装備中スロットの合格ラインを超えるか判定します。</b><br>
                             <b>レベル</b>：選択した強化段階までのサブ枠数が入力可能になります。<br>
                             <b>比較スロット</b>：「自動」は②タブの最弱スロットを参照します。<br>
-                            <b>期待確率</b>：残サブ枠でランダムに付与された場合に合格ラインを超える確率です。実際の抽選確率を用いたモンテカルロ法で推定しています。
+                            <b>期待確率</b>：残サブ枠でランダムに付与された場合に合格ラインを超える確率です。実際の抽選確率を用いたモンテカルロ法で推定しています。<br>
+                            <b>分布図</b>：この音骸を育て切った場合／新しい音骸を+0から育てた場合のスコア分布を並べて表示します。
                         </div>
                     </details>
                     <div class="inline2" style="margin-bottom:10px;">
@@ -2961,7 +2973,7 @@
                         <details class="how-to">
                             <summary>📖 使い方</summary>
                             <div class="how-to-body">
-                                <b>登録した武器は①タブのドロップダウンから選択すると自動反映されます。</b><br>
+                                <b>登録した武器は①タブの選択パネルから選ぶと自動反映されます。</b><br>
                                 <b>基礎攻撃力</b>：①タブの基礎攻撃力に加算されます。<br>
                                 <b>各バフ値</b>：①タブの「自動」行に内訳として表示されます。<br>
                                 <b>登録データ</b>：localStorageに保存。ブラウザデータ消去で削除されます。
@@ -3069,7 +3081,7 @@
                         <details class="how-to">
                             <summary>📖 使い方</summary>
                             <div class="how-to-body">
-                                <b>登録したキャラは①タブのドロップダウンから選択すると自動反映されます。</b><br>
+                                <b>登録したキャラは①タブの選択パネルから選ぶと自動反映されます。</b><br>
                                 <b>各バフ値</b>：①タブの「自動」行に内訳として表示されます。<br>
                                 <b>属性バフ</b>：共鳴スキル等による恒常的な属性バフを入力します。<br>
                                 <b>登録データ</b>：localStorageに保存。ブラウザデータ消去で削除されます。
@@ -3235,12 +3247,13 @@
             </div>
 
         </div>
+    </div>
 
-        <div class="credit">
-            このツールはClaude（Anthropic）を用いて作成された私的ツールです。<br>
-            鳴潮（Wuthering Waves）は Kuro Games の著作物です。ゲームデータの利用は個人的な参照目的のみです。<br>
-            本ツールは非公式であり、Kuro Games とは一切関係ありません。
-        </div>
+    <div class="credit">
+        このツールはClaude（Anthropic）を用いて作成された私的ツールです。<br>
+        鳴潮（Wuthering Waves）は Kuro Games の著作物です。ゲームデータの利用は個人的な参照目的のみです。<br>
+        本ツールは非公式であり、Kuro Games とは一切関係ありません。<br>
+        <a href="https://x.com/FCIBrIAtTs" target="_blank" rel="noopener">@FCIBrIAtTs</a>
     </div>
 
     <script>
@@ -3956,8 +3969,6 @@
             const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
             const dskill_w = dn * rn + dh * rh + ds * rs + dl * rl + de * re;
             const DMG_eff = (da_eff + dskill_w) / 100;
-            // 項目別モードは内訳から積み上げた total、合計値モードは入力された合計値
-            // （合計値が未入力なら基礎値で代用）
             const stat_eff_final = total;
 
             const cr_clamped = Math.min(cr_eff, 100); // クリ率は100%上限
@@ -6420,7 +6431,12 @@
             { name: 'ザンニーS0', desc: '全バフ発動時。dmg_lightは変奏スキル発動時条件付き', attr: 'light', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_light: 12, ratio: { heavy: 100 } },
             { name: 'カンタレラS0', desc: '全バフ発動時。dmg_darkは音骸スキル発動時条件付き最大(2スタック)', attr: 'dark', base_atk: 400, base_hp: 11600, base_def: 1099, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_dark: 12, ratio: { normal: 100 } },
             { name: 'ブラントS0', desc: '全バフ発動時。dmg_fireは固有スキルにより常時', attr: 'fire', base_atk: 375, base_hp: 11675, base_def: 1307, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_fire: 15, ratio: { normal: 100 } },
-            { name: 'フィービーS0', desc: '全バフ発動時。アブソリューション(重撃)/コンフェッション(共鳴スキル)の2モード制のデュアルタイプ', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_light: 12, ratio: { heavy: 100, skill: 100 } },
+            // ratio修正: {heavy:100,skill:100}→{normal:100,heavy:100}。
+            // 「共鳴スキル：清浄なるコンフェッション」はモード切替の入力操作名であり
+            // ダメージ種別ではない。実際の出力は鏡の環内側の通常攻撃(チャミュエルの星＝
+            // 通常攻撃ダメージ明記)＋重撃(スターライト)。武器「光のハルモニア」が
+            // 通常攻撃+重撃をバフする点とも整合する。
+            { name: 'フィービーS0', desc: '全バフ発動時。アブソリューション(重撃)/コンフェッション(通常攻撃)の2モード制のデュアルタイプ', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_light: 12, ratio: { normal: 100, heavy: 100 } },
             { name: 'ロココS0', desc: '全バフ発動時。攻撃力+20%(条件付き)は未反映', attr: 'dark', base_atk: 375, base_hp: 12250, base_def: 1197, crit_rate: 5, crit_dmg: 166, atk_pct: 12, ratio: { heavy: 100 } },
             { name: 'カルロッタS0', desc: '全バフ発動時', attr: 'ice', base_atk: 462, base_hp: 12450, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100 } },
             { name: 'ショアキーパーS0', desc: '全バフ発動時。純ヒーラー。本来の回復効果%+12は未対応のため未反映。ratioは全項目0（直接ダメージ寄与なしとして扱う）', attr: 'light', base_atk: 287, base_hp: 16712, base_def: 1099, crit_rate: 5, crit_dmg: 150, hp_pct: 15.2, ratio: {} },
@@ -6445,54 +6461,80 @@
             // ▼ここから武器を追記▼
             // weaponType は武器種別（長刃・迅刀・拳銃・手甲・増幅器）。将来のグリッド選択パネルで
             // タブの軸に使う想定。精錬ランクは特記無ければ1（R1、無凸）。
-            // 「ルシラーの限定武器」として伝わっていた「フリーズフレームR1」は出典側が
-            // 「ダーニャの偽物の矮星との混同の可能性、要確認」と明記していたため、
-            // 裏取りできるまでここには含めていない。
             { name: '千古の湖水R1', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 12 },
             { name: '千古の湖水R5', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 24 },
             { name: '歳華調和R1', weaponType: '長刃', desc: '全バフ発動時(限定・今汐)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_skill: 48 },
             { name: '春裁ちR1', weaponType: '迅刀', desc: '全バフ発動時(限定・ツバキ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 70 },
-            { name: '定めを覆す荊冠R1', weaponType: '迅刀', desc: '全バフ発動時(限定・カルテジア)', base_atk: 412, hp_pct: 84.2 },
-            { name: 'スターキャリブレーターR1', weaponType: '長刃', desc: '全バフ発動時(限定・モーニエ)', base_atk: 412, def_pct: 16 },
+            // dmg_all追加: 風蝕1スタック以上の敵への与ダメ+20%
+            { name: '定めを覆す荊冠R1', weaponType: '迅刀', desc: '全バフ発動時(限定・カルテジア)', base_atk: 412, hp_pct: 84.2, dmg_all: 20 },
+            // crit_dmg追加: HP回復効果発動時チーム全員クリダメ+20%（自身も対象）
+            { name: 'スターキャリブレーターR1', weaponType: '長刃', desc: '全バフ発動時(限定・モーニエ)', base_atk: 412, def_pct: 16, crit_dmg: 20 },
             { name: 'ラディアンスの切っ先R1', weaponType: '長刃', desc: '全バフ発動時(恒常)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_lib: 24 },
             { name: '曇斬R1', weaponType: '長刃', desc: '全バフ発動時(限定・千咲)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_lib: 24, dmg_all: 24 },
             { name: '雷霆を統べし王剣R1', weaponType: '長刃', desc: '全バフ発動時(限定・オーガスタ)', base_atk: 675, crit_rate: 12.1, atk_pct: 12, dmg_heavy: 20 },
-            { name: '闘炎の爪痕R1', weaponType: '長刃', desc: '全バフ発動時(限定・ルパ)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_lib: 24 },
+            // dmg_fire追加: 重撃延長時チーム焦熱ダメ+24%（ルパ自身も焦熱属性で対象）
+            { name: '闘炎の爪痕R1', weaponType: '長刃', desc: '全バフ発動時(限定・ルパ)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_lib: 24, dmg_fire: 24 },
             { name: '蒼鱗連峰R1', weaponType: '長刃', desc: '全バフ発動時(限定・忌炎)', base_atk: 587, crit_dmg: 48.6, dmg_all: 12, dmg_heavy: 48 },
             { name: '仙境の湖光R1', weaponType: '長刃', desc: '全バフ発動時(恒常)', base_atk: 587, flat_atk: 36.4, dmg_lib: 21 },
             { name: '天つ蒼淵R1', weaponType: '迅刀', desc: '全バフ発動時(限定・秧秧玄翎)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_heavy: 36 },
             { name: '灼霜R1', weaponType: '迅刀', desc: '全バフ発動時(限定・緋雪)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_ice: 28 },
             { name: 'とこしえの明星R1', weaponType: '迅刀', desc: '全バフ発動時(限定・エイメス)', base_atk: 587, crit_rate: 24.3, dmg_all: 12 },
             { name: 'レーザーの鋭剣R1', weaponType: '迅刀', desc: '全バフ発動時(恒常)', base_atk: 587, atk_pct: 12, dmg_skill: 24 },
-            { name: '破敵の鋭竹R1', weaponType: '迅刀', desc: '全バフ発動時(限定・仇遠)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_heavy: 30 },
+            // dmg_echo追加: 変奏発動でチーム音骸スキルダメ+20%（仇遠本人も音骸スキル型のため対象）
+            { name: '破敵の鋭竹R1', weaponType: '迅刀', desc: '全バフ発動時(限定・仇遠)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_heavy: 30, dmg_echo: 20 },
             { name: 'エンドレスボヤージュR1', weaponType: '迅刀', desc: '全バフ発動時(限定・ブラント)', base_atk: 412, crit_rate: 8, dmg_normal: 48 },
-            { name: '赫く燃ゆる流光R1', weaponType: '迅刀', desc: '全バフ発動時(限定・長離、1スタック時。最大14スタックで+56)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_skill: 4 },
-            { name: 'スペクトラル・トリガーR1', weaponType: '拳銃', desc: '全バフ発動時(限定・ルーシー)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_heavy: 30 },
-            { name: 'スカル・ポッパーR1', weaponType: '拳銃', desc: '全バフ発動時(限定・レベッカ)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 12 },
-            { name: 'スペクトル・ブラスターR1', weaponType: '拳銃', desc: '全バフ発動時(限定・リンネー)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 36 },
+            // dmg_skill修正: 4→56（最大14スタック分、4×14。他のスタック系と同じく全バフ発動時＝最大値を採用）
+            { name: '赫く燃ゆる流光R1', weaponType: '迅刀', desc: '全バフ発動時(限定・長離、最大14スタック)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_skill: 56 },
+            // dmg_light追加: 共鳴スキル時回折ダメ+20%×最大2スタック
+            { name: 'スペクトラル・トリガーR1', weaponType: '拳銃', desc: '全バフ発動時(限定・ルーシー)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_heavy: 30, dmg_light: 40 },
+            // dmg_normal修正: 12→36（24変奏時+12オフセット時）、atk_pct修正: 12→36（12base+24チーム攻撃力、自身も対象）
+            { name: 'スカル・ポッパーR1', weaponType: '拳銃', desc: '全バフ発動時(限定・レベッカ)', base_atk: 500, crit_dmg: 72, atk_pct: 36, dmg_normal: 36 },
+            // dmg_all追加: 震撃協和/密集協和オフセット付与毎にチーム全ダメ+8%×最大3スタック
+            { name: 'スペクトル・ブラスターR1', weaponType: '拳銃', desc: '全バフ発動時(限定・リンネー)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 36, dmg_all: 24 },
             { name: 'フェーズのさざ波R1', weaponType: '拳銃', desc: '全バフ発動時(恒常)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_all: 24 },
             { name: 'ルクス＆アンブラR1', weaponType: '拳銃', desc: '全バフ発動時(限定・ガルブレーナ)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_heavy: 24, dmg_echo: 24 },
             { name: '森のアリアR1', weaponType: '拳銃', desc: '全バフ発動時(限定・シャコンヌ)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_wind: 24 },
             { name: 'ラストダンスR1', weaponType: '拳銃', desc: '全バフ発動時(限定・カルロッタ)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_skill: 48 },
             { name: '不変の湖煙R1', weaponType: '拳銃', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 10 },
             { name: 'ソル・スウォーンの注釈R1', weaponType: '手甲', desc: '全バフ発動時(限定・シグリカ)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12, dmg_echo: 32 },
-            { name: 'デイブレイカースパインR1', weaponType: '手甲', desc: '全バフ発動時(限定・リューク・ヘルセン)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_light: 20 },
-            { name: 'パルスの機腕R1', weaponType: '手甲', desc: '全バフ発動時(恒常)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 6 },
+            // dmg_normal追加: 密集協和オフセット付与毎の通常攻撃ダメ+20%（回折バフとは別枠）
+            { name: 'デイブレイカースパインR1', weaponType: '手甲', desc: '全バフ発動時(限定・リューク・ヘルセン)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_light: 20, dmg_normal: 20 },
+            // dmg_normal修正: 6→24（最大4スタック分、6×4）
+            { name: 'パルスの機腕R1', weaponType: '手甲', desc: '全バフ発動時(恒常、最大4スタック)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_normal: 24 },
             { name: '万物を書き留める月相R1', weaponType: '手甲', desc: '全バフ発動時(限定・ユーノ)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_lib: 20 },
             { name: '焔光の裁きR1', weaponType: '手甲', desc: '全バフ発動時(限定・ザンニー)', base_atk: 587, crit_dmg: 48.6, atk_pct: 12 },
             { name: 'トラジコメーディアR1', weaponType: '手甲', desc: '全バフ発動時(限定・ロココ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_heavy: 48 },
             { name: '万端の枢機R1', weaponType: '手甲', desc: '全バフ発動時(限定・相里要)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_lib: 48 },
             { name: '怒涛の湖音R1', weaponType: '手甲', desc: '全バフ発動時(恒常)', base_atk: 587, flat_atk: 36.4, dmg_normal: 10, dmg_skill: 10 },
-            { name: '夕霞の飲露R1', weaponType: '増幅器', desc: '全バフ発動時(限定・ルシラー)', base_atk: 412, hp_pct: 12 },
-            { name: '偽物の矮星R1', weaponType: '増幅器', desc: '全バフ発動時(限定・ダーニャ)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_lib: 36 },
-            { name: 'ボゾンの観測器R1', weaponType: '増幅器', desc: '全バフ発動時(恒常)', base_atk: 525, atk_pct: 12, dmg_normal: 12 },
+            // 紐付くキャラを修正: ルシラー→穂穂。穂穂は本データ収集時点で
+            // 未実装・ステータス未公開のため、この武器自体はキャラ未登録のまま収録する。
+            // atk_pct追加: 雪色染め+さざ波両方所持でチーム攻撃力+20%（自身も対象）
+            { name: '夕霞の飲露R1', weaponType: '増幅器', desc: '全バフ発動時(限定・穂穂、キャラ未登録)', base_atk: 412, hp_pct: 12, atk_pct: 20 },
+            // ステータス画面のスクリーンショットで確認。武器効果：攻撃力+12%（常時）。
+            // 斉爆効果／密集協和・オフセット付与後、共鳴解放ダメージ+36%（5秒）。
+            // その持続時間内にチーム内キャラが同条件を付与すると、そのキャラの攻撃力+24%（15秒）。
+            // atk_pct はこの2つを合算（12+24=36）。旧データは常時分の12のみで、
+            // 条件付きのチーム攻撃力+24%が抜けていた。
+            { name: '偽物の矮星R1', weaponType: '増幅器', desc: '全バフ発動時(限定・ダーニャ)', base_atk: 500, crit_rate: 36, atk_pct: 36, dmg_lib: 36 },
+            // ステータス画面のスクリーンショットで確認。武器効果「フェードアウト」：
+            // 攻撃力+12%（常時）。結霜効果付与後、自身の凝縮ダメージ+30%・
+            // チーム内キャラの攻撃力+24%（ともに条件付き、12/30秒持続）。
+            // atk_pct はこの2つを合算（12+24=36）。紐付くキャラ名はスクショに無いため未確認。
+            { name: 'フリーズフレームR1', weaponType: '増幅器', desc: '全バフ発動時(限定)。結霜効果付与後の効果込み', base_atk: 587, crit_rate: 24.3, atk_pct: 36, dmg_ice: 30 },
+            // atk_pct修正: 12→24（12base+12協和破壊後条件付き）
+            { name: 'ボゾンの観測器R1', weaponType: '増幅器', desc: '全バフ発動時(恒常)', base_atk: 525, atk_pct: 24, dmg_normal: 12 },
             { name: '幽冥の忘憂曲R1', weaponType: '増幅器', desc: '全バフ発動時(限定・フローヴァ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_skill: 32, dmg_echo: 32 },
             { name: '深海の囁きR1', weaponType: '増幅器', desc: '全バフ発動時(限定・カンタレラ)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 40 },
-            { name: '光のハルモニアR1', weaponType: '増幅器', desc: '全バフ発動時(限定・フィービー)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_normal: 14, dmg_heavy: 14 },
-            { name: '星々のコンチェルトR1', weaponType: '増幅器', desc: '全バフ発動時(限定・ショアキーパー)', base_atk: 412, hp_pct: 12 },
-            { name: '氷華の雅印R1', weaponType: '増幅器', desc: '全バフ発動時(限定・折枝)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 12 },
-            { name: '糸繰りの奇術R1', weaponType: '増幅器', desc: '全バフ発動時(限定・吟霖)', base_atk: 500, crit_rate: 36, dmg_all: 12 },
-            { name: '栄枯の湖岸R1', weaponType: '増幅器', desc: '全バフ発動時(恒常)', base_atk: 500, flat_atk: 53.9, dmg_normal: 3.2 },
+            // dmg_normal/dmg_heavy修正: 14→42（最大3スタック分、14×3）
+            { name: '光のハルモニアR1', weaponType: '増幅器', desc: '全バフ発動時(限定・フィービー、最大3スタック)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_normal: 42, dmg_heavy: 42 },
+            // atk_pct追加: 共鳴スキルHP回復発生でチーム攻撃力+14%（自身も対象）
+            { name: '星々のコンチェルトR1', weaponType: '増幅器', desc: '全バフ発動時(限定・ショアキーパー)', base_atk: 412, hp_pct: 12, atk_pct: 14 },
+            // dmg_normal修正: 12→52（未登場時の最大発動値。登場時のみなら36）
+            { name: '氷華の雅印R1', weaponType: '増幅器', desc: '全バフ発動時(限定・折枝、未登場時の最大値)', base_atk: 500, crit_dmg: 72, atk_pct: 12, dmg_normal: 52 },
+            // atk_pct追加: 0→24（登場時最大。未登場時なら48）
+            { name: '糸繰りの奇術R1', weaponType: '増幅器', desc: '全バフ発動時(限定・吟霖、登場時の値)', base_atk: 500, crit_rate: 36, dmg_all: 12, atk_pct: 24 },
+            // dmg_normal修正: 3.2→16（最大5スタック分、3.2×5）
+            { name: '栄枯の湖岸R1', weaponType: '増幅器', desc: '全バフ発動時(恒常、最大5スタック)', base_atk: 500, flat_atk: 53.9, dmg_normal: 16 },
             // ▲ここまで▲
         ];
 
