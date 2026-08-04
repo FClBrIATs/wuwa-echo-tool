@@ -1336,4 +1336,58 @@ await withPage(async page => {
     checkTrue('ページ自体は横スクロールしない', r.ページ横スクロールなし);
 });
 
+// ── ハーモニーの収録データ拡充（Ver3.4〜3.5分） ──────────────
+suite('未収録だった4種のハーモニーが追加されている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const byId = id => HARMONIES.find(h => h.id === id);
+        const mei = byId('冥夜'), jo = byId('浄心'), kyo = byId('玄翎虚滅'), kori = byId('玄翎結霜');
+        return {
+            件数: HARMONIES.length,
+            id重複: HARMONIES.map(h => h.id).filter((v, i, a) => a.indexOf(v) !== i),
+            冥夜あり: !!mei, 冥夜setType: mei?.setType,
+            浄心あり: !!jo, 浄心attr: jo?.attr,
+            玄翎虚滅あり: !!kyo, 玄翎結霜あり: !!kori,
+            // 共鳴効率+10%（2セット）は未対応フィールドなので反映されない前提
+            玄翎虚滅の2セット: kyo?.set2,
+            玄翎結霜の2セット: kori?.set2,
+            // 5セットは「共鳴効率が十分確保されている」前提の上限値（+25%）で固定
+            玄翎結霜の5セットatk: kori?.set5?.atk_pct,
+        };
+    });
+    check('ハーモニーは34件（既存30+新規4）', r.件数, 34);
+    check('id重複は無い', r.id重複, []);
+    checkTrue('冥夜を導く灯が追加されている', r.冥夜あり);
+    check('冥夜は2+5セット', r.冥夜setType, '2+5');
+    checkTrue('煞を祓う浄心が追加されている', r.浄心あり);
+    check('浄心の属性は気動', r.浄心attr, 'wind');
+    checkTrue('羽舞う塵世の歌(虚滅編成)が追加されている', r.玄翎虚滅あり);
+    checkTrue('羽舞う塵世の歌(結霜編成)が追加されている', r.玄翎結霜あり);
+    check('虚滅編成の2セットは未対応フィールドのため空', r.玄翎虚滅の2セット, {
+        atk_pct: 0, hp_pct: 0, def_pct: 0,
+        dmg_fire: 0, dmg_ice: 0, dmg_thunder: 0, dmg_wind: 0, dmg_light: 0, dmg_dark: 0, dmg_all: 0,
+        crit_rate: 0, crit_dmg: 0,
+        dmg_normal: 0, dmg_heavy: 0, dmg_skill: 0, dmg_lib: 0, dmg_echo: 0,
+    });
+    check('結霜編成の5セットは上限値+25%で固定', r.玄翎結霜の5セットatk, 25);
+});
+
+suite('新規ハーモニーが①タブの選択パネルに出る');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        document.getElementById('hsel_wrap_0').querySelector('.custom-sel-btn').click();
+        const list = document.getElementById('hsel_list_0');
+        // 玄翎虚滅・玄翎結霜は attr:'other' なので「その他」タブに入る
+        const otherTab = [...list.querySelectorAll('.gpk-tab')].find(t => t.textContent.includes('その他'));
+        otherTab.click();
+        const cells = [...list.querySelectorAll('.gpk-grid')].find(g => g.style.display !== 'none')
+            .querySelectorAll('.gpk-cell');
+        const names = [...cells].map(c => c.textContent.trim());
+        return { names };
+    });
+    checkTrue('冥夜を導く灯が「その他」タブから選べる', r.names.some(n => n.includes('冥夜')));
+    checkTrue('虚滅編成が選べる', r.names.some(n => n.includes('虚滅編成')));
+    checkTrue('結霜編成が選べる', r.names.some(n => n.includes('結霜編成')));
+});
+
 await finish();
