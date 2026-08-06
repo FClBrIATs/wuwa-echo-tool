@@ -1812,6 +1812,161 @@
             line-height: 1.6;
         }
 
+        /* ── ステータスバランス（レーダー） ───────────────────── */
+        .radar-wrap {
+            position: relative;
+            width: min(100%, 320px);
+            aspect-ratio: 1;
+            margin: 6px auto 8px;
+        }
+
+        .radar-wrap svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .radar-ring {
+            fill: none;
+            stroke: var(--border2);
+            stroke-width: .4;
+        }
+
+        .radar-spoke {
+            stroke: var(--border2);
+            stroke-width: .4;
+        }
+
+        .radar-target-marker {
+            fill: none;
+            stroke: var(--orange);
+            stroke-width: .6;
+            stroke-dasharray: 1.6 1.2;
+            opacity: .85;
+        }
+
+        .radar-value-fill {
+            fill: rgba(var(--p-rgb), .18);
+            stroke: var(--p);
+            stroke-width: 1;
+            stroke-linejoin: round;
+        }
+
+        .radar-value-dot {
+            fill: var(--p);
+            stroke: var(--card);
+            stroke-width: .6;
+        }
+
+        .radar-value-dot.achieved {
+            fill: var(--green);
+        }
+
+        .radar-vertex-chips {
+            position: absolute;
+            inset: 0;
+        }
+
+        .radar-chip {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            background: var(--card);
+            border: 1.5px solid var(--border2);
+            border-radius: 8px;
+            padding: 4px 8px;
+            cursor: pointer;
+            user-select: none;
+            font: inherit;
+            min-width: 68px;
+            box-shadow: var(--shadow);
+        }
+
+        .radar-chip:hover,
+        .radar-chip:focus-visible {
+            border-color: var(--p);
+            outline: none;
+        }
+
+        .radar-chip.achieved {
+            border-color: var(--green);
+        }
+
+        .radar-chip .radar-chip-label {
+            font-size: 9.5px;
+            color: var(--text3);
+            white-space: nowrap;
+        }
+
+        .radar-chip .radar-chip-val {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .radar-chip .radar-chip-pct {
+            font-size: 9px;
+            color: var(--p);
+        }
+
+        .radar-chip.achieved .radar-chip-pct {
+            color: var(--green);
+        }
+
+        .radar-target-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .radar-target-field {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10.5px;
+            color: var(--text2);
+        }
+
+        .radar-target-field input {
+            width: 48px;
+            border: 1px solid var(--border2);
+            border-radius: 5px;
+            padding: 3px 5px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            text-align: right;
+            background: var(--card);
+            color: var(--text);
+        }
+
+        .stat-detail-toggle {
+            width: 100%;
+            text-align: left;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: var(--text2);
+            background: var(--card2);
+        }
+
+        .radar-highlight {
+            animation: radarHighlight 1.4s ease-out;
+        }
+
+        @keyframes radarHighlight {
+            0% { box-shadow: 0 0 0 3px rgba(var(--p-rgb), .5); }
+            100% { box-shadow: 0 0 0 0 rgba(var(--p-rgb), 0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .radar-highlight { animation: none; }
+        }
+
         .divider {
             height: 1px;
             background: var(--border);
@@ -2362,7 +2517,8 @@
                             <div class="how-to-body">
                                 <b>入力の考え方</b>：ハーモニー・武器・キャラ・音骸メイン/サブは登録データと②タブから自動計算されます。手で入れるのは「直接入力」欄だけです。<br>
                                 <b>キャラ/武器/ハーモニー選択</b>：ボタンを押すと属性タブ→名前のグリッドから選べます。<br>
-                                <b>合計欄</b>：各項目の合計はゲーム内の数値と突き合わせられるよう大きく表示しています。ここに直接打ち込むと、自動計算との差が「直接入力」に入ります。<br>
+                                <b>ステータスバランス</b>：攻撃力%・クリ率・クリダメ・ダメージバフを、各自の目標に対する達成度でレーダー表示します。凹んでいる頂点ほど目標に届いていません。攻撃力%とダメージバフの目標は下の欄で編集でき、クリ率とクリダメは1:2のバランスで自動的に連動します。頂点をタップすると対応する入力欄が開きます。<br>
+                                <b>合計欄</b>：初期状態では畳まれています（「内訳・直接入力欄を表示」またはレーダーの頂点タップで開きます）。各項目の合計はゲーム内の数値と突き合わせられるよう大きく表示しています。ここに直接打ち込むと、自動計算との差が「直接入力」に入ります。<br>
                                 <b>使用属性</b>：選択した属性のバフのみ計算に使用します。<br>
                                 <b>ダメージ比率</b>：各スキルの比率に応じてスコアの重み付けが変わります。合計100を推奨。
                             </div>
@@ -2392,8 +2548,29 @@
                             <button id="statModeBtn_def" class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
                         </div>
 
+                        <!-- ===== ステータスバランス（レーダー） ===== -->
+                        <!-- 常時表示にしたいので、他のsec-titleのように自動折りたたみの
+                             対象にならないよう div でラップしている -->
+                        <div id="statRadarSection">
+                            <div class="sec-title">ステータスバランス</div>
+                            <div class="radar-wrap" id="statRadarWrap">
+                                <svg viewBox="0 0 100 100" id="statRadarSvg" aria-hidden="true">
+                                    <g id="statRadarRings"></g>
+                                    <polygon id="statRadarMarker" class="radar-target-marker"></polygon>
+                                    <path id="statRadarPath" class="radar-value-fill" d=""></path>
+                                    <g id="statRadarDots"></g>
+                                </svg>
+                                <div class="radar-vertex-chips" id="statRadarChips"></div>
+                            </div>
+                            <div class="radar-target-row" id="radarTargetRow"></div>
+                            <div class="hint">頂点をタップすると、対応する内訳の入力欄が開きます。攻撃力%とダメージバフの目標は上の欄で編集できます。</div>
+                        </div>
+                        <div class="divider"></div>
+
                         <!-- ===== 内訳入力 ===== -->
-                        <div id="block_detail">
+                        <button type="button" class="btn stat-detail-toggle" id="statDetailToggleBtn"
+                            onclick="toggleStatDetail()">▸ 内訳・直接入力欄を表示</button>
+                        <div id="block_detail" style="display:none;">
                             <div class="input-legend">
                                 <span class="lg-auto">自動計算（登録データ・②タブから）</span>
                                 <span class="lg-manual">手入力</span>
@@ -2551,6 +2728,9 @@
                         <h2>ダメバフ</h2>
                     </div>
                     <div class="card-body">
+                        <button type="button" class="btn stat-detail-toggle" id="dmgbufDetailToggleBtn"
+                            onclick="toggleDmgbufDetail()">▸ 内訳・直接入力欄を表示</button>
+                        <div id="dmgbufBlock" style="display:none;">
                         <div class="sec-title">属性バフ</div>
 
                         <div id="dmgbuf_detail">
@@ -2584,6 +2764,7 @@
 
                         <div id="skillbuf_detail">
                             <div id="di_skill_rows"></div>
+                        </div>
                         </div>
                     </div>
 
@@ -3590,6 +3771,9 @@
         let useAttr = ''; // 使用属性: 'fire'|'ice'|'thunder'|'wind'|'light'|'dark'|'' (空=合算)
         let S = {
             ratio: { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 },
+            // ステータスバランス（レーダー）の目標値。攻撃力%とダメージバフのみ保存
+            // （クリ率・クリダメは1:2換算で自動計算するため保存不要）
+            radarTarget: { atk: 100, dmgbuf: 100 },
             harmony: [
                 { id: '', setLevel: 5, custom: B() },
                 { id: '', setLevel: 5, custom: B() },
@@ -4401,6 +4585,195 @@
             }).join('');
         }
 
+        // ================================================================
+        // ステータスバランス（レーダー）
+        // ================================================================
+        // 目標:上限 = 2:3。上限は「目標を超えても頂点が急に張り付かない」ための
+        // 見栄え用の余白で、達成判定はあくまで目標(target)との比較で行う。
+        const RADAR_RATIO = 1.5;
+
+        // クリ率・クリダメは1:2換算で高い方を基準に、もう一方の目標を逆算する。
+        // 比率計算そのものは損益分岐点100を使う（バランス判定と同じ基準）。
+        // 150（クリダメの基礎値）は表示上の下限にのみ使い、比率計算には混ぜない。
+        function radarCrCdTargets(cr, cd) {
+            const crEq = cr;
+            const cdEq = Math.max(0, cd - 100) / 2;
+            if (crEq >= cdEq) {
+                const crTarget = cr, crUpper = Math.max(1, cr * RADAR_RATIO);
+                const cdBonusTarget = 2 * cr;
+                const cdTarget = 100 + cdBonusTarget;
+                const cdUpper = 100 + cdBonusTarget * RADAR_RATIO;
+                return { crTarget, crUpper, cdTarget, cdUpper, anchor: 'cr' };
+            }
+            const cdBonusTarget = Math.max(0, cd - 100);
+            const cdTarget = cd, cdUpper = 100 + cdBonusTarget * RADAR_RATIO;
+            const crTarget = cdEq, crUpper = Math.max(1, cdEq * RADAR_RATIO);
+            return { crTarget, crUpper, cdTarget, cdUpper, anchor: 'cd' };
+        }
+
+        // 4軸それぞれの現在値・目標・上限を返す。現在値はすべて既存の計算結果をそのまま使う
+        // （新しい計算は一切しない）。
+        function radarAxes() {
+            const D = detailBreakdown();
+            const p = getPartials();
+            const cr = D.cr.total, cd = D.cd.total;
+            const { crTarget, crUpper, cdTarget, cdUpper, anchor } = radarCrCdTargets(cr, cd);
+            const statLabel = { atk: '攻撃力%', hp: 'HP%', def: '防御力%' }[statMode];
+            const cdLower = 150;
+            return [
+                {
+                    key: 'atk', label: statLabel, unit: '%', lower: 0,
+                    current: D.statPct.total, target: S.radarTarget.atk, upper: S.radarTarget.atk * RADAR_RATIO,
+                    editableTarget: true, detailId: 'lbl_total_d',
+                },
+                {
+                    key: 'cr', label: 'クリ率', unit: '%', lower: 0,
+                    current: cr, target: crTarget, upper: crUpper,
+                    editableTarget: false, isAnchor: anchor === 'cr', detailId: 'dt_cr',
+                },
+                {
+                    key: 'cd', label: 'クリダメ', unit: '%', lower: cdLower,
+                    current: cd, target: cdTarget, upper: cdUpper,
+                    editableTarget: false, isAnchor: anchor === 'cd', detailId: 'dt_cd',
+                },
+                {
+                    key: 'dmgbuf', label: 'ダメバフ', unit: '%', lower: 0,
+                    current: p.DMG_eff * 100, target: S.radarTarget.dmgbuf, upper: S.radarTarget.dmgbuf * RADAR_RATIO,
+                    editableTarget: true, detailId: 'dmgbufBlock',
+                },
+            ];
+        }
+
+        function radarRatioOf(a) {
+            const denom = Math.max(1e-6, a.upper - a.lower);
+            return Math.max(0, Math.min(1, (a.current - a.lower) / denom));
+        }
+        function radarMarkerRatioOf(a) {
+            const denom = Math.max(1e-6, a.upper - a.lower);
+            return Math.max(0, Math.min(1, (a.target - a.lower) / denom));
+        }
+        function radarAchieved(a) { return a.current >= a.target; }
+
+        const RADAR_CX = 50, RADAR_CY = 50, RADAR_MAX_R = 32, RADAR_CHIP_R = 44;
+        function radarPolar(r, angle) { return [RADAR_CX + r * Math.cos(angle), RADAR_CY + r * Math.sin(angle)]; }
+        function radarAngleOf(i, n) { return -Math.PI / 2 + i * (2 * Math.PI / n); }
+
+        const RADAR_SVG_NS = 'http://www.w3.org/2000/svg';
+        function radarEl(tag, attrs) {
+            const e = document.createElementNS(RADAR_SVG_NS, tag);
+            Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+            return e;
+        }
+
+        function renderStatRadar() {
+            const wrap = document.getElementById('statRadarWrap');
+            if (!wrap) return; // ①タブ以外の描画中は要素が無い
+            const AXES = radarAxes();
+            const n = AXES.length;
+
+            const ringsGroup = document.getElementById('statRadarRings');
+            ringsGroup.innerHTML = '';
+            [0.25, 0.5, 0.75, 1].forEach(f => {
+                const pts = AXES.map((_, i) => radarPolar(RADAR_MAX_R * f, radarAngleOf(i, n)).join(',')).join(' ');
+                ringsGroup.appendChild(radarEl('polygon', { points: pts, class: 'radar-ring' }));
+            });
+            AXES.forEach((_, i) => {
+                const [x, y] = radarPolar(RADAR_MAX_R, radarAngleOf(i, n));
+                ringsGroup.appendChild(radarEl('line', { x1: RADAR_CX, y1: RADAR_CY, x2: x, y2: y, class: 'radar-spoke' }));
+            });
+
+            const markerPts = AXES.map((a, i) => radarPolar(RADAR_MAX_R * radarMarkerRatioOf(a), radarAngleOf(i, n)));
+            document.getElementById('statRadarMarker').setAttribute('points', markerPts.map(p => p.join(',')).join(' '));
+
+            const valuePts = AXES.map((a, i) => radarPolar(RADAR_MAX_R * radarRatioOf(a), radarAngleOf(i, n)));
+            document.getElementById('statRadarPath').setAttribute('d', 'M' + valuePts.map(p => p.join(',')).join('L') + 'Z');
+
+            const dotsGroup = document.getElementById('statRadarDots');
+            dotsGroup.innerHTML = '';
+            AXES.forEach((a, i) => {
+                const [x, y] = valuePts[i];
+                dotsGroup.appendChild(radarEl('circle', { cx: x, cy: y, r: 1.5, class: 'radar-value-dot' + (radarAchieved(a) ? ' achieved' : '') }));
+            });
+
+            const chipsWrap = document.getElementById('statRadarChips');
+            chipsWrap.innerHTML = '';
+            AXES.forEach((a, i) => {
+                const [x, y] = radarPolar(RADAR_CHIP_R, radarAngleOf(i, n));
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isAchieved = radarAchieved(a);
+                btn.className = 'radar-chip' + (isAchieved ? ' achieved' : '');
+                btn.style.left = x + '%';
+                btn.style.top = y + '%';
+                const pct = a.target > 0 ? Math.round(a.current / a.target * 100) : 0;
+                btn.innerHTML = `
+      <span class="radar-chip-label">${esc(a.label)}${a.isAnchor ? ' 🎯' : ''}</span>
+      <span class="radar-chip-val">${a.current.toFixed(1)}${a.unit}</span>
+      <span class="radar-chip-pct">${isAchieved ? '達成 ✓' : pct + '%'}</span>`;
+                btn.setAttribute('aria-label', `${a.label} 現在${a.current.toFixed(1)}${a.unit}、目標${a.target.toFixed(1)}${a.unit}に対して${isAchieved ? '達成' : pct + '%'}。タップで内訳を開く`);
+                btn.addEventListener('click', () => openRadarDetail(a));
+                chipsWrap.appendChild(btn);
+            });
+
+            renderRadarTargetRow(AXES);
+        }
+
+        function renderRadarTargetRow(AXES) {
+            const row = document.getElementById('radarTargetRow');
+            if (!row) return;
+            const editable = AXES.filter(a => a.editableTarget);
+            row.innerHTML = editable.map(a => `
+    <label class="radar-target-field">目標（${esc(a.label)}）
+      <input type="number" inputmode="decimal" step="any" value="${a.target}" min="1"
+        onchange="setRadarTarget('${a.key}', this.value)">%
+    </label>`).join('');
+        }
+
+        function setRadarTarget(key, val) {
+            const v = Math.max(1, parseFloat(val) || 1);
+            S.radarTarget[key] = v;
+            recalcAll();
+            scheduleSave();
+        }
+
+        // 頂点タップで対応する既存の内訳エリアを開き、スクロール＋一瞬ハイライトする
+        function openRadarDetail(axis) {
+            if (axis.key === 'dmgbuf') {
+                const block = document.getElementById('dmgbufBlock');
+                if (block && block.style.display === 'none') toggleDmgbufDetail();
+            } else {
+                const block = document.getElementById('block_detail');
+                if (block && block.style.display === 'none') toggleStatDetail();
+            }
+            const target = document.getElementById(axis.detailId);
+            if (!target) return;
+            requestAnimationFrame(() => {
+                target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                target.classList.remove('radar-highlight');
+                // 再アニメーションさせるため一度クラスを外してから戻す
+                void target.offsetWidth;
+                target.classList.add('radar-highlight');
+            });
+        }
+
+        function toggleStatDetail() {
+            const block = document.getElementById('block_detail');
+            const btn = document.getElementById('statDetailToggleBtn');
+            if (!block || !btn) return;
+            const willShow = block.style.display === 'none';
+            block.style.display = willShow ? '' : 'none';
+            btn.textContent = willShow ? '▾ 内訳・直接入力欄を隠す' : '▸ 内訳・直接入力欄を表示';
+        }
+
+        function toggleDmgbufDetail() {
+            const block = document.getElementById('dmgbufBlock');
+            const btn = document.getElementById('dmgbufDetailToggleBtn');
+            if (!block || !btn) return;
+            const willShow = block.style.display === 'none';
+            block.style.display = willShow ? '' : 'none';
+            btn.textContent = willShow ? '▾ 内訳・直接入力欄を隠す' : '▸ 内訳・直接入力欄を表示';
+        }
+
         function updateHarmonyEffectBox() {
             const H = getHarmonyTotal();
             const box = document.getElementById('harmonyEffectBox'); if (!box) return;
@@ -4883,6 +5256,7 @@
                     { id: '', setLevel: 5, custom: B() },
                 ];
                 S.harmonyManual = B();
+                S.radarTarget = { atk: 100, dmgbuf: 100 };
                 useAttr = '';
 
                 // 3. 使用属性ボタンの見た目リセット
@@ -5153,6 +5527,7 @@
             updateHarmonyEffectBox();
             updateEchoScores();
             updateAutoStatRows();
+            renderStatRadar();
             requestAnimationFrame(autoSizeAll);
         }
 
@@ -6797,6 +7172,7 @@ rebuildCharaWeaponSelects();
                 }
                 S.harmonyManual = { ...B(), ...(saved.S.harmonyManual || {}) };
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0, ...(saved.S.ratio || {}) };
+                S.radarTarget = { atk: 100, dmgbuf: 100, ...(saved.S.radarTarget || {}) };
                 if (['atk', 'hp', 'def'].includes(saved.statMode)) statMode = saved.statMode;
                 if (typeof saved.useAttr === 'string') useAttr = saved.useAttr;
                 return true;
