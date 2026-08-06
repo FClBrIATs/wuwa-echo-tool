@@ -1011,22 +1011,115 @@ await withPage(async page => {
     check('凡例が3種類出る', r.凡例, ['lg-auto', 'lg-manual', 'lg-total']);
 });
 
-suite('合計値入力モードが無い');
+suite('合計値入力モードが無い（内訳は畳まれているだけで、別系統の計算ではない）');
 await withPage(async page => {
     const r = await page.evaluate(() => ({
         モード切替ボタン: !!document.getElementById('inputModeBtn_total'),
         合計値モードのブロック: !!document.getElementById('block_total'),
         切替関数: typeof setInputMode,
-        内訳が最初から見えている: document.getElementById('block_detail').offsetParent !== null,
+        内訳の要素自体は存在する: !!document.getElementById('block_detail'),
         キャラ武器の選択も見えている: document.getElementById('select_block').offsetParent !== null,
-        属性バフの内訳が見えている: document.getElementById('di_attr_rows').children.length,
+        属性バフの内訳が生成されている: document.getElementById('di_attr_rows').children.length,
     }));
     checkTrue('モード切替ボタンは無い', !r.モード切替ボタン);
     checkTrue('合計値モードの入力欄は無い', !r.合計値モードのブロック);
     check('切替関数も残っていない', r.切替関数, 'undefined');
-    checkTrue('内訳入力が最初から表示される', r.内訳が最初から見えている);
+    checkTrue('内訳入力のDOM自体は常に存在する（畳まれているだけ）', r.内訳の要素自体は存在する);
     checkTrue('キャラ・武器の選択が最初から表示される', r.キャラ武器の選択も見えている);
-    check('属性バフの内訳が6属性ぶん生成される', r.属性バフの内訳が見えている, 6);
+    check('属性バフの内訳は表示状態に関係なく6属性ぶん生成される', r.属性バフの内訳が生成されている, 6);
+});
+
+suite('ステータスの内訳・直接入力欄は、レーダーが主要な入り口になったので初期状態では畳まれている');
+await withPage(async page => {
+    const r = await page.evaluate(() => ({
+        内訳が最初は畳まれている: document.getElementById('block_detail').offsetParent === null,
+        ダメバフ内訳も最初は畳まれている: document.getElementById('dmgbufBlock').offsetParent === null,
+        トグルボタンがある: !!document.getElementById('statDetailToggleBtn'),
+    }));
+    checkTrue('ステータスの内訳は初期状態で畳まれている', r.内訳が最初は畳まれている);
+    checkTrue('ダメバフの内訳も初期状態で畳まれている', r.ダメバフ内訳も最初は畳まれている);
+    checkTrue('手動で開くボタンがある', r.トグルボタンがある);
+});
+
+// ── ステータスバランス（レーダー） ──────────────────────
+suite('レーダーの頂点が既存の計算結果をそのまま反映する');
+await withPage(async page => {
+    const r = await page.evaluate(([b]) => {
+        eval(b);
+        recalcAll();
+        const D = detailBreakdown(), p = getPartials();
+        const chips = [...document.querySelectorAll('.radar-chip')].map(c => c.textContent);
+        return {
+            頂点の数: chips.length,
+            攻撃力表示あり: chips.some(t => t.includes('攻撃力%') && t.includes(D.statPct.total.toFixed(1))),
+            クリ率表示あり: chips.some(t => t.includes('クリ率') && t.includes(D.cr.total.toFixed(1))),
+            クリダメ表示あり: chips.some(t => t.includes('クリダメ') && t.includes(D.cd.total.toFixed(1))),
+            ダメバフ表示あり: chips.some(t => t.includes('ダメバフ') && t.includes((p.DMG_eff * 100).toFixed(1))),
+        };
+    }, [BUILD]);
+    check('頂点は4つ', r.頂点の数, 4);
+    checkTrue('攻撃力%の頂点が現在値をそのまま表示', r.攻撃力表示あり);
+    checkTrue('クリ率の頂点が現在値をそのまま表示', r.クリ率表示あり);
+    checkTrue('クリダメの頂点が現在値をそのまま表示', r.クリダメ表示あり);
+    checkTrue('ダメバフの頂点がDMG_effをそのまま表示', r.ダメバフ表示あり);
+});
+
+suite('クリ率・クリダメの目標は1:2換算で高い方が基準になる');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        // クリダメの方が伸びている（換算72.5 > クリ率68）→ クリダメが基準
+        const a = radarCrCdTargets(68, 245);
+        // クリ率の方が伸びている（クリ率90 > クリダメ換算40）→ クリ率が基準
+        const b = radarCrCdTargets(90, 180);
+        return { a, b };
+    });
+    check('CR68/CD245ではクリダメが基準', r.a.anchor, 'cd');
+    checkNear('基準側(クリダメ)の目標は自分自身', r.a.cdTarget, 245, 0.01);
+    checkNear('クリ率の目標は逆算値(72.5)', r.a.crTarget, 72.5, 0.01);
+    check('CR90/CD180ではクリ率が基準', r.b.anchor, 'cr');
+    checkNear('基準側(クリ率)の目標は自分自身', r.b.crTarget, 90, 0.01);
+    checkNear('クリダメの目標は逆算値(280)', r.b.cdTarget, 280, 0.01);
+});
+
+suite('攻撃力%・ダメバフの目標値は編集でき、localStorageに保存される');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        setRadarTarget('atk', '120');
+        setRadarTarget('dmgbuf', '80');
+        return { atk: S.radarTarget.atk, dmgbuf: S.radarTarget.dmgbuf };
+    });
+    check('攻撃力%の目標が反映される', r.atk, 120);
+    check('ダメバフの目標が反映される', r.dmgbuf, 80);
+
+    await page.evaluate(() => saveState());
+    await page.reload();
+    await page.waitForFunction(() => typeof S !== 'undefined' && S.radarTarget);
+    const after = await page.evaluate(() => S.radarTarget);
+    check('リロード後も攻撃力%の目標が保たれる', after.atk, 120);
+    check('リロード後もダメバフの目標が保たれる', after.dmgbuf, 80);
+});
+
+suite('レーダーの頂点タップで対応する内訳が開いてスクロールする');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const chips = [...document.querySelectorAll('.radar-chip')];
+        const crChip = chips.find(c => c.textContent.includes('クリ率'));
+        crChip.click();
+        return {
+            クリ率タップ後に内訳が開く: document.getElementById('block_detail').offsetParent !== null,
+        };
+    });
+    checkTrue('クリ率の頂点タップで内訳ブロックが開く', r.クリ率タップ後に内訳が開く);
+
+    const r2 = await page.evaluate(() => {
+        const chips = [...document.querySelectorAll('.radar-chip')];
+        const dmgChip = chips.find(c => c.textContent.includes('ダメバフ'));
+        dmgChip.click();
+        return {
+            ダメバフタップ後に内訳が開く: document.getElementById('dmgbufBlock').offsetParent !== null,
+        };
+    });
+    checkTrue('ダメバフの頂点タップでダメバフ内訳が開く', r2.ダメバフタップ後に内訳が開く);
 });
 
 suite('タブのリセットが動く');
@@ -1525,6 +1618,47 @@ await withPage(async page => {
     checkTrue('②タブがマトリクス入力を説明している', r.t2.includes('マトリクス'));
     checkTrue('②タブが「種類→値の順」という古い説明のままではない', !r.t2.includes('種類→値'));
     checkTrue('登録タブの案内がドロップダウンに触れていない', !r.wReg.includes('ドロップダウン'));
+});
+
+suite('各サブステ優先度に音骸サブステとして出現しない項目（属性バフ・音骸スキルダメバフ）が出ない');
+await withPage(async page => {
+    const r = await page.evaluate(([b]) => {
+        eval(b);
+        S.ratio = { normal: 0, heavy: 0, skill: 50, lib: 0, echo: 50 }; // 音骸スキルダメバフも比率>0で出す条件にする
+        updateMVRanking();
+        return { text: document.getElementById('mvRanking').textContent };
+    }, [BUILD]);
+    checkTrue('ランキングに「属性バフ」が含まれない', !r.text.includes('属性バフ'));
+    checkTrue('ランキングに「音骸スキルダメバフ」が含まれない', !r.text.includes('音骸スキルダメバフ'));
+    checkTrue('攻撃力%は引き続き表示される', r.text.includes('攻撃力%'));
+    checkTrue('クリ率は引き続き表示される', r.text.includes('クリ率'));
+    checkTrue('共鳴スキルダメバフ（比率>0）は引き続き表示される', r.text.includes('共鳴スキルダメバフ'));
+});
+
+suite('武器登録で武器種を選択でき、①タブの選択パネルに反映される');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        charaType = 'weapon'; setRegType('weapon', null);
+        document.getElementById('ch_name').value = 'テスト武器2';
+        document.getElementById('ch_base_atk').value = '500';
+        setWeaponType('拳銃', document.querySelector('#chWeaponTypeBtns .attr-sel-btn[data-wt="拳銃"]'));
+        addCharaEntry();
+        const saved = getSavedCharaEntries('weapon')[0];
+        o.保存された武器種 = saved.weaponType;
+
+        rebuildCharaWeaponSelects();
+        const names = [...document.querySelectorAll('.gpk-grid[data-pane="拳銃"] .gpk-cell')].map(b => b.textContent);
+        o.拳銃タブに出る = names.includes('テスト武器2');
+
+        // 編集時にボタンの選択状態が復元される
+        editCharaEntry('weapon', saved.id);
+        o.編集時に選択が復元される = document.querySelector('#chWeaponTypeBtns .attr-sel-btn[data-wt="拳銃"]').classList.contains('active');
+        return o;
+    });
+    check('武器種が保存される', r.保存された武器種, '拳銃');
+    checkTrue('登録した武器が①タブの武器種タブに出る', r.拳銃タブに出る);
+    checkTrue('編集で開くと武器種の選択が復元される', r.編集時に選択が復元される);
 });
 
 await finish();
