@@ -1527,4 +1527,41 @@ await withPage(async page => {
     checkTrue('登録タブの案内がドロップダウンに触れていない', !r.wReg.includes('ドロップダウン'));
 });
 
+suite('各サブステ優先度に属性バフ（音骸サブに存在しない項目）が出ない');
+await withPage(async page => {
+    const r = await page.evaluate(([b]) => {
+        eval(b); updateMVRanking();
+        return { text: document.getElementById('mvRanking').textContent };
+    }, [BUILD]);
+    checkTrue('ランキングに「属性バフ」が含まれない', !r.text.includes('属性バフ'));
+    checkTrue('攻撃力%は引き続き表示される', r.text.includes('攻撃力%'));
+    checkTrue('クリ率は引き続き表示される', r.text.includes('クリ率'));
+});
+
+suite('武器登録で武器種を選択でき、①タブの選択パネルに反映される');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const o = {};
+        charaType = 'weapon'; setRegType('weapon', null);
+        document.getElementById('ch_name').value = 'テスト武器2';
+        document.getElementById('ch_base_atk').value = '500';
+        setWeaponType('拳銃', document.querySelector('#chWeaponTypeBtns .attr-sel-btn[data-wt="拳銃"]'));
+        addCharaEntry();
+        const saved = getSavedCharaEntries('weapon')[0];
+        o.保存された武器種 = saved.weaponType;
+
+        rebuildCharaWeaponSelects();
+        const names = [...document.querySelectorAll('.gpk-grid[data-pane="拳銃"] .gpk-cell')].map(b => b.textContent);
+        o.拳銃タブに出る = names.includes('テスト武器2');
+
+        // 編集時にボタンの選択状態が復元される
+        editCharaEntry('weapon', saved.id);
+        o.編集時に選択が復元される = document.querySelector('#chWeaponTypeBtns .attr-sel-btn[data-wt="拳銃"]').classList.contains('active');
+        return o;
+    });
+    check('武器種が保存される', r.保存された武器種, '拳銃');
+    checkTrue('登録した武器が①タブの武器種タブに出る', r.拳銃タブに出る);
+    checkTrue('編集で開くと武器種の選択が復元される', r.編集時に選択が復元される);
+});
+
 await finish();

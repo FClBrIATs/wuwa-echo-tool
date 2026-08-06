@@ -2981,6 +2981,28 @@
                         </details>
                         <div class="cw-field" style="margin-bottom:8px;"><label>名称</label><input type="text"
                                 id="ch_name" placeholder="例：千古の湖水"></div>
+                        <div class="sec-title">武器種（①タブの選択パネルのタブ分けに使用）</div>
+                        <input type="hidden" id="ch_weaponType" value="">
+                        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px;" id="chWeaponTypeBtns">
+                            <button type="button" class="attr-sel-btn" data-wt="長刃"
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setWeaponType('長刃',this)">長刃</button>
+                            <button type="button" class="attr-sel-btn" data-wt="迅刀"
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setWeaponType('迅刀',this)">迅刀</button>
+                            <button type="button" class="attr-sel-btn" data-wt="拳銃"
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setWeaponType('拳銃',this)">拳銃</button>
+                            <button type="button" class="attr-sel-btn" data-wt="手甲"
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setWeaponType('手甲',this)">手甲</button>
+                            <button type="button" class="attr-sel-btn" data-wt="増幅器"
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setWeaponType('増幅器',this)">増幅器</button>
+                            <button type="button" class="attr-sel-btn" data-wt=""
+                                style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
+                                onclick="setWeaponType('',this)">未指定</button>
+                        </div>
                         <div class="sec-title">メインステータス</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>基礎攻撃力</label><input type="number" inputmode="decimal" step="any" id="ch_base_atk"
@@ -4344,11 +4366,6 @@
             const gainCD = p.pCD * dCD / E * 100;
             list.push({ name: 'クリダメ', gain: gainCD, note: `サブステ期待値 +${dCD}% (現在: ${p.cd_eff.toFixed(1)}%)` });
 
-            // 属性バフ：サブステに属性バフはないので代表として攻撃力%の期待値を流用
-            const dDA = subMid('atk_pct');
-            const gainDA = p.pDmg * dDA / E * 100;
-            list.push({ name: '属性バフ', gain: gainDA, note: `参考値 +${dDA}%（サブステでは出ません）`, isAttr: true });
-
             // スキル種別ダメバフ：各スキルサブステ期待値
             const rn = S.ratio.normal / 100, rh = S.ratio.heavy / 100, rs = S.ratio.skill / 100;
             const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
@@ -4910,6 +4927,19 @@
                 b.classList.toggle('active', active);
                 b.style.background = active ? (b.dataset.color || b.style.borderColor) : 'transparent';
                 b.style.color = active ? '#fff' : (b.dataset.color || b.style.color);
+            });
+        }
+
+        // ================================================================
+        // 武器登録：武器種選択（①タブの選択パネルのタブ分けに使用するため保存）
+        // ================================================================
+        function setWeaponType(wt, btn) {
+            const hid = document.getElementById('ch_weaponType'); if (hid) hid.value = wt;
+            document.querySelectorAll('#chWeaponTypeBtns .attr-sel-btn').forEach(b => {
+                const active = b === btn;
+                b.classList.toggle('active', active);
+                b.style.background = active ? '#94a3b8' : 'transparent';
+                b.style.color = active ? '#fff' : '#94a3b8';
             });
         }
 
@@ -6608,6 +6638,9 @@
             const attr = entry ? (entry.attr || '') : '';
             const btn = attr ? document.querySelector(`#chAttrBtns .attr-sel-btn[data-attr="${attr}"]`) : null;
             setCharaAttr(attr, btn);
+            const wt = entry ? (entry.weaponType || '') : '';
+            const wtBtn = wt ? document.querySelector(`#chWeaponTypeBtns .attr-sel-btn[data-wt="${wt}"]`) : null;
+            setWeaponType(wt, wtBtn);
         }
 
         // 編集モードの見た目を切り替える
@@ -6647,6 +6680,8 @@
             const entry = { id: 'ch_' + Date.now(), name, type: charaType, desc: descEl ? descEl.value || '' : '' };
             if (charaType === 'chara') {
                 entry.attr = document.getElementById('ch_attr_c')?.value || '';
+            } else {
+                entry.weaponType = document.getElementById('ch_weaponType')?.value || '';
             }
             CH_FIELDS.forEach(k => {
                 const el = document.getElementById('ch_' + k + sfx) || document.getElementById('ch_' + k);
