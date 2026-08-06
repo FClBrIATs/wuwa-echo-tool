@@ -1527,15 +1527,19 @@ await withPage(async page => {
     checkTrue('登録タブの案内がドロップダウンに触れていない', !r.wReg.includes('ドロップダウン'));
 });
 
-suite('各サブステ優先度に属性バフ（音骸サブに存在しない項目）が出ない');
+suite('各サブステ優先度に音骸サブステとして出現しない項目（属性バフ・音骸スキルダメバフ）が出ない');
 await withPage(async page => {
     const r = await page.evaluate(([b]) => {
-        eval(b); updateMVRanking();
+        eval(b);
+        S.ratio = { normal: 0, heavy: 0, skill: 50, lib: 0, echo: 50 }; // 音骸スキルダメバフも比率>0で出す条件にする
+        updateMVRanking();
         return { text: document.getElementById('mvRanking').textContent };
     }, [BUILD]);
     checkTrue('ランキングに「属性バフ」が含まれない', !r.text.includes('属性バフ'));
+    checkTrue('ランキングに「音骸スキルダメバフ」が含まれない', !r.text.includes('音骸スキルダメバフ'));
     checkTrue('攻撃力%は引き続き表示される', r.text.includes('攻撃力%'));
     checkTrue('クリ率は引き続き表示される', r.text.includes('クリ率'));
+    checkTrue('共鳴スキルダメバフ（比率>0）は引き続き表示される', r.text.includes('共鳴スキルダメバフ'));
 });
 
 suite('武器登録で武器種を選択でき、①タブの選択パネルに反映される');

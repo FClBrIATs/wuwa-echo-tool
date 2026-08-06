@@ -4368,23 +4368,20 @@
 
             // スキル種別ダメバフ：各スキルサブステ期待値
             const rn = S.ratio.normal / 100, rh = S.ratio.heavy / 100, rs = S.ratio.skill / 100;
-            const rl = S.ratio.lib / 100, re = S.ratio.echo / 100;
+            const rl = S.ratio.lib / 100;
+            // 音骸スキルダメバフはサブステとして存在しないため、属性バフと同様に対象外
             const SKILL_TYPES = [
                 { name: '通常攻撃ダメバフ', r: rn, key: 'dmg_normal' },
                 { name: '重撃ダメバフ', r: rh, key: 'dmg_heavy' },
                 { name: '共鳴スキルダメバフ', r: rs, key: 'dmg_skill' },
                 { name: '共鳴解放ダメバフ', r: rl, key: 'dmg_lib' },
-                // 音骸スキルダメバフはサブステとして存在しないため、
-                // 属性バフと同様に攻撃力%の期待値を参考値として流用する
-                { name: '音骸スキルダメバフ', r: re, key: 'atk_pct', ref: true },
             ];
             SKILL_TYPES.forEach(sk => {
                 if (sk.r <= 0) return;
                 const dSk = subMid(sk.key);
                 const pSkill = p.stat_eff * sk.r * p.crit_factor / 100;
                 const g = pSkill * dSk / E * 100;
-                const label = sk.ref ? `参考値 +${dSk}%（サブステでは出ません）` : `サブステ期待値 +${dSk}%`;
-                list.push({ name: sk.name, gain: g, note: `${label} (比率${(sk.r * 100).toFixed(0)}%)` });
+                list.push({ name: sk.name, gain: g, note: `サブステ期待値 +${dSk}% (比率${(sk.r * 100).toFixed(0)}%)` });
             });
 
             list.sort((a, b) => b.gain - a.gain);
