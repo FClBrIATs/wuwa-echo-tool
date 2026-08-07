@@ -1945,26 +1945,43 @@
             color: var(--text);
         }
 
-        .stat-detail-toggle {
-            width: 100%;
-            text-align: left;
+        /* 頂点タップで開くポップオーバー。位置決め・外側クリックで閉じる仕組みは
+           既存の .custom-sel-list をそのまま流用し、ここでは中身の見た目だけ足す */
+        .radar-popover {
+            padding: 12px 14px;
+            max-height: 70vh;
+            overflow-y: auto;
+            z-index: 210;
+        }
+
+        .radar-popover-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
             margin-bottom: 8px;
+        }
+
+        .radar-popover-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .radar-popover-close {
+            border: none;
+            background: transparent;
+            color: var(--text3);
             font-size: 11px;
-            color: var(--text2);
+            cursor: pointer;
+            padding: 3px 7px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .radar-popover-close:hover {
             background: var(--card2);
-        }
-
-        .radar-highlight {
-            animation: radarHighlight 1.4s ease-out;
-        }
-
-        @keyframes radarHighlight {
-            0% { box-shadow: 0 0 0 3px rgba(var(--p-rgb), .5); }
-            100% { box-shadow: 0 0 0 0 rgba(var(--p-rgb), 0); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .radar-highlight { animation: none; }
+            color: var(--text);
         }
 
         .divider {
@@ -2517,8 +2534,8 @@
                             <div class="how-to-body">
                                 <b>入力の考え方</b>：ハーモニー・武器・キャラ・音骸メイン/サブは登録データと②タブから自動計算されます。手で入れるのは「直接入力」欄だけです。<br>
                                 <b>キャラ/武器/ハーモニー選択</b>：ボタンを押すと属性タブ→名前のグリッドから選べます。<br>
-                                <b>ステータスバランス</b>：攻撃力%・クリ率・クリダメ・ダメージバフを、各自の目標に対する達成度でレーダー表示します。凹んでいる頂点ほど目標に届いていません。攻撃力%とダメージバフの目標は下の欄で編集でき、クリ率とクリダメは1:2のバランスで自動的に連動します。頂点をタップすると対応する入力欄が開きます。<br>
-                                <b>合計欄</b>：初期状態では畳まれています（「内訳・直接入力欄を表示」またはレーダーの頂点タップで開きます）。各項目の合計はゲーム内の数値と突き合わせられるよう大きく表示しています。ここに直接打ち込むと、自動計算との差が「直接入力」に入ります。<br>
+                                <b>ステータスバランス</b>：攻撃力%・クリ率・クリダメ・ダメージバフを、各自の目標に対する達成度でレーダー表示します。凹んでいる頂点ほど目標に届いていません。攻撃力%とダメージバフの目標は下の欄で編集でき、クリ率とクリダメは1:2のバランスで自動的に連動します。<br>
+                                <b>入力パネル</b>：頂点をタップすると、その場に入力パネルが開きます。各項目の合計はゲーム内の数値と突き合わせられるよう大きく表示しています。ここに直接打ち込むと、自動計算との差が「直接入力」に入ります。<br>
                                 <b>使用属性</b>：選択した属性のバフのみ計算に使用します。<br>
                                 <b>ダメージ比率</b>：各スキルの比率に応じてスコアの重み付けが変わります。合計100を推奨。
                             </div>
@@ -2540,6 +2557,55 @@
                             <div class="harmony-picker" id="harmonyPicker"></div>
                             <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
                             <div class="divider"></div>
+                            <div class="sec-title">使用属性</div>
+                            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
+                                <button class="attr-sel-btn" data-attr="fire" onclick="setUseAttr('fire',this)"
+                                    style="border-color:#dc2626;color:#dc2626">焦熱</button>
+                                <button class="attr-sel-btn" data-attr="ice" onclick="setUseAttr('ice',this)"
+                                    style="border-color:#2563eb;color:#2563eb">凝縮</button>
+                                <button class="attr-sel-btn" data-attr="thunder" onclick="setUseAttr('thunder',this)"
+                                    style="border-color:#7c3aed;color:#7c3aed">電導</button>
+                                <button class="attr-sel-btn" data-attr="wind" onclick="setUseAttr('wind',this)"
+                                    style="border-color:#15803d;color:#15803d">気動</button>
+                                <button class="attr-sel-btn" data-attr="light" onclick="setUseAttr('light',this)"
+                                    style="border-color:#8f5a06;color:#8f5a06">回折</button>
+                                <button class="attr-sel-btn" data-attr="dark" onclick="setUseAttr('dark',this)"
+                                    style="border-color:#be185d;color:#be185d">消滅</button>
+                            </div>
+                            <div class="sub-note" id="note_useattr"></div>
+                            <div class="hint">選択した属性バフのみ計算に使用します。</div>
+                            <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
+                                    100%</span>
+                            </div>
+                            <div id="ratio_warn" class="warn-box"
+                                style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                                ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
+                            <div class="ratio-presets" id="ratioPresets"></div>
+                            <div class="inline2">
+                                <div class="field"><label>通常攻撃</label>
+                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
+                                        oninput="S.ratio.normal=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                </div>
+                                <div class="field"><label>重撃</label>
+                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_h" value="0"
+                                        oninput="S.ratio.heavy=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                </div>
+                                <div class="field"><label>共鳴スキル</label>
+                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_s" value="100"
+                                        oninput="S.ratio.skill=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                </div>
+                                <div class="field"><label>共鳴解放</label>
+                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_l" value="0"
+                                        oninput="S.ratio.lib=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                </div>
+                                <div class="field"><label>音骸スキル</label>
+                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_e" value="0"
+                                        oninput="S.ratio.echo=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                </div>
+                            </div>
+                            <div class="ratio-vis" id="ratioVis"></div>
+                            <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
+                            <div class="divider"></div>
                         </div>
 
                         <div class="mode-sw">
@@ -2550,8 +2616,10 @@
 
                         <!-- ===== ステータスバランス（レーダー） ===== -->
                         <!-- 常時表示にしたいので、他のsec-titleのように自動折りたたみの
-                             対象にならないよう div でラップしている -->
-                        <div id="statRadarSection">
+                             対象にならないよう div でラップしている。custom-sel-wrap は
+                             ポップオーバーの位置決め(position:relative)と、外側クリックで
+                             閉じる既存の仕組み(closeDropdowns)をそのまま流用するため。 -->
+                        <div id="statRadarSection" class="custom-sel-wrap">
                             <div class="sec-title">ステータスバランス</div>
                             <div class="radar-wrap" id="statRadarWrap">
                                 <svg viewBox="0 0 100 100" id="statRadarSvg" aria-hidden="true">
@@ -2563,211 +2631,171 @@
                                 <div class="radar-vertex-chips" id="statRadarChips"></div>
                             </div>
                             <div class="radar-target-row" id="radarTargetRow"></div>
-                            <div class="hint">頂点をタップすると、対応する内訳の入力欄が開きます。攻撃力%とダメージバフの目標は上の欄で編集できます。</div>
+                            <div class="hint">頂点をタップすると、対応する入力パネルが開きます。攻撃力%とダメージバフの目標は上の欄で編集できます。</div>
+
+                            <!-- 頂点タップで開くポップオーバー。中身は下の statGroupHome から
+                                 その都度移してくる（要素を使い回すので入力の仕組みは変わらない） -->
+                            <div class="custom-sel-list radar-popover" id="radarPopover">
+                                <div class="radar-popover-head">
+                                    <span class="radar-popover-title" id="radarPopoverTitle"></span>
+                                    <button type="button" class="radar-popover-close" onclick="closeRadarPopover()">閉じる ✕</button>
+                                </div>
+                                <div class="radar-popover-body" id="radarPopoverBody"></div>
+                            </div>
                         </div>
                         <div class="divider"></div>
 
-                        <!-- ===== 内訳入力 ===== -->
-                        <button type="button" class="btn stat-detail-toggle" id="statDetailToggleBtn"
-                            onclick="toggleStatDetail()">▸ 内訳・直接入力欄を表示</button>
-                        <div id="block_detail" style="display:none;">
-                            <div class="input-legend">
-                                <span class="lg-auto">自動計算（登録データ・②タブから）</span>
-                                <span class="lg-manual">手入力</span>
-                                <span class="lg-total">合計（自動計算・上書き可）</span>
-                            </div>
-                            <!-- 基礎攻撃力 内訳 -->
-                            <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_weapon" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_chara" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_base_other" placeholder="0" oninput="onDetailOther('base',this.value);autoSize(this)"></div>
-                            </div>
-                            <div class="detail-total" id="dt_base"></div>
-                            <div id="base_warn" class="warn-box"
-                                style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
-                                基礎攻撃力が0です。武器・キャラを選ぶか、直接入力欄に入れてください（攻撃力%系のスコアが正しく計算されません）。</div>
-                            <div class="divider"></div>
-                            <!-- 全体攻撃力 内訳 -->
-                            <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_h" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（武器）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_w" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_c" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_em" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_pct_es" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_flat_em" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_flat_es" placeholder="0" readonly tabindex="-1"></div>
-                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_stat_other" placeholder="0" oninput="onDetailOther('stat',this.value);autoSize(this)"></div>
-                            </div>
-                            <div class="detail-total" id="dt_total"></div>
-                            <div class="divider"></div>
-                            <!-- クリ率 内訳 -->
-                            <div class="sec-title">クリ率</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_h" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cr_w"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                        <!-- ===== 頂点タップで開く各パネルの中身（畳んだ状態でここに保持） ===== -->
+                        <div id="statGroupHome" style="display:none;">
+                            <div id="statGroup_atk">
+                                <div class="input-legend">
+                                    <span class="lg-auto">自動計算（登録データ・②タブから）</span>
+                                    <span class="lg-manual">手入力</span>
+                                    <span class="lg-total">合計（自動計算・上書き可）</span>
                                 </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cr_c"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                <!-- 基礎攻撃力 内訳 -->
+                                <div class="sec-title" id="lbl_base_d">基礎攻撃力</div>
+                                <div class="detail-grid">
+                                    <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_base_weapon" placeholder="0" readonly tabindex="-1"></div>
+                                    <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_base_chara" placeholder="0" readonly tabindex="-1"></div>
+                                    <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_base_other" placeholder="0" oninput="onDetailOther('base',this.value);autoSize(this)"></div>
                                 </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_em" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_es" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cr_other" placeholder="0" oninput="onDetailOther('cr',this.value);autoSize(this)"><span
-                                        class="unit">%</span></div>
+                                <div class="detail-total" id="dt_base"></div>
+                                <div id="base_warn" class="warn-box"
+                                    style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                                    基礎攻撃力が0です。武器・キャラを選ぶか、直接入力欄に入れてください（攻撃力%系のスコアが正しく計算されません）。</div>
+                                <div class="divider"></div>
+                                <!-- 全体攻撃力 内訳 -->
+                                <div class="sec-title" id="lbl_total_d">全体攻撃力</div>
+                                <div class="detail-grid">
+                                    <div class="detail-item"><label>%バフ（ハーモニー）</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_pct_h" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>%バフ（武器）</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_pct_w" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>%バフ（キャラ）</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_pct_c" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>%バフ（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_pct_em" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>%バフ（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_pct_es" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>実数（音骸メイン）</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_flat_em" placeholder="0" readonly tabindex="-1"></div>
+                                    <div class="detail-item"><label>実数（音骸サブ）</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_flat_es" placeholder="0" readonly tabindex="-1"></div>
+                                    <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_stat_other" placeholder="0" oninput="onDetailOther('stat',this.value);autoSize(this)"></div>
+                                </div>
+                                <div class="detail-total" id="dt_total"></div>
                             </div>
-                            <div class="detail-total" id="dt_cr"></div>
-                            <div class="divider"></div>
-                            <!-- クリダメ 内訳 -->
-                            <div class="sec-title">クリダメ</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_h" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cd_w"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
-                                </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cd_c"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
-                                </div>
-                                <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_em" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_es" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_cd_other" placeholder="0" oninput="onDetailOther('cd',this.value);autoSize(this)"><span
-                                        class="unit">%</span></div>
-                            </div>
-                            <div class="detail-total" id="dt_cd"></div>
-                            <div id="crit_warn" class="warn-box"
-                                style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
-                                クリダメが100%未満です。ダメージ計算では100%として扱います。</div>
-                        </div>
 
-                        <div class="divider"></div>
-                        <div class="sec-title">使用属性</div>
-                        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
-                            <button class="attr-sel-btn" data-attr="fire" onclick="setUseAttr('fire',this)"
-                                style="border-color:#dc2626;color:#dc2626">焦熱</button>
-                            <button class="attr-sel-btn" data-attr="ice" onclick="setUseAttr('ice',this)"
-                                style="border-color:#2563eb;color:#2563eb">凝縮</button>
-                            <button class="attr-sel-btn" data-attr="thunder" onclick="setUseAttr('thunder',this)"
-                                style="border-color:#7c3aed;color:#7c3aed">電導</button>
-                            <button class="attr-sel-btn" data-attr="wind" onclick="setUseAttr('wind',this)"
-                                style="border-color:#15803d;color:#15803d">気動</button>
-                            <button class="attr-sel-btn" data-attr="light" onclick="setUseAttr('light',this)"
-                                style="border-color:#8f5a06;color:#8f5a06">回折</button>
-                            <button class="attr-sel-btn" data-attr="dark" onclick="setUseAttr('dark',this)"
-                                style="border-color:#be185d;color:#be185d">消滅</button>
+                            <div id="statGroup_cr">
+                                <div class="input-legend">
+                                    <span class="lg-auto">自動計算</span>
+                                    <span class="lg-manual">手入力</span>
+                                    <span class="lg-total">合計（上書き可）</span>
+                                </div>
+                                <div class="sec-title">クリ率</div>
+                                <div class="detail-grid">
+                                    <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cr_h" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cr_w"
+                                            placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                    </div>
+                                    <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cr_c"
+                                            placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                    </div>
+                                    <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cr_em" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cr_es" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cr_other" placeholder="0" oninput="onDetailOther('cr',this.value);autoSize(this)"><span
+                                            class="unit">%</span></div>
+                                </div>
+                                <div class="detail-total" id="dt_cr"></div>
+                            </div>
+
+                            <div id="statGroup_cd">
+                                <div class="input-legend">
+                                    <span class="lg-auto">自動計算</span>
+                                    <span class="lg-manual">手入力</span>
+                                    <span class="lg-total">合計（上書き可）</span>
+                                </div>
+                                <div class="sec-title">クリダメ</div>
+                                <div class="detail-grid">
+                                    <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cd_h" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_cd_w"
+                                            placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                    </div>
+                                    <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any" id="di_cd_c"
+                                            placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                    </div>
+                                    <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cd_em" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cd_es" placeholder="0" readonly tabindex="-1"><span
+                                            class="unit">%</span></div>
+                                    <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                            id="di_cd_other" placeholder="0" oninput="onDetailOther('cd',this.value);autoSize(this)"><span
+                                            class="unit">%</span></div>
+                                </div>
+                                <div class="detail-total" id="dt_cd"></div>
+                                <div id="crit_warn" class="warn-box"
+                                    style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                                    クリダメが100%未満です。ダメージ計算では100%として扱います。</div>
+                            </div>
+
+                            <div id="statGroup_dmgbuf">
+                                <div class="input-legend">
+                                    <span class="lg-auto">自動計算</span>
+                                    <span class="lg-manual">手入力</span>
+                                    <span class="lg-total">合計（上書き可）</span>
+                                </div>
+                                <div class="sec-title">属性バフ</div>
+                                <div id="dmgbuf_detail">
+                                    <!-- 属性ループはJSで生成 -->
+                                    <div id="di_attr_rows"></div>
+                                    <div class="sec-title" style="margin-top:8px;">全属性バフ</div>
+                                    <div class="detail-grid">
+                                        <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
+                                                id="di_dall_h" placeholder="0" readonly tabindex="-1"><span
+                                                class="unit">%</span></div>
+                                        <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_dall_w"
+                                                placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
+                                        </div>
+                                        <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
+                                                id="di_dall_c" placeholder="0" readonly tabindex="-1"><span
+                                                class="unit">%</span></div>
+                                        <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
+                                                id="di_dall_other" placeholder="0" oninput="onDetailOther('dall',this.value);autoSize(this)"><span
+                                                class="unit">%</span></div>
+                                    </div>
+                                    <div class="detail-total" id="dt_dall"></div>
+                                </div>
+                                <div class="sub-note" id="note_da"></div>
+                                <div class="divider"></div>
+                                <div class="sec-title">スキル種別ダメバフ</div>
+                                <div id="skillbuf_detail">
+                                    <div id="di_skill_rows"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="sub-note" id="note_useattr"></div>
-                        <div class="hint">選択した属性バフのみ計算に使用します。</div>
-                        <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
-                                100%</span>
-                        </div>
-                        <div id="ratio_warn" class="warn-box"
-                            style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
-                            ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
-                        <div class="ratio-presets" id="ratioPresets"></div>
-                        <div class="inline2">
-                            <div class="field"><label>通常攻撃</label>
-                                <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
-                                    oninput="S.ratio.normal=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>重撃</label>
-                                <input type="number" inputmode="decimal" min="0" max="100" id="r_h" value="0"
-                                    oninput="S.ratio.heavy=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>共鳴スキル</label>
-                                <input type="number" inputmode="decimal" min="0" max="100" id="r_s" value="100"
-                                    oninput="S.ratio.skill=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>共鳴解放</label>
-                                <input type="number" inputmode="decimal" min="0" max="100" id="r_l" value="0"
-                                    oninput="S.ratio.lib=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                            <div class="field"><label>音骸スキル</label>
-                                <input type="number" inputmode="decimal" min="0" max="100" id="r_e" value="0"
-                                    oninput="S.ratio.echo=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                            </div>
-                        </div>
-                        <div class="ratio-vis" id="ratioVis"></div>
-                        <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
 
                     </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-head">
-                        <h2>ダメバフ</h2>
-                    </div>
-                    <div class="card-body">
-                        <button type="button" class="btn stat-detail-toggle" id="dmgbufDetailToggleBtn"
-                            onclick="toggleDmgbufDetail()">▸ 内訳・直接入力欄を表示</button>
-                        <div id="dmgbufBlock" style="display:none;">
-                        <div class="sec-title">属性バフ</div>
-
-                        <div id="dmgbuf_detail">
-                            <div class="input-legend">
-                                <span class="lg-auto">自動計算</span>
-                                <span class="lg-manual">手入力</span>
-                                <span class="lg-total">合計（上書き可）</span>
-                            </div>
-                            <!-- 属性ループはJSで生成 -->
-                            <div id="di_attr_rows"></div>
-                            <div class="sec-title" style="margin-top:8px;">全属性バフ</div>
-                            <div class="detail-grid">
-                                <div class="detail-item"><label>ハーモニー</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_dall_h" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item"><label>武器</label><input type="number" inputmode="decimal" step="any" id="di_dall_w"
-                                        placeholder="0" readonly tabindex="-1"><span class="unit">%</span>
-                                </div>
-                                <div class="detail-item"><label>キャラ</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_dall_c" placeholder="0" readonly tabindex="-1"><span
-                                        class="unit">%</span></div>
-                                <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
-                                        id="di_dall_other" placeholder="0" oninput="onDetailOther('dall',this.value);autoSize(this)"><span
-                                        class="unit">%</span></div>
-                            </div>
-                            <div class="detail-total" id="dt_dall"></div>
-                        </div>
-
-                        <div class="sub-note" id="note_da"></div>
-                        <div class="divider"></div>                        <div class="sec-title">スキル種別ダメバフ</div>
-
-                        <div id="skillbuf_detail">
-                            <div id="di_skill_rows"></div>
-                        </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
@@ -3777,6 +3805,7 @@
             harmony: [
                 { id: '', setLevel: 5, custom: B() },
                 { id: '', setLevel: 5, custom: B() },
+                { id: '', setLevel: 5, custom: B() },
             ],
             harmonyManual: B(), // 手動ハーモニーバフ
             other: {}, // 項目別モードの「その他」欄（ユーザー直接入力）
@@ -3825,7 +3854,7 @@
 
         function getHarmonyTotal() {
             const t = B();
-            for (let i = 0; i < 2; i++) {
+            for (let i = 0; i < 3; i++) {
                 const c = S.harmony[i].custom;
                 Object.keys(t).forEach(k => { t[k] += n(c[k]); });
             }
@@ -4624,22 +4653,22 @@
                 {
                     key: 'atk', label: statLabel, unit: '%', lower: 0,
                     current: D.statPct.total, target: S.radarTarget.atk, upper: S.radarTarget.atk * RADAR_RATIO,
-                    editableTarget: true, detailId: 'lbl_total_d',
+                    editableTarget: true, detailId: 'statGroup_atk',
                 },
                 {
                     key: 'cr', label: 'クリ率', unit: '%', lower: 0,
                     current: cr, target: crTarget, upper: crUpper,
-                    editableTarget: false, isAnchor: anchor === 'cr', detailId: 'dt_cr',
+                    editableTarget: false, isAnchor: anchor === 'cr', detailId: 'statGroup_cr',
                 },
                 {
                     key: 'cd', label: 'クリダメ', unit: '%', lower: cdLower,
                     current: cd, target: cdTarget, upper: cdUpper,
-                    editableTarget: false, isAnchor: anchor === 'cd', detailId: 'dt_cd',
+                    editableTarget: false, isAnchor: anchor === 'cd', detailId: 'statGroup_cd',
                 },
                 {
                     key: 'dmgbuf', label: 'ダメバフ', unit: '%', lower: 0,
                     current: p.DMG_eff * 100, target: S.radarTarget.dmgbuf, upper: S.radarTarget.dmgbuf * RADAR_RATIO,
-                    editableTarget: true, detailId: 'dmgbufBlock',
+                    editableTarget: true, detailId: 'statGroup_dmgbuf',
                 },
             ];
         }
@@ -4736,42 +4765,29 @@
             scheduleSave();
         }
 
-        // 頂点タップで対応する既存の内訳エリアを開き、スクロール＋一瞬ハイライトする
+        // 頂点タップで、対応する入力欄（statGroupHomeに畳んで保持している既存の要素）を
+        // そのままポップオーバーへ移して開く。要素を使い回すので入力の仕組みは変わらない。
+        // 閉じた後も要素はポップオーバー側に残るが、id参照なので場所は問わない。
         function openRadarDetail(axis) {
-            if (axis.key === 'dmgbuf') {
-                const block = document.getElementById('dmgbufBlock');
-                if (block && block.style.display === 'none') toggleDmgbufDetail();
-            } else {
-                const block = document.getElementById('block_detail');
-                if (block && block.style.display === 'none') toggleStatDetail();
+            const group = document.getElementById(axis.detailId);
+            const body = document.getElementById('radarPopoverBody');
+            const home = document.getElementById('statGroupHome');
+            const popover = document.getElementById('radarPopover');
+            const title = document.getElementById('radarPopoverTitle');
+            if (!group || !body || !popover) return;
+            // 前に別の頂点で開いていた中身が残っていれば、いったんホームへ戻してから入れ替える
+            while (body.firstChild) {
+                if (home) home.appendChild(body.firstChild); else body.removeChild(body.firstChild);
             }
-            const target = document.getElementById(axis.detailId);
-            if (!target) return;
-            requestAnimationFrame(() => {
-                target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                target.classList.remove('radar-highlight');
-                // 再アニメーションさせるため一度クラスを外してから戻す
-                void target.offsetWidth;
-                target.classList.add('radar-highlight');
-            });
+            body.appendChild(group);
+            if (title) title.textContent = axis.label + ' の入力';
+            document.querySelectorAll('.custom-sel-list.open').forEach(l => l.classList.remove('open'));
+            popover.classList.add('open');
         }
 
-        function toggleStatDetail() {
-            const block = document.getElementById('block_detail');
-            const btn = document.getElementById('statDetailToggleBtn');
-            if (!block || !btn) return;
-            const willShow = block.style.display === 'none';
-            block.style.display = willShow ? '' : 'none';
-            btn.textContent = willShow ? '▾ 内訳・直接入力欄を隠す' : '▸ 内訳・直接入力欄を表示';
-        }
-
-        function toggleDmgbufDetail() {
-            const block = document.getElementById('dmgbufBlock');
-            const btn = document.getElementById('dmgbufDetailToggleBtn');
-            if (!block || !btn) return;
-            const willShow = block.style.display === 'none';
-            block.style.display = willShow ? '' : 'none';
-            btn.textContent = willShow ? '▾ 内訳・直接入力欄を隠す' : '▸ 内訳・直接入力欄を表示';
+        function closeRadarPopover() {
+            const popover = document.getElementById('radarPopover');
+            if (popover) popover.classList.remove('open');
         }
 
         function updateHarmonyEffectBox() {
@@ -4794,7 +4810,7 @@
         function buildHarmonyPicker() {
             const d = document.getElementById('harmonyPicker'); if (!d) return;
             d.innerHTML = '';
-            for (let i = 0; i < 2; i++) d.appendChild(buildHSlotEl(i));
+            for (let i = 0; i < 3; i++) d.appendChild(buildHSlotEl(i));
             d.appendChild(buildManualHSlotEl());
             // close dropdown on outside click
             document.addEventListener('click', closeDropdowns, { once: false });
@@ -5252,6 +5268,7 @@
                 S.other = {};
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
                 S.harmony = [
+                    { id: '', setLevel: 5, custom: B() },
                     { id: '', setLevel: 5, custom: B() },
                     { id: '', setLevel: 5, custom: B() },
                 ];
@@ -7167,8 +7184,13 @@ rebuildCharaWeaponSelects();
                 S = { ...S, ...saved.S };
                 S.other = saved.S.other && typeof saved.S.other === 'object' ? saved.S.other : {};
                 S.echoes = normalizeEchoSet(Array.isArray(saved.S.echoes) ? saved.S.echoes : []);
-                if (!Array.isArray(S.harmony) || S.harmony.length !== 2) {
-                    S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+                // 2枠→3枠化。旧保存データ（2枠）は空の3枠目を足すだけで済ませ、選択済みの
+                // ハーモニーを消さない。壊れた形の場合のみ初期状態に戻す
+                if (!Array.isArray(S.harmony) || S.harmony.length < 1) {
+                    S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+                } else {
+                    while (S.harmony.length < 3) S.harmony.push({ id: '', setLevel: 5, custom: B() });
+                    S.harmony = S.harmony.slice(0, 3);
                 }
                 S.harmonyManual = { ...B(), ...(saved.S.harmonyManual || {}) };
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0, ...(saved.S.ratio || {}) };

@@ -919,7 +919,7 @@ suite('選択式の入力がまとまっている');
 await withPage(async page => {
     const r = await page.evaluate(() => {
         const pick = document.getElementById('harmonyPicker');
-        const detail = document.getElementById('block_detail');
+        const detail = document.getElementById('statGroupHome');
         return {
             // 折りたたみの中に入れると、一次入力なのにページから消える
             選択ブロックの中: !!pick.closest('#select_block'),
@@ -937,12 +937,35 @@ await withPage(async page => {
     checkTrue('数値の内訳より前に置かれる', r.内訳より前);
 });
 
+suite('使用属性・ダメージ比率がハーモニー選択の下に配置されている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const harmony = document.getElementById('harmonyPicker');
+        const attr = document.getElementById('attrSelector');
+        const ratio = document.getElementById('ratioPresets');
+        const radar = document.getElementById('statRadarSection');
+        const posAfter = (a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? true : false;
+        return {
+            使用属性がハーモニーの選択枠内: !!attr.closest('#select_block'),
+            ダメージ比率もハーモニーの選択枠内: !!ratio.closest('#select_block'),
+            使用属性はハーモニーより後: posAfter(harmony, attr),
+            ダメージ比率は使用属性より後: posAfter(attr, ratio),
+            使用属性はレーダーより前: posAfter(attr, radar),
+        };
+    });
+    checkTrue('使用属性がハーモニーと同じ選択ブロック内にある', r.使用属性がハーモニーの選択枠内);
+    checkTrue('ダメージ比率もハーモニーと同じ選択ブロック内にある', r.ダメージ比率もハーモニーの選択枠内);
+    checkTrue('使用属性はハーモニー選択の下にある', r.使用属性はハーモニーより後);
+    checkTrue('ダメージ比率は使用属性の下にある', r.ダメージ比率は使用属性より後);
+    checkTrue('使用属性・ダメージ比率はレーダーより上にある', r.使用属性はレーダーより前);
+});
+
 // ── 合計欄への直接入力 ──────────────────────────────────
 suite('合計欄が入力と自動計算の両方を受ける');
 await withPage(async page => {
     const r = await page.evaluate(() => {
         const o = {};
-        S.other = {}; S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+        S.other = {}; S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
         recalcAll();
 
         // ゲーム画面の数字をそのまま打ち込める
@@ -997,7 +1020,7 @@ await withPage(async page => {
             手入力欄は実線: getComputedStyle(document.getElementById('di_cr_other')).borderStyle,
             色が違う: getComputedStyle(document.getElementById('di_cr_h')).backgroundColor
                 !== getComputedStyle(document.getElementById('di_cr_other')).backgroundColor,
-            凡例: [...document.querySelectorAll('#block_detail .input-legend span')].map(x => x.className),
+            凡例: [...document.querySelectorAll('#statGroup_cr .input-legend span')].map(x => x.className),
         };
     });
     checkTrue('内訳の入力欄がある', r.欄がある > 20);
@@ -1011,13 +1034,13 @@ await withPage(async page => {
     check('凡例が3種類出る', r.凡例, ['lg-auto', 'lg-manual', 'lg-total']);
 });
 
-suite('合計値入力モードが無い（内訳は畳まれているだけで、別系統の計算ではない）');
+suite('合計値入力モードが無い（内訳はポップオーバーに移して開くだけで、別系統の計算ではない）');
 await withPage(async page => {
     const r = await page.evaluate(() => ({
         モード切替ボタン: !!document.getElementById('inputModeBtn_total'),
         合計値モードのブロック: !!document.getElementById('block_total'),
         切替関数: typeof setInputMode,
-        内訳の要素自体は存在する: !!document.getElementById('block_detail'),
+        内訳の要素自体は存在する: !!document.getElementById('statGroupHome'),
         キャラ武器の選択も見えている: document.getElementById('select_block').offsetParent !== null,
         属性バフの内訳が生成されている: document.getElementById('di_attr_rows').children.length,
     }));
@@ -1029,16 +1052,16 @@ await withPage(async page => {
     check('属性バフの内訳は表示状態に関係なく6属性ぶん生成される', r.属性バフの内訳が生成されている, 6);
 });
 
-suite('ステータスの内訳・直接入力欄は、レーダーが主要な入り口になったので初期状態では畳まれている');
+suite('ステータスの内訳・直接入力欄は、レーダーの頂点タップで開くポップオーバーの中に畳まれている');
 await withPage(async page => {
     const r = await page.evaluate(() => ({
-        内訳が最初は畳まれている: document.getElementById('block_detail').offsetParent === null,
-        ダメバフ内訳も最初は畳まれている: document.getElementById('dmgbufBlock').offsetParent === null,
-        トグルボタンがある: !!document.getElementById('statDetailToggleBtn'),
+        内訳が最初は畳まれている: document.getElementById('statGroupHome').offsetParent === null,
+        ポップオーバーが最初は閉じている: !document.getElementById('radarPopover').classList.contains('open'),
+        頂点ボタンがある: document.querySelectorAll('.radar-chip').length,
     }));
-    checkTrue('ステータスの内訳は初期状態で畳まれている', r.内訳が最初は畳まれている);
-    checkTrue('ダメバフの内訳も初期状態で畳まれている', r.ダメバフ内訳も最初は畳まれている);
-    checkTrue('手動で開くボタンがある', r.トグルボタンがある);
+    checkTrue('ステータスの内訳（statGroupHome）は初期状態で畳まれている', r.内訳が最初は畳まれている);
+    checkTrue('ポップオーバーは初期状態で閉じている', r.ポップオーバーが最初は閉じている);
+    check('頂点ボタンが4つある', r.頂点ボタンがある, 4);
 });
 
 // ── ステータスバランス（レーダー） ──────────────────────
@@ -1099,27 +1122,39 @@ await withPage(async page => {
     check('リロード後もダメバフの目標が保たれる', after.dmgbuf, 80);
 });
 
-suite('レーダーの頂点タップで対応する内訳が開いてスクロールする');
+suite('レーダーの頂点タップで対応する入力パネルがポップオーバーとして開く');
 await withPage(async page => {
     const r = await page.evaluate(() => {
         const chips = [...document.querySelectorAll('.radar-chip')];
         const crChip = chips.find(c => c.textContent.includes('クリ率'));
         crChip.click();
         return {
-            クリ率タップ後に内訳が開く: document.getElementById('block_detail').offsetParent !== null,
+            ポップオーバーが開く: document.getElementById('radarPopover').classList.contains('open'),
+            クリ率の入力欄がポップオーバーに移っている: document.getElementById('radarPopoverBody').contains(document.getElementById('statGroup_cr')),
+            タイトルにクリ率と出る: document.getElementById('radarPopoverTitle').textContent.includes('クリ率'),
         };
     });
-    checkTrue('クリ率の頂点タップで内訳ブロックが開く', r.クリ率タップ後に内訳が開く);
+    checkTrue('クリ率の頂点タップでポップオーバーが開く', r.ポップオーバーが開く);
+    checkTrue('クリ率の入力グループがポップオーバー内に移動する', r.クリ率の入力欄がポップオーバーに移っている);
+    checkTrue('ポップオーバーのタイトルにクリ率と出る', r.タイトルにクリ率と出る);
 
     const r2 = await page.evaluate(() => {
         const chips = [...document.querySelectorAll('.radar-chip')];
         const dmgChip = chips.find(c => c.textContent.includes('ダメバフ'));
         dmgChip.click();
         return {
-            ダメバフタップ後に内訳が開く: document.getElementById('dmgbufBlock').offsetParent !== null,
+            ダメバフの入力欄がポップオーバーに移っている: document.getElementById('radarPopoverBody').contains(document.getElementById('statGroup_dmgbuf')),
+            クリ率のグループは入れ替わって消えている: document.getElementById('radarPopoverBody').contains(document.getElementById('statGroup_cr')),
         };
     });
-    checkTrue('ダメバフの頂点タップでダメバフ内訳が開く', r2.ダメバフタップ後に内訳が開く);
+    checkTrue('ダメバフの頂点タップでダメバフの入力グループに切り替わる', r2.ダメバフの入力欄がポップオーバーに移っている);
+    checkTrue('別の頂点に切り替えると前のグループはポップオーバーから外れる（重複しない）', !r2.クリ率のグループは入れ替わって消えている);
+
+    const r3 = await page.evaluate(() => {
+        closeRadarPopover();
+        return document.getElementById('radarPopover').classList.contains('open');
+    });
+    checkTrue('閉じるボタン相当のcloseRadarPopover()でポップオーバーが閉じる', !r3);
 });
 
 suite('タブのリセットが動く');
@@ -1136,6 +1171,68 @@ await withPage(async page => {
     check('リセット前はクリ率が入っている', r.before, 68);
     check('リセットで0に戻る', r.after, 0);
     check('直接入力も空になる', r.other, '{}');
+});
+
+// ── ハーモニー3枠 ───────────────────────────────────────
+suite('ハーモニーが3枠選べる');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        window.confirmDialog = (msg, fn) => fn();
+        const o = {};
+        o.初期状態は3枠 = S.harmony.length;
+        buildHarmonyPicker();
+        o.ピッカーが3枠描画される = document.querySelectorAll('.h-slot').length;
+
+        // 3枠それぞれに別のハーモニーを選べる
+        S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
+        S.harmony[1] = { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) };
+        S.harmony[2] = { id: 'アストロ', setLevel: 2, custom: getPresetBuff('アストロ', 2) };
+        buildHarmonyPicker(); recalcAll();
+        const H = getHarmonyTotal();
+        // 3枠とも合算に反映されているか（3枠目だけ抜けていないか）を確認
+        const h0 = getPresetBuff('リフレクト', 5), h1 = getPresetBuff('静寂', 5), h2 = getPresetBuff('アストロ', 2);
+        o.攻撃力バフが3枠分合算される = Math.round((H.atk_pct - (h0.atk_pct + h1.atk_pct + h2.atk_pct)) * 1e6);
+
+        resetStatsTab();
+        o.リセット後も3枠 = S.harmony.length;
+        o.リセット後は全枠空 = S.harmony.every(h => h.id === '');
+        return o;
+    });
+    check('初期状態でハーモニーが3枠ある', r.初期状態は3枠, 3);
+    check('選択パネルも3枠描画される', r.ピッカーが3枠描画される, 3);
+    check('3枠すべてのバフが合算に反映される（3枠目の抜け漏れ無し）', r.攻撃力バフが3枠分合算される, 0);
+    check('リセットしても3枠のまま', r.リセット後も3枠, 3);
+    checkTrue('リセットで3枠とも空になる', r.リセット後は全枠空);
+});
+
+suite('旧保存データ（ハーモニー2枠）を読み込むと、選択済みの内容を保ったまま3枠目が空で足される');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        localStorage.setItem('ww_echo_state', JSON.stringify({
+            __ver: 1,
+            statMode: 'atk', useAttr: '',
+            S: {
+                ...S,
+                harmony: [
+                    { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) },
+                    { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) },
+                ],
+            },
+        }));
+        const ok = loadState();
+        return {
+            読み込み成功: ok,
+            枠数: S.harmony.length,
+            旧1枠目が保たれる: S.harmony[0].id,
+            旧2枠目が保たれる: S.harmony[1].id,
+            新3枠目は空: S.harmony[2].id,
+        };
+    });
+    checkTrue('読み込みが成功する', r.読み込み成功);
+    check('3枠に正規化される', r.枠数, 3);
+    check('旧1枠目のハーモニーが消えない', r.旧1枠目が保たれる, 'リフレクト');
+    check('旧2枠目のハーモニーが消えない', r.旧2枠目が保たれる, '静寂');
+    check('3枠目は空で足される', r.新3枠目は空, '');
 });
 
 // ── 配色 ────────────────────────────────────────────────
