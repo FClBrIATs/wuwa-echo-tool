@@ -3220,93 +3220,7 @@
                                 style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
                                 onclick="setWeaponType('',this)">未指定</button>
                         </div>
-                        <div class="sec-title">メインステータス</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" inputmode="decimal" step="any" id="ch_base_atk"
-                                    placeholder="0"></div>
-                            <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_atk_pct"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>攻撃力実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_atk"
-                                    placeholder="0"></div>
-                            <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_hp_pct"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>HP実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_hp"
-                                    placeholder="0">
-                            </div>
-                            <div class="cw-field"><label>防御%</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_def_pct"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
-                        <div class="sec-title">クリティカル</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_rate"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_dmg"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
-                        <div class="sec-title">属性バフ</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label style="color:#dc2626">焦熱</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#2563eb">凝縮</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#7c3aed">電導</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#15803d">気動</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#8f5a06">回折</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#be185d">消滅</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
-                        <div class="sec-title">スキル種別ダメバフ</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label>通常攻撃</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_normal"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>重撃</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_heavy"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>共鳴スキル</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_skill"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>共鳴解放</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_lib"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>音骸スキル</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_echo"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>全属性バフ</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_all"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
+                        <div id="chFieldsWeapon"></div>
                         <div class="cw-field" style="margin-top:6px;margin-bottom:8px;"><label>説明（任意）</label>
                             <input type="text" id="ch_desc" placeholder="例：精錬5、パッシブ込み">
                         </div>
@@ -3353,96 +3267,7 @@
                                 style="border-color:#94a3b8;color:#94a3b8;padding:2px 5px;font-size:10px;"
                                 onclick="setCharaAttr('',this)">未指定</button>
                         </div>
-                        <div class="sec-title">メインステータス</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label>基礎攻撃力</label><input type="number" inputmode="decimal" step="any" id="ch_base_atk_c"
-                                    placeholder="0"></div>
-                            <div class="cw-field"><label>基礎HP</label><input type="number" inputmode="decimal" step="any" id="ch_base_hp_c"
-                                    placeholder="0"></div>
-                            <div class="cw-field"><label>基礎防御力</label><input type="number" inputmode="decimal" step="any" id="ch_base_def_c"
-                                    placeholder="0"></div>
-                            <div class="cw-field"><label>攻撃力%</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_atk_pct_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>攻撃力実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_atk_c"
-                                    placeholder="0"></div>
-                            <div class="cw-field"><label>HP%</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_hp_pct_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>HP実数</label><input type="number" inputmode="decimal" step="any" id="ch_flat_hp_c"
-                                    placeholder="0"></div>
-                            <div class="cw-field"><label>防御%</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_def_pct_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
-                        <div class="sec-title">クリティカル</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label>クリ率</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_rate_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>クリダメ</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_crit_dmg_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
-                        <div class="sec-title">属性バフ</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label style="color:#dc2626">焦熱</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_fire_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#2563eb">凝縮</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_ice_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#7c3aed">電導</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_thunder_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#15803d">気動</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_wind_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#8f5a06">回折</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_light_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label style="color:#be185d">消滅</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_dark_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
-                        <div class="sec-title">スキル種別ダメバフ</div>
-                        <div class="cw-grid">
-                            <div class="cw-field"><label>通常攻撃</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_normal_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>重撃</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_heavy_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>共鳴スキル</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_skill_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>共鳴解放</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_lib_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>音骸スキル</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_echo_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                            <div class="cw-field"><label>全属性バフ</label>
-                                <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="ch_dmg_all_c"
-                                        placeholder="0"><span class="unit">%</span></div>
-                            </div>
-                        </div>
+                        <div id="chFieldsChara"></div>
                         <div class="sec-title">ダメージ比率（合計100推奨）</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>通常攻撃</label>
@@ -6974,6 +6799,73 @@
             'dmg_wind', 'dmg_light', 'dmg_dark', 'dmg_all', 'dmg_normal', 'dmg_heavy',
             'dmg_skill', 'dmg_lib', 'dmg_echo'];
 
+        // 武器フォーム・キャラフォームで共通の入力欄（メインステ〜スキル種別ダメバフ）を
+        // ここから生成する。キャラ側は id に "_c" サフィックスが付く別要素になるため、
+        // 以前はHTMLを丸ごと複製していた（ch_* と ch_*_c の二重定義）。charaOnly の
+        // フィールド（基礎HP・基礎防御力）はキャラ側にのみ出す。
+        const CH_FORM_SECTIONS = [
+            {
+                title: 'メインステータス', fields: [
+                    { key: 'base_atk', label: '基礎攻撃力' },
+                    { key: 'base_hp', label: '基礎HP', charaOnly: true },
+                    { key: 'base_def', label: '基礎防御力', charaOnly: true },
+                    { key: 'atk_pct', label: '攻撃力%', pct: true },
+                    { key: 'flat_atk', label: '攻撃力実数' },
+                    { key: 'hp_pct', label: 'HP%', pct: true },
+                    { key: 'flat_hp', label: 'HP実数' },
+                    { key: 'def_pct', label: '防御%', pct: true },
+                ]
+            },
+            {
+                title: 'クリティカル', fields: [
+                    { key: 'crit_rate', label: 'クリ率', pct: true },
+                    { key: 'crit_dmg', label: 'クリダメ', pct: true },
+                ]
+            },
+            {
+                title: '属性バフ', fields: [
+                    { key: 'dmg_fire', label: '焦熱', pct: true, color: '#dc2626' },
+                    { key: 'dmg_ice', label: '凝縮', pct: true, color: '#2563eb' },
+                    { key: 'dmg_thunder', label: '電導', pct: true, color: '#7c3aed' },
+                    { key: 'dmg_wind', label: '気動', pct: true, color: '#15803d' },
+                    { key: 'dmg_light', label: '回折', pct: true, color: '#8f5a06' },
+                    { key: 'dmg_dark', label: '消滅', pct: true, color: '#be185d' },
+                ]
+            },
+            {
+                title: 'スキル種別ダメバフ', fields: [
+                    { key: 'dmg_normal', label: '通常攻撃', pct: true },
+                    { key: 'dmg_heavy', label: '重撃', pct: true },
+                    { key: 'dmg_skill', label: '共鳴スキル', pct: true },
+                    { key: 'dmg_lib', label: '共鳴解放', pct: true },
+                    { key: 'dmg_echo', label: '音骸スキル', pct: true },
+                    { key: 'dmg_all', label: '全属性バフ', pct: true },
+                ]
+            },
+        ];
+
+        function chFieldHTML(f, sfx) {
+            const id = 'ch_' + f.key + sfx;
+            const labelAttr = f.color ? ` style="color:${f.color}"` : '';
+            if (f.pct) {
+                return `<div class="cw-field"><label${labelAttr}>${f.label}</label>
+                    <div class="cw-inp-row"><input type="number" inputmode="decimal" step="any" id="${id}" placeholder="0"><span class="unit">%</span></div></div>`;
+            }
+            return `<div class="cw-field"><label${labelAttr}>${f.label}</label><input type="number" inputmode="decimal" step="any" id="${id}" placeholder="0"></div>`;
+        }
+
+        function chFormSectionsHTML(sfx, isChara) {
+            return CH_FORM_SECTIONS.map(sec => {
+                const fields = sec.fields.filter(f => isChara || !f.charaOnly);
+                return `<div class="sec-title">${sec.title}</div><div class="cw-grid">${fields.map(f => chFieldHTML(f, sfx)).join('')}</div>`;
+            }).join('');
+        }
+
+        function buildCharaWeaponForms() {
+            const w = document.getElementById('chFieldsWeapon'); if (w) w.innerHTML = chFormSectionsHTML('', false);
+            const c = document.getElementById('chFieldsChara'); if (c) c.innerHTML = chFormSectionsHTML('_c', true);
+        }
+
         // 固定プリセットを除いた「ユーザー登録分のみ」を返す。
         // 保存時は必ずこちらを使うこと。getCharaEntries() の戻り値をそのまま保存すると
         // 固定プリセットまでlocalStorageに書き込まれ、登録のたびに増殖する。
@@ -7232,6 +7124,7 @@ rebuildCharaWeaponSelects();
 
         function init() {
             migrateCharaStorage();
+            buildCharaWeaponForms();
             buildRatioPresets();
             const restored = loadState();
             updateRatioVis();
