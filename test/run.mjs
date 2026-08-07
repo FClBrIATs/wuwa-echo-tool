@@ -965,7 +965,7 @@ suite('合計欄が入力と自動計算の両方を受ける');
 await withPage(async page => {
     const r = await page.evaluate(() => {
         const o = {};
-        S.other = {}; S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+        S.other = {}; S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
         recalcAll();
 
         // ゲーム画面の数字をそのまま打ち込める
@@ -1171,6 +1171,68 @@ await withPage(async page => {
     check('リセット前はクリ率が入っている', r.before, 68);
     check('リセットで0に戻る', r.after, 0);
     check('直接入力も空になる', r.other, '{}');
+});
+
+// ── ハーモニー3枠 ───────────────────────────────────────
+suite('ハーモニーが3枠選べる');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        window.confirmDialog = (msg, fn) => fn();
+        const o = {};
+        o.初期状態は3枠 = S.harmony.length;
+        buildHarmonyPicker();
+        o.ピッカーが3枠描画される = document.querySelectorAll('.h-slot').length;
+
+        // 3枠それぞれに別のハーモニーを選べる
+        S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
+        S.harmony[1] = { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) };
+        S.harmony[2] = { id: 'アストロ', setLevel: 2, custom: getPresetBuff('アストロ', 2) };
+        buildHarmonyPicker(); recalcAll();
+        const H = getHarmonyTotal();
+        // 3枠とも合算に反映されているか（3枠目だけ抜けていないか）を確認
+        const h0 = getPresetBuff('リフレクト', 5), h1 = getPresetBuff('静寂', 5), h2 = getPresetBuff('アストロ', 2);
+        o.攻撃力バフが3枠分合算される = Math.round((H.atk_pct - (h0.atk_pct + h1.atk_pct + h2.atk_pct)) * 1e6);
+
+        resetStatsTab();
+        o.リセット後も3枠 = S.harmony.length;
+        o.リセット後は全枠空 = S.harmony.every(h => h.id === '');
+        return o;
+    });
+    check('初期状態でハーモニーが3枠ある', r.初期状態は3枠, 3);
+    check('選択パネルも3枠描画される', r.ピッカーが3枠描画される, 3);
+    check('3枠すべてのバフが合算に反映される（3枠目の抜け漏れ無し）', r.攻撃力バフが3枠分合算される, 0);
+    check('リセットしても3枠のまま', r.リセット後も3枠, 3);
+    checkTrue('リセットで3枠とも空になる', r.リセット後は全枠空);
+});
+
+suite('旧保存データ（ハーモニー2枠）を読み込むと、選択済みの内容を保ったまま3枠目が空で足される');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        localStorage.setItem('ww_echo_state', JSON.stringify({
+            __ver: 1,
+            statMode: 'atk', useAttr: '',
+            S: {
+                ...S,
+                harmony: [
+                    { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) },
+                    { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) },
+                ],
+            },
+        }));
+        const ok = loadState();
+        return {
+            読み込み成功: ok,
+            枠数: S.harmony.length,
+            旧1枠目が保たれる: S.harmony[0].id,
+            旧2枠目が保たれる: S.harmony[1].id,
+            新3枠目は空: S.harmony[2].id,
+        };
+    });
+    checkTrue('読み込みが成功する', r.読み込み成功);
+    check('3枠に正規化される', r.枠数, 3);
+    check('旧1枠目のハーモニーが消えない', r.旧1枠目が保たれる, 'リフレクト');
+    check('旧2枠目のハーモニーが消えない', r.旧2枠目が保たれる, '静寂');
+    check('3枠目は空で足される', r.新3枠目は空, '');
 });
 
 // ── 配色 ────────────────────────────────────────────────

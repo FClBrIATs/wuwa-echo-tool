@@ -3805,6 +3805,7 @@
             harmony: [
                 { id: '', setLevel: 5, custom: B() },
                 { id: '', setLevel: 5, custom: B() },
+                { id: '', setLevel: 5, custom: B() },
             ],
             harmonyManual: B(), // 手動ハーモニーバフ
             other: {}, // 項目別モードの「その他」欄（ユーザー直接入力）
@@ -3853,7 +3854,7 @@
 
         function getHarmonyTotal() {
             const t = B();
-            for (let i = 0; i < 2; i++) {
+            for (let i = 0; i < 3; i++) {
                 const c = S.harmony[i].custom;
                 Object.keys(t).forEach(k => { t[k] += n(c[k]); });
             }
@@ -4809,7 +4810,7 @@
         function buildHarmonyPicker() {
             const d = document.getElementById('harmonyPicker'); if (!d) return;
             d.innerHTML = '';
-            for (let i = 0; i < 2; i++) d.appendChild(buildHSlotEl(i));
+            for (let i = 0; i < 3; i++) d.appendChild(buildHSlotEl(i));
             d.appendChild(buildManualHSlotEl());
             // close dropdown on outside click
             document.addEventListener('click', closeDropdowns, { once: false });
@@ -5267,6 +5268,7 @@
                 S.other = {};
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 };
                 S.harmony = [
+                    { id: '', setLevel: 5, custom: B() },
                     { id: '', setLevel: 5, custom: B() },
                     { id: '', setLevel: 5, custom: B() },
                 ];
@@ -7182,8 +7184,13 @@ rebuildCharaWeaponSelects();
                 S = { ...S, ...saved.S };
                 S.other = saved.S.other && typeof saved.S.other === 'object' ? saved.S.other : {};
                 S.echoes = normalizeEchoSet(Array.isArray(saved.S.echoes) ? saved.S.echoes : []);
-                if (!Array.isArray(S.harmony) || S.harmony.length !== 2) {
-                    S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+                // 2枠→3枠化。旧保存データ（2枠）は空の3枠目を足すだけで済ませ、選択済みの
+                // ハーモニーを消さない。壊れた形の場合のみ初期状態に戻す
+                if (!Array.isArray(S.harmony) || S.harmony.length < 1) {
+                    S.harmony = [{ id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }, { id: '', setLevel: 5, custom: B() }];
+                } else {
+                    while (S.harmony.length < 3) S.harmony.push({ id: '', setLevel: 5, custom: B() });
+                    S.harmony = S.harmony.slice(0, 3);
                 }
                 S.harmonyManual = { ...B(), ...(saved.S.harmonyManual || {}) };
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0, ...(saved.S.ratio || {}) };
