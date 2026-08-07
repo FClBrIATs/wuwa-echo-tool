@@ -2553,9 +2553,13 @@
                                 <div id="cwPicker_weapon" style="flex:1;"></div>
                             </div>
                             <div class="sub-note" id="note_charaweapon"></div>
-                            <div class="sec-title" style="margin-top:10px;">ハーモニー</div>
-                            <div class="harmony-picker" id="harmonyPicker"></div>
-                            <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
+                            <details class="collapsible-section" open style="margin-top:10px;">
+                                <summary class="sec-title">ハーモニー</summary>
+                                <div class="collapsible-content">
+                                    <div class="harmony-picker" id="harmonyPicker"></div>
+                                    <div class="info-box" id="harmonyEffectBox" style="display:none"></div>
+                                </div>
+                            </details>
                             <div class="divider"></div>
                             <div class="sec-title">使用属性</div>
                             <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;" id="attrSelector">
@@ -2574,37 +2578,41 @@
                             </div>
                             <div class="sub-note" id="note_useattr"></div>
                             <div class="hint">選択した属性バフのみ計算に使用します。</div>
-                            <div class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
-                                    100%</span>
-                            </div>
-                            <div id="ratio_warn" class="warn-box"
-                                style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
-                                ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
-                            <div class="ratio-presets" id="ratioPresets"></div>
-                            <div class="inline2">
-                                <div class="field"><label>通常攻撃</label>
-                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
-                                        oninput="S.ratio.normal=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                            <details class="collapsible-section">
+                                <summary class="sec-title">ダメージ比率（合計100%）<span id="ratio_total_note" style="color:var(--green)"> =
+                                        100%</span>
+                                </summary>
+                                <div class="collapsible-content">
+                                    <div id="ratio_warn" class="warn-box"
+                                        style="font-size:10px;padding:4px 8px;margin-bottom:6px;display:none;">⚠
+                                        ダメージ比率の合計が100%になっていません。スコアの重み付けが実際の立ち回りとズレる可能性があります。</div>
+                                    <div class="ratio-presets" id="ratioPresets"></div>
+                                    <div class="inline2">
+                                        <div class="field"><label>通常攻撃</label>
+                                            <input type="number" inputmode="decimal" min="0" max="100" id="r_n" value="0"
+                                                oninput="S.ratio.normal=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                        </div>
+                                        <div class="field"><label>重撃</label>
+                                            <input type="number" inputmode="decimal" min="0" max="100" id="r_h" value="0"
+                                                oninput="S.ratio.heavy=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                        </div>
+                                        <div class="field"><label>共鳴スキル</label>
+                                            <input type="number" inputmode="decimal" min="0" max="100" id="r_s" value="100"
+                                                oninput="S.ratio.skill=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                        </div>
+                                        <div class="field"><label>共鳴解放</label>
+                                            <input type="number" inputmode="decimal" min="0" max="100" id="r_l" value="0"
+                                                oninput="S.ratio.lib=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                        </div>
+                                        <div class="field"><label>音骸スキル</label>
+                                            <input type="number" inputmode="decimal" min="0" max="100" id="r_e" value="0"
+                                                oninput="S.ratio.echo=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
+                                        </div>
+                                    </div>
+                                    <div class="ratio-vis" id="ratioVis"></div>
+                                    <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
                                 </div>
-                                <div class="field"><label>重撃</label>
-                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_h" value="0"
-                                        oninput="S.ratio.heavy=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                                </div>
-                                <div class="field"><label>共鳴スキル</label>
-                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_s" value="100"
-                                        oninput="S.ratio.skill=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                                </div>
-                                <div class="field"><label>共鳴解放</label>
-                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_l" value="0"
-                                        oninput="S.ratio.lib=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                                </div>
-                                <div class="field"><label>音骸スキル</label>
-                                    <input type="number" inputmode="decimal" min="0" max="100" id="r_e" value="0"
-                                        oninput="S.ratio.echo=+this.value||0;ratioSource='manual';updateRatioVis();recalcAll();autoSize(this)">
-                                </div>
-                            </div>
-                            <div class="ratio-vis" id="ratioVis"></div>
-                            <div class="hint">各スキルの使用比率。スコア計算の重み付けに使用します。合計100を推奨。</div>
+                            </details>
                             <div class="divider"></div>
                         </div>
 

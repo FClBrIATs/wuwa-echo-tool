@@ -920,10 +920,12 @@ await withPage(async page => {
     const r = await page.evaluate(() => {
         const pick = document.getElementById('harmonyPicker');
         const detail = document.getElementById('statGroupHome');
+        const details = pick.closest('details.collapsible-section');
         return {
-            // 折りたたみの中に入れると、一次入力なのにページから消える
             選択ブロックの中: !!pick.closest('#select_block'),
-            折りたたまれていない: !pick.closest('details'),
+            // 折りたたみ自体はある（ページを短くするための機能）が、初期状態は開いている
+            折りたたみ要素になっている: !!details,
+            初期状態で開いている: !!(details && details.open),
             見えている: pick.offsetParent !== null,
             // キャラ・武器と同じ「選ぶ入力」なので、数値の内訳より前に置く
             内訳より前: pick.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING ? true : false,
@@ -932,9 +934,24 @@ await withPage(async page => {
     });
     checkTrue('ハーモニーがキャラ・武器と同じ枠にある', r.選択ブロックの中);
     checkTrue('キャラ選択も同じ枠にある', r.キャラ選択も同じ枠);
-    checkTrue('折りたたみに巻き込まれていない', r.折りたたまれていない);
+    checkTrue('ハーモニー選択は折りたたみ可能になっている', r.折りたたみ要素になっている);
+    checkTrue('ハーモニー選択の折りたたみは初期状態で開いている', r.初期状態で開いている);
     checkTrue('ハーモニー選択が見えている', r.見えている);
     checkTrue('数値の内訳より前に置かれる', r.内訳より前);
+});
+
+suite('ダメージ比率が折りたたみになっている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const ratio = document.getElementById('ratioPresets');
+        const details = ratio.closest('details.collapsible-section');
+        return {
+            折りたたみ要素になっている: !!details,
+            初期状態は閉じている: !!(details && !details.open),
+        };
+    });
+    checkTrue('ダメージ比率は折りたたみ可能になっている', r.折りたたみ要素になっている);
+    checkTrue('ダメージ比率の折りたたみは初期状態で閉じている', r.初期状態は閉じている);
 });
 
 suite('使用属性・ダメージ比率がハーモニー選択の下に配置されている');
