@@ -1061,7 +1061,7 @@ await withPage(async page => {
     }));
     checkTrue('ステータスの内訳（statGroupHome）は初期状態で畳まれている', r.内訳が最初は畳まれている);
     checkTrue('ポップオーバーは初期状態で閉じている', r.ポップオーバーが最初は閉じている);
-    check('頂点ボタンが5つある', r.頂点ボタンがある, 5);
+    check('頂点ボタンが4つある', r.頂点ボタンがある, 4);
 });
 
 // ── ステータスバランス（レーダー） ──────────────────────
@@ -1077,15 +1077,13 @@ await withPage(async page => {
             攻撃力表示あり: chips.some(t => t.includes('攻撃力%') && t.includes(D.statPct.total.toFixed(1))),
             クリ率表示あり: chips.some(t => t.includes('クリ率') && t.includes(D.cr.total.toFixed(1))),
             クリダメ表示あり: chips.some(t => t.includes('クリダメ') && t.includes(D.cd.total.toFixed(1))),
-            共鳴効率表示あり: chips.some(t => t.includes('共鳴効率') && t.includes(D.resEff.total.toFixed(1))),
             ダメバフ表示あり: chips.some(t => t.includes('ダメバフ') && t.includes((p.DMG_eff * 100).toFixed(1))),
         };
     }, [BUILD]);
-    check('頂点は5つ', r.頂点の数, 5);
+    check('頂点は4つ', r.頂点の数, 4);
     checkTrue('攻撃力%の頂点が現在値をそのまま表示', r.攻撃力表示あり);
     checkTrue('クリ率の頂点が現在値をそのまま表示', r.クリ率表示あり);
     checkTrue('クリダメの頂点が現在値をそのまま表示', r.クリダメ表示あり);
-    checkTrue('共鳴効率の頂点が現在値をそのまま表示', r.共鳴効率表示あり);
     checkTrue('ダメバフの頂点がDMG_effをそのまま表示', r.ダメバフ表示あり);
 });
 
@@ -1122,50 +1120,6 @@ await withPage(async page => {
     const after = await page.evaluate(() => S.radarTarget);
     check('リロード後も攻撃力%の目標が保たれる', after.atk, 120);
     check('リロード後もダメバフの目標が保たれる', after.dmgbuf, 80);
-});
-
-// ── 共鳴効率 ────────────────────────────────────────────
-suite('共鳴効率が基礎100%＋音骸メイン・サブ・直接入力で集計される');
-await withPage(async page => {
-    const r = await page.evaluate(() => {
-        S.other = {};
-        S.echoes.forEach(e => { e.main = { cost: null, key1: '', val1: 0, key2: '', val2: 0 }; e.subs = Array.from({ length: 5 }, () => ({ key: '', val: '' })); });
-        recalcAll();
-        const base = detailBreakdown().resEff.total;
-
-        // 音骸メイン（コスト3枠の共鳴効率32%）
-        S.echoes[0].main = { cost: 3, key1: 'res_eff', val1: 32.0, key2: '', val2: 0 };
-        recalcAll();
-        const withMain = detailBreakdown().resEff.total;
-
-        // 音骸サブ
-        S.echoes[1].subs[0] = { key: 'res_eff', val: '12.4' };
-        recalcAll();
-        const withSub = detailBreakdown().resEff.total;
-
-        // 直接入力
-        onDetailOther('reseff', '10');
-        const withManual = detailBreakdown().resEff.total;
-
-        return { base, withMain, withSub, withManual };
-    });
-    check('入力が無い状態では基礎の100%のみ', r.base, 100);
-    checkNear('音骸メインの共鳴効率が加算される', r.withMain, 132.0, 0.01);
-    checkNear('音骸サブの共鳴効率も加算される', r.withSub, 144.4, 0.01);
-    checkNear('直接入力ぶんも合計に乗る', r.withManual, 154.4, 0.01);
-});
-
-suite('共鳴効率の目標は下限100%を下回らない');
-await withPage(async page => {
-    const r = await page.evaluate(() => {
-        setRadarTarget('reseff', '50'); // 下限(100)未満を指定
-        const clamped = S.radarTarget.reseff;
-        setRadarTarget('reseff', '180');
-        const normal = S.radarTarget.reseff;
-        return { clamped, normal };
-    });
-    check('下限未満を指定すると100に補正される', r.clamped, 100);
-    check('下限以上ならそのまま反映される', r.normal, 180);
 });
 
 suite('レーダーの頂点タップで対応する入力パネルがポップオーバーとして開く');

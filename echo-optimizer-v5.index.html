@@ -2759,31 +2759,6 @@
                                     クリダメが100%未満です。ダメージ計算では100%として扱います。</div>
                             </div>
 
-                            <div id="statGroup_reseff">
-                                <div class="input-legend">
-                                    <span class="lg-auto">自動計算</span>
-                                    <span class="lg-manual">手入力</span>
-                                    <span class="lg-total">合計（上書き可）</span>
-                                </div>
-                                <div class="sec-title">共鳴効率</div>
-                                <div class="hint">基礎値100%（ゲーム内の初期値）+ 音骸メイン + 音骸サブ + 直接入力。
-                                    ハーモニー・武器・キャラからの共鳴効率バフは今のところ未対応です。</div>
-                                <div class="detail-grid">
-                                    <div class="detail-item"><label>基礎</label><input type="number" inputmode="decimal" step="any"
-                                            value="100" readonly tabindex="-1"><span class="unit">%</span></div>
-                                    <div class="detail-item"><label>音骸メイン</label><input type="number" inputmode="decimal" step="any"
-                                            id="di_reseff_em" placeholder="0" readonly tabindex="-1"><span
-                                            class="unit">%</span></div>
-                                    <div class="detail-item"><label>音骸サブ</label><input type="number" inputmode="decimal" step="any"
-                                            id="di_reseff_es" placeholder="0" readonly tabindex="-1"><span
-                                            class="unit">%</span></div>
-                                    <div class="detail-item manual"><label>直接入力</label><input type="number" inputmode="decimal" step="any"
-                                            id="di_reseff_other" placeholder="0" oninput="onDetailOther('reseff',this.value);autoSize(this)"><span
-                                            class="unit">%</span></div>
-                                </div>
-                                <div class="detail-total" id="dt_reseff"></div>
-                            </div>
-
                             <div id="statGroup_dmgbuf">
                                 <div class="input-legend">
                                     <span class="lg-auto">自動計算</span>
@@ -3826,7 +3801,7 @@
             ratio: { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0 },
             // ステータスバランス（レーダー）の目標値。攻撃力%とダメージバフのみ保存
             // （クリ率・クリダメは1:2換算で自動計算するため保存不要）
-            radarTarget: { atk: 100, dmgbuf: 100, reseff: 150 },
+            radarTarget: { atk: 100, dmgbuf: 100 },
             harmony: [
                 { id: '', setLevel: 5, custom: B() },
                 { id: '', setLevel: 5, custom: B() },
@@ -4665,7 +4640,7 @@
             return { crTarget, crUpper, cdTarget, cdUpper, anchor: 'cd' };
         }
 
-        // 5軸それぞれの現在値・目標・上限を返す。現在値はすべて既存の計算結果をそのまま使う
+        // 4軸それぞれの現在値・目標・上限を返す。現在値はすべて既存の計算結果をそのまま使う
         // （新しい計算は一切しない）。
         function radarAxes() {
             const D = detailBreakdown();
@@ -4674,8 +4649,6 @@
             const { crTarget, crUpper, cdTarget, cdUpper, anchor } = radarCrCdTargets(cr, cd);
             const statLabel = { atk: '攻撃力%', hp: 'HP%', def: '防御力%' }[statMode];
             const cdLower = 150;
-            // 共鳴効率は基礎100%が下限（クリダメの150%と同じ考え方）
-            const reseffLower = 100;
             return [
                 {
                     key: 'atk', label: statLabel, unit: '%', lower: 0,
@@ -4691,11 +4664,6 @@
                     key: 'cd', label: 'クリダメ', unit: '%', lower: cdLower,
                     current: cd, target: cdTarget, upper: cdUpper,
                     editableTarget: false, isAnchor: anchor === 'cd', detailId: 'statGroup_cd',
-                },
-                {
-                    key: 'reseff', label: '共鳴効率', unit: '%', lower: reseffLower,
-                    current: D.resEff.total, target: S.radarTarget.reseff, upper: S.radarTarget.reseff * RADAR_RATIO,
-                    editableTarget: true, detailId: 'statGroup_reseff',
                 },
                 {
                     key: 'dmgbuf', label: 'ダメバフ', unit: '%', lower: 0,
@@ -4785,17 +4753,13 @@
             const editable = AXES.filter(a => a.editableTarget);
             row.innerHTML = editable.map(a => `
     <label class="radar-target-field">目標（${esc(a.label)}）
-      <input type="number" inputmode="decimal" step="any" value="${a.target}" min="${a.lower || 1}"
+      <input type="number" inputmode="decimal" step="any" value="${a.target}" min="1"
         onchange="setRadarTarget('${a.key}', this.value)">%
     </label>`).join('');
         }
 
-        // 目標は各軸の下限を割り込めないようにする（下限より低いと上限が下限を
-        // 下回り、半径の計算が破綻するため）。共鳴効率だけ下限100%
-        const RADAR_TARGET_MIN = { reseff: 100 };
         function setRadarTarget(key, val) {
-            const min = RADAR_TARGET_MIN[key] || 1;
-            const v = Math.max(min, parseFloat(val) || min);
+            const v = Math.max(1, parseFloat(val) || 1);
             S.radarTarget[key] = v;
             recalcAll();
             scheduleSave();
@@ -5309,7 +5273,7 @@
                     { id: '', setLevel: 5, custom: B() },
                 ];
                 S.harmonyManual = B();
-                S.radarTarget = { atk: 100, dmgbuf: 100, reseff: 150 };
+                S.radarTarget = { atk: 100, dmgbuf: 100 };
                 useAttr = '';
 
                 // 3. 使用属性ボタンの見た目リセット
@@ -5460,9 +5424,6 @@
             const cr = withTotal({ h: n(H.crit_rate), w: n(W.crit_rate), c: n(C.crit_rate), em: n(EM.crit_rate), es: n(ES.crit_rate), other: o('cr') });
             const cd = withTotal({ h: n(H.crit_dmg), w: n(W.crit_dmg), c: n(C.crit_dmg), em: n(EM.crit_dmg), es: n(ES.crit_dmg), other: o('cd') });
             const dall = withTotal({ h: n(H.dmg_all), w: n(W.dmg_all), c: n(C.dmg_all), other: o('dall') });
-            // 共鳴効率：基礎100%（ゲーム内の初期値）+ 音骸メイン + 音骸サブ + 直接入力。
-            // ハーモニー・武器・キャラは今のところ共鳴効率フィールドを持たない（B()未対応）
-            const resEff = withTotal({ base: 100, em: n(EM.res_eff), es: n(ES.res_eff), other: o('reseff') });
 
             const attr = {};
             ATTR_DETAIL.forEach(a => {
@@ -5477,7 +5438,7 @@
             });
 
             return {
-                base, statPct, statFlat, cr, cd, dall, attr, skill, resEff,
+                base, statPct, statFlat, cr, cd, dall, attr, skill,
                 total: base.total * (1 + statPct.total / 100) + statFlat.total,
             };
         }
@@ -5498,7 +5459,6 @@
             ['h', 'w', 'c', 'em', 'es'].forEach(k => fill('di_stat_pct_' + k, D.statPct[k]));
             fill('di_stat_flat_em', D.statFlat.em); fill('di_stat_flat_es', D.statFlat.es);
             ['h', 'w', 'c', 'em', 'es'].forEach(k => { fill('di_cr_' + k, D.cr[k]); fill('di_cd_' + k, D.cd[k]); });
-            fill('di_reseff_em', D.resEff.em); fill('di_reseff_es', D.resEff.es);
             ATTR_DETAIL.forEach(a => ['h', 'w', 'c', 'em'].forEach(k => fill(`di_d${a.key}_${k}`, D.attr[a.key][k])));
             ['h', 'w', 'c'].forEach(k => fill('di_dall_' + k, D.dall[k]));
             SKILL_DETAIL.forEach(x => ['h', 'w', 'c', 'es'].forEach(k => fill(`di_s${x.key}_${k}`, D.skill[x.key][k])));
@@ -5506,7 +5466,6 @@
             const O = S.other || {};
             fill('di_base_other', O.base); fill('di_stat_other', O.stat);
             fill('di_cr_other', O.cr); fill('di_cd_other', O.cd); fill('di_dall_other', O.dall);
-            fill('di_reseff_other', O.reseff);
             ATTR_DETAIL.forEach(a => fill(`di_d${a.key}_other`, O['d' + a.key]));
             SKILL_DETAIL.forEach(x => fill(`di_s${x.key}_other`, O['s' + x.key]));
         }
@@ -5526,7 +5485,6 @@
             { id: 'dt_total', other: 'stat', label: '全体', unit: '', dec: 0, hero: true, get: D => D.total },
             { id: 'dt_cr', other: 'cr', label: 'クリ率', unit: '%', dec: 1, hero: true, get: D => D.cr.total },
             { id: 'dt_cd', other: 'cd', label: 'クリダメ', unit: '%', dec: 1, hero: true, get: D => D.cd.total },
-            { id: 'dt_reseff', other: 'reseff', label: '共鳴効率', unit: '%', dec: 1, hero: true, get: D => D.resEff.total },
             { id: 'dt_dall', other: 'dall', label: '合計', unit: '%', dec: 1, get: D => D.dall.total },
             ...ATTR_DETAIL.map(a => ({ id: 'dt_d' + a.key, other: 'd' + a.key, label: '合計', unit: '%', dec: 1, get: D => D.attr[a.key].total })),
             ...SKILL_DETAIL.map(x => ({ id: 'dt_s' + x.key, other: 's' + x.key, label: '合計', unit: '%', dec: 1, get: D => D.skill[x.key].total })),
@@ -7236,7 +7194,7 @@ rebuildCharaWeaponSelects();
                 }
                 S.harmonyManual = { ...B(), ...(saved.S.harmonyManual || {}) };
                 S.ratio = { normal: 0, heavy: 0, skill: 100, lib: 0, echo: 0, ...(saved.S.ratio || {}) };
-                S.radarTarget = { atk: 100, dmgbuf: 100, reseff: 150, ...(saved.S.radarTarget || {}) };
+                S.radarTarget = { atk: 100, dmgbuf: 100, ...(saved.S.radarTarget || {}) };
                 if (['atk', 'hp', 'def'].includes(saved.statMode)) statMode = saved.statMode;
                 if (typeof saved.useAttr === 'string') useAttr = saved.useAttr;
                 return true;
