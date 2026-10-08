@@ -1794,7 +1794,7 @@ await withPage(async page => {
             スペクター: h('スペクター'), スペクター効果: getPresetBuff('スペクター', 1),
         };
     });
-    check('ハーモニーは36件（34+新規2）', r.ハーモニー件数, 36);
+    checkTrue('ハーモニーは36件以上（34+新規2）', r.ハーモニー件数 >= 36);
     check('id重複は無い', r.id重複, []);
 
     // 基礎値はゲームデータのLv90値（小数切り捨て）。スキルツリーは攻撃力+12%/クリ率+8%
@@ -1839,6 +1839,26 @@ await withPage(async page => {
     check('枠の効果に通常攻撃+35が入る', r.custom.dmg_normal, 35);
     check('セット表示は「1」', r.toggle, '1');
     check('ハーモニー合計に重撃+35が入る', r.total.dmg_heavy, 35);
+});
+
+suite('ゲームデータにあるハーモニーを全種収録し、ショアキーパーのHP%を訂正');
+await withPage(async page => {
+    const r = await page.evaluate(() => ({
+        件数: HARMONIES.length,
+        id重複: HARMONIES.map(x => x.id).filter((v, i, a) => a.indexOf(v) !== i),
+        鏡影2: getPresetBuff('鏡影', 2).dmg_thunder, 鏡影5: getPresetBuff('鏡影', 5).dmg_thunder,
+        フラワー2: Object.values(getPresetBuff('フラワー', 2)).some(v => v > 0),
+        フラワー5: getPresetBuff('フラワー', 5).atk_pct,
+        ショアキーパーhp: BUILTIN_CHARA.find(e => e.name === 'ショアキーパーS0').hp_pct,
+    }));
+    // ゲームデータの37種。羽舞う塵世の歌は編成別に2件で登録しているので38件
+    check('ハーモニーは38件', r.件数, 38);
+    check('id重複は無い', r.id重複, []);
+    check('鏡影流電の閃 2セットは電導+10', r.鏡影2, 10);
+    check('鏡影流電の閃 5セットは自身分のみの電導+20', r.鏡影5, 20);
+    checkTrue('フラワー・レミニセンス 2セットは未対応フィールドのため空', !r.フラワー2);
+    check('フラワー・レミニセンス 5セットは攻撃力+25（10+15）', r.フラワー5, 25);
+    check('ショアキーパーのHP%はスキルツリーの12', r.ショアキーパーhp, 12);
 });
 
 await finish();

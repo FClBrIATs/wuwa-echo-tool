@@ -3571,6 +3571,19 @@
                 set1: B({ dmg_normal: 35, dmg_heavy: 35 }),
                 desc: '1セット:ハック・オフセット付与時 通常攻撃ダメ・重撃ダメ+35%(15秒)'
             },
+            //  未実装（ゲームデータには存在するが、データ収集時点の Ver3.7 前半では未実装）
+            // 5セットの「終奏後、次に登場するキャラへのバフ」はパティナ・フォームと同じく自身には数えない。
+            {
+                id: '鏡影', name: '鏡影流電の閃', attr: 'thunder', setType: '2+5',
+                set2: B({ dmg_thunder: 10 }), set5: B({ dmg_thunder: 20 }),
+                desc: '(未実装時点のデータ) 電導ダメ+10%。電磁効果付与時 電導ダメ+10%(15秒); 持続中に終奏→次キャラ電導ダメ+25%(15秒)'
+            },
+            // 2セット（HP回復効果+10%）は本ツール未対応のフィールドなので反映されない。
+            {
+                id: 'フラワー', name: 'フラワー・レミニセンス', attr: 'other', setType: '2+5',
+                set2: B(), set5: B({ atk_pct: 25 }),
+                desc: '(未実装時点のデータ) 本来2セット:HP回復効果+10%(本ツール未対応)。5セット:HP回復時 チーム攻撃力+10%(30秒)、持続中に同奏の獲得・レスポンスで追加+15%'
+            },
         ];
 
         // ================================================================
@@ -6705,7 +6718,9 @@
             { name: 'フィービーS0', desc: '全バフ発動時。アブソリューション(重撃)/コンフェッション(通常攻撃)の2モード制のデュアルタイプ', attr: 'light', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_light: 12, ratio: { normal: 100, heavy: 100 } },
             { name: 'ロココS0', desc: '全バフ発動時。攻撃力+20%(条件付き)は未反映', attr: 'dark', base_atk: 375, base_hp: 12250, base_def: 1197, crit_rate: 5, crit_dmg: 166, atk_pct: 12, ratio: { heavy: 100 } },
             { name: 'カルロッタS0', desc: '全バフ発動時', attr: 'ice', base_atk: 462, base_hp: 12450, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100 } },
-            { name: 'ショアキーパーS0', desc: '全バフ発動時。純ヒーラー。本来の回復効果%+12は未対応のため未反映。ratioは全項目0（直接ダメージ寄与なしとして扱う）', attr: 'light', base_atk: 287, base_hp: 16712, base_def: 1099, crit_rate: 5, crit_dmg: 150, hp_pct: 15.2, ratio: {} },
+            // hp_pct修正: 15.2→12。ゲームデータ(encore.moe)のスキルツリーはHP上限+12%・HP回復効果+12%で、
+            // 15.2はモーニエの防御%の値を写し間違えたものとみられる。
+            { name: 'ショアキーパーS0', desc: '全バフ発動時。純ヒーラー。本来の回復効果%+12は未対応のため未反映。ratioは全項目0（直接ダメージ寄与なしとして扱う）', attr: 'light', base_atk: 287, base_hp: 16712, base_def: 1099, crit_rate: 5, crit_dmg: 150, hp_pct: 12, ratio: {} },
             { name: '相里要S0', desc: '全バフ発動時。dmg_thunderは共鳴スキル発動時条件付き最大(4スタック)', attr: 'thunder', base_atk: 425, base_hp: 10625, base_def: 1222, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_thunder: 20, ratio: { lib: 100 } },
             { name: '折枝S0', desc: '全バフ発動時。攻撃力+18%(条件付き)は未反映', attr: 'ice', base_atk: 375, base_hp: 12250, base_def: 1197, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { normal: 100 } },
             { name: '長離S0', desc: '全バフ発動時。dmg_fireは心眼+強化重撃/共鳴解放条件付き最大合算', attr: 'fire', base_atk: 462, base_hp: 10387, base_def: 1099, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_fire: 40, ratio: { skill: 100 } },
