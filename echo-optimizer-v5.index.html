@@ -3558,6 +3558,19 @@
                 set2: B(), set5: B({ atk_pct: 25 }),
                 desc: '本来2セット:共鳴効率+10%(本ツール未対応)。5セット:敵に結霜効果付与時 共鳴効率1%につきチーム攻撃力+0.1%、最大+25%(10秒)。atk_pct:25は上限到達（共鳴効率250%相当）を前提とした値。緋雪/ルシラー(結霜モード)など結霜編成向け'
             },
+            //  3.7 （出典：ゲームデータ encore.moe。wikiwiki はクラウド環境から閲覧不可だった）
+            {
+                id: '銜夢', name: '銜夢照世の心', attr: 'thunder', setType: '2+5',
+                set2: B({ dmg_thunder: 10 }), set5: B({ dmg_thunder: 32.5, crit_rate: 15 }),
+                desc: '電導ダメ+10%。電磁効果付与時/同奏の獲得・レスポンス時 クリ率+15%、電導ダメ+22.5%(30秒)'
+            },
+            // ナイトメア音骸「響き渡る共鳴・ナイトメア・スマッシャー」1体で発動する1セット効果。
+            // 他の5セットと併用する前提なので、別の枠に入れて使う。
+            {
+                id: 'スペクター', name: 'ナイトメア・スペクター', attr: 'other', setType: '1',
+                set1: B({ dmg_normal: 35, dmg_heavy: 35 }),
+                desc: '1セット:ハック・オフセット付与時 通常攻撃ダメ・重撃ダメ+35%(15秒)'
+            },
         ];
 
         // ================================================================
@@ -3682,6 +3695,7 @@
             const h = allHarmonies().find(x => x.id === hId);
             if (!h) return B();
             if (h.setType === '3') return { ...(h.set3 || B()) };
+            if (h.setType === '1') return { ...(h.set1 || B()) };
             return setLevel === 5 ? { ...(h.set5 || B()) } : { ...(h.set2 || B()) };
         }
 
@@ -4745,7 +4759,7 @@
         <button class="set-btn${slot.setLevel === 5 ? ' active' : ''}" onclick="onSetLevel(${i},5)">5</button>
       </div>`;
                 } else {
-                    setToggle = `<div class="set-toggle"><button class="set-btn active">3</button></div>`;
+                    setToggle = `<div class="set-toggle"><button class="set-btn active">${h.setType === '1' ? 1 : 3}</button></div>`;
                 }
             }
 
@@ -4839,7 +4853,7 @@
         function onHarmonySelect(i, hId) {
             S.harmony[i].id = hId;
             const h = allHarmonies().find(x => x.id === hId);
-            if (h) S.harmony[i].setLevel = h.setType === '3' ? 3 : 5;
+            if (h) S.harmony[i].setLevel = h.setType === '3' ? 3 : h.setType === '1' ? 1 : 5;
             S.harmony[i].custom = { ...getPresetBuff(hId, S.harmony[i].setLevel) };
             buildHarmonyPicker();
             fillDetailInputs();
@@ -6545,18 +6559,18 @@
                 // 属性を選んで登録したのに全属性バフとして保存されている古いデータ。
                 // 意図が判別できないため自動では直さず、編集で直せるよう印だけ付ける。
                 const legacyAll = h.attr && h.attr !== 'other' &&
-                    [h.set5, h.set3, h.set2].some(x => x && x.dmg_all > 0);
+                    [h.set5, h.set3, h.set2, h.set1].some(x => x && x.dmg_all > 0);
                 const warn = legacyAll
                     ? '<div style="font-size:9px;color:var(--orange);margin-top:2px;">⚠ 属性ダメバフが「全属性」として保存されています。編集して保存し直すと選択した属性に反映されます。</div>'
                     : '';
-                const s5str = fmtBuff(h.set5 || h.set3 || B());
+                const s5str = fmtBuff(h.set5 || h.set3 || h.set1 || B());
                 const s2str = h.setType === '2+5' ? fmtBuff(h.set2 || B()) : '';
                 return `<div class="custom-item${h.id === editingHarmonyId ? ' editing' : ''}">
       <span class="attr-icon ${a.cls}"></span>
       <div style="flex:1;min-width:0;">
         <div style="font-size:11px;font-weight:500;">${esc(h.name)} <span style="font-size:9px;color:var(--text3);font-weight:400;">${esc(h.setType)}</span>${h.id === editingHarmonyId ? ' <span style="font-size:9px;color:var(--p)">編集中</span>' : ''}</div>
         ${s2str ? `<div style="font-size:9px;color:#2563eb;">2セット: ${s2str}</div>` : ''}
-        <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : '3セット: '}${s5str || '未設定'}${h.desc ? `<span style="color:var(--text3);margin-left:5px;">${esc(h.desc)}</span>` : ''}</div>
+        <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : h.setType === '1' ? '1セット: ' : '3セット: '}${s5str || '未設定'}${h.desc ? `<span style="color:var(--text3);margin-left:5px;">${esc(h.desc)}</span>` : ''}</div>
         ${warn}
       </div>
       ${isBuiltin
@@ -6706,6 +6720,25 @@
             { name: '漂泊者・気動S0', desc: '全バフ発動時(恒常/主人公)。本来の回復効果%+12は未対応のため未反映', attr: 'wind', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 5, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100 } },
             { name: '漂泊者・消滅S0', desc: '全バフ発動時(恒常/主人公)。dmg_darkは暗湧状態条件付き', attr: 'dark', base_atk: 412, base_hp: 10825, base_def: 1258, crit_rate: 5, crit_dmg: 150, atk_pct: 12, dmg_dark: 20, ratio: { normal: 100 } },
             { name: '漂泊者・電導S0', desc: '全バフ発動時(恒常/主人公)', attr: 'thunder', base_atk: 437, base_hp: 10775, base_def: 1136, crit_rate: 13, crit_dmg: 150, atk_pct: 12, ratio: { skill: 100 } },
+            //
+            // ── Ver3.6〜3.7 追加分 ──
+            // wikiwiki がクラウド環境から閲覧できなかったため、出典はゲームデータを掲載する
+            // encore.moe（日本語）。実装済みかどうかと推奨運用は game8 で確認した。
+            // 基礎値・スキルツリーは既存の今汐/忌炎/ショアキーパーで同じ取り方をして一致を確認済み。
+            //
+            // 心は共鳴モダリティ（電磁/同奏）で固有スキルのバフが別物になるため、
+            // 「羽舞う塵世の歌」と同じく用途ごとに別エントリで登録する。
+            // ダメージは変奏・重撃・共鳴解放の大技まで含めてほぼすべて共鳴スキルダメージ扱い。
+            { name: '心S0(電磁)', desc: '全バフ発動時。共鳴モダリティ・電磁。dmg_thunderは固有スキルの電導ダメ+25%×2スタックと、漂泊者・電導併用時の+20%の合算', attr: 'thunder', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 150, atk_pct: 12, dmg_thunder: 70, ratio: { skill: 100 } },
+            { name: '心S0(同奏)', desc: '全バフ発動時。共鳴モダリティ・同奏。atk_pctは12+固有スキルの攻撃力+50%(諸相同奏の変奏後8秒)。同奏増幅の最終ダメ+3%×2は未対応のため未反映', attr: 'thunder', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 13, crit_dmg: 150, atk_pct: 62, ratio: { skill: 100 } },
+            // 心識捕捉(最大15スタック: 2%×15 + 最初の7スタックに追加5%×7 = 65%)は
+            // 曇体仙身の通常攻撃・重撃・奏弦の剣の重撃・共鳴解放に乗る。主力の通常攻撃/重撃に反映。
+            { name: '清宵S0', desc: '全バフ発動時。dmg_normal/dmg_heavyは心識捕捉15スタック時(65%)。曇体仙身の通常攻撃と天威妖魔破(重撃)のデュアルタイプ', attr: 'wind', base_atk: 462, base_hp: 10300, base_def: 1112, crit_rate: 5, crit_dmg: 166, atk_pct: 12, dmg_normal: 65, dmg_heavy: 65, ratio: { normal: 100, heavy: 100 } },
+            // 景燃はHP上限依存のキャラ。本ツールは攻撃力参照のみ対応のため、HP上限50000以上
+            // （game8 で「ほぼ必須級」とされるバフ上限）を前提に、攻撃力・焦熱ダメの上限値を固定値で入れる。
+            // 防御力は共鳴回路「幽冥帰り」により常に0（データ上も0）。
+            { name: '景燃S0', desc: '全バフ発動時。HP上限50000以上を前提に flat_atk=+1800(HP1000ごと+36の上限)、dmg_fire=+75%(HP1000ごと+1.5%の上限)。あざなえる禍福(変奏後15秒)と熒惑中のHP依存の倍率増加は未反映', attr: 'fire', base_atk: 312, base_hp: 15375, base_def: 0, crit_rate: 13, crit_dmg: 150, hp_pct: 12, flat_atk: 1800, dmg_fire: 75, ratio: { heavy: 100 } },
+            { name: '穂穂S0', desc: '全バフ発動時。純ヒーラー（サポート）。本来の回復効果%+12は未対応のため未反映。ratioは全項目0（直接ダメージ寄与なしとして扱う）', attr: 'ice', base_atk: 287, base_hp: 16712, base_def: 1099, crit_rate: 5, crit_dmg: 150, hp_pct: 12, ratio: {} },
             // ▲ここまで▲
         ];
 
@@ -6758,10 +6791,10 @@
             { name: 'トラジコメーディアR1', weaponType: '手甲', desc: '全バフ発動時(限定・ロココ)', base_atk: 587, crit_rate: 24.3, atk_pct: 12, dmg_heavy: 48 },
             { name: '万端の枢機R1', weaponType: '手甲', desc: '全バフ発動時(限定・相里要)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_lib: 48 },
             { name: '怒涛の湖音R1', weaponType: '手甲', desc: '全バフ発動時(恒常)', base_atk: 587, flat_atk: 36.4, dmg_normal: 10, dmg_skill: 10 },
-            // 紐付くキャラを修正: ルシラー→穂穂。穂穂は本データ収集時点で
-            // 未実装・ステータス未公開のため、この武器自体はキャラ未登録のまま収録する。
+            // 紐付くキャラを修正: ルシラー→穂穂。穂穂の実装後、ゲームデータ(encore.moe)の
+            // Lv90値・効果と一致することを確認した（サブステの共鳴効率77.0%は本ツール未対応）。
             // atk_pct追加: 雪色染め+さざ波両方所持でチーム攻撃力+20%（自身も対象）
-            { name: '夕霞の飲露R1', weaponType: '増幅器', desc: '全バフ発動時(限定・穂穂、キャラ未登録)', base_atk: 412, hp_pct: 12, atk_pct: 20 },
+            { name: '夕霞の飲露R1', weaponType: '増幅器', desc: '全バフ発動時(限定・穂穂)', base_atk: 412, hp_pct: 12, atk_pct: 20 },
             // ステータス画面のスクリーンショットで確認。武器効果：攻撃力+12%（常時）。
             // 斉爆効果／密集協和・オフセット付与後、共鳴解放ダメージ+36%（5秒）。
             // その持続時間内にチーム内キャラが同条件を付与すると、そのキャラの攻撃力+24%（15秒）。
@@ -6787,6 +6820,18 @@
             { name: '糸繰りの奇術R1', weaponType: '増幅器', desc: '全バフ発動時(限定・吟霖、登場時の値)', base_atk: 500, crit_rate: 36, dmg_all: 12, atk_pct: 24 },
             // dmg_normal修正: 3.2→16（最大5スタック分、3.2×5）
             { name: '栄枯の湖岸R1', weaponType: '増幅器', desc: '全バフ発動時(恒常、最大5スタック)', base_atk: 500, flat_atk: 53.9, dmg_normal: 16 },
+            //
+            // ── Ver3.6〜3.7 追加分（出典は BUILTIN_CHARA の同名見出しを参照） ──
+            // 共鳴スキルダメージブースト36%を dmg_skill として反映。電導耐性無視・電磁効果ダメブーストは未対応
+            { name: '玉殿に咲き満ちる玄華R1', weaponType: '増幅器', desc: '全バフ発動時(限定・心)', base_atk: 587, crit_rate: 24.3, dmg_all: 12, dmg_skill: 36 },
+            // dmg_wind: 密集協和・オフセット付与で+11.2%×最大5スタック。最大スタック時の防御無視10%は未対応
+            { name: '雲琅R1', weaponType: '迅刀', desc: '全バフ発動時(限定・清宵、最大5スタック)', base_atk: 500, crit_rate: 36, atk_pct: 12, dmg_wind: 56 },
+            // crit_dmg: 順天+4%×最大6スタック。crit_rate: 順天6スタック時の重撃クリ率+12%（重撃のみだが、景燃はほぼ全ダメージが重撃のため反映）。
+            // 寛大の防御無視は未対応。基礎攻撃力は game8 では500表記だが、ゲームデータ(encore.moe)の
+            // Lv90値412.5と、同じHPサブステ武器の定めを覆す荊冠(412)に合わせて412とした。
+            { name: '幾千の導きR1', weaponType: '長刃', desc: '全バフ発動時(限定・景燃、最大6スタック)', base_atk: 412, hp_pct: 72.2, dmg_all: 12, crit_dmg: 24, crit_rate: 12 },
+            // サブステの共鳴効率38.8%は本ツール未対応。dmg_skill はHP回復時、dmg_wind は漂泊者・気動の無形無相の朧発動時
+            { name: '血の盟約R1', weaponType: '迅刀', desc: '全バフ発動時(漂泊者・気動向け)', base_atk: 587, dmg_skill: 10, dmg_wind: 10 },
             // ▲ここまで▲
         ];
 

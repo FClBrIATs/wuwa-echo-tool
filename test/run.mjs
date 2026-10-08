@@ -1562,7 +1562,8 @@ await withPage(async page => {
             玄翎結霜の5セットatk: kori?.set5?.atk_pct,
         };
     });
-    check('ハーモニーは34件（既存30+新規4）', r.件数, 34);
+    // 以降のバージョンでも追加されるので、件数の厳密な確認は最新の追加分のスイートで行う
+    checkTrue('ハーモニーは34件以上（既存30+新規4）', r.件数 >= 34);
     check('id重複は無い', r.id重複, []);
     checkTrue('冥夜を導く灯が追加されている', r.冥夜あり);
     check('冥夜は2+5セット', r.冥夜setType, '2+5');
@@ -1773,6 +1774,71 @@ await withPage(async page => {
     check('武器種が保存される', r.保存された武器種, '拳銃');
     checkTrue('登録した武器が①タブの武器種タブに出る', r.拳銃タブに出る);
     checkTrue('編集で開くと武器種の選択が復元される', r.編集時に選択が復元される);
+});
+
+// ── Ver3.6〜3.7 の収録データ追加 ──────────────────────────
+// wikiwiki がクラウド環境から閲覧できなかったため、ゲームデータ(encore.moe)と game8 で照合した値
+suite('Ver3.6〜3.7のキャラ・武器・ハーモニーが追加されている');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        const c = n => BUILTIN_CHARA.find(e => e.name === n);
+        const w = n => BUILTIN_WEAPON.find(e => e.name === n);
+        const h = id => HARMONIES.find(x => x.id === id);
+        return {
+            ハーモニー件数: HARMONIES.length,
+            id重複: HARMONIES.map(x => x.id).filter((v, i, a) => a.indexOf(v) !== i),
+            心電磁: c('心S0(電磁)'), 心同奏: c('心S0(同奏)'), 清宵: c('清宵S0'), 景燃: c('景燃S0'), 穂穂: c('穂穂S0'),
+            玄華: w('玉殿に咲き満ちる玄華R1'), 雲琅: w('雲琅R1'), 幾千: w('幾千の導きR1'), 血の盟約: w('血の盟約R1'),
+            夕霞desc: w('夕霞の飲露R1').desc,
+            銜夢2: getPresetBuff('銜夢', 2), 銜夢5: getPresetBuff('銜夢', 5),
+            スペクター: h('スペクター'), スペクター効果: getPresetBuff('スペクター', 1),
+        };
+    });
+    check('ハーモニーは36件（34+新規2）', r.ハーモニー件数, 36);
+    check('id重複は無い', r.id重複, []);
+
+    // 基礎値はゲームデータのLv90値（小数切り捨て）。スキルツリーは攻撃力+12%/クリ率+8%
+    check('心の基礎攻撃力', r.心電磁.base_atk, 462);
+    check('心(電磁)は電導ダメ+70（固有25×2+漂泊者併用20）', r.心電磁.dmg_thunder, 70);
+    check('心(同奏)は攻撃力%+62（12+固有50）', r.心同奏.atk_pct, 62);
+    check('心は共鳴スキル主体', r.心電磁.ratio, { skill: 100 });
+    check('清宵はクリダメツリー（150+16）', r.清宵.crit_dmg, 166);
+    check('清宵は心識捕捉15スタックで通常/重撃+65', [r.清宵.dmg_normal, r.清宵.dmg_heavy], [65, 65]);
+    check('清宵は通常攻撃+重撃のデュアルタイプ', r.清宵.ratio, { normal: 100, heavy: 100 });
+    check('景燃の防御力は仕様上0', r.景燃.base_def, 0);
+    check('景燃はHP50000前提の上限値', [r.景燃.flat_atk, r.景燃.dmg_fire], [1800, 75]);
+    check('景燃は重撃主体', r.景燃.ratio, { heavy: 100 });
+    check('穂穂は純ヒーラー扱い', r.穂穂.ratio, {});
+    check('新キャラの属性', [r.心電磁.attr, r.清宵.attr, r.景燃.attr, r.穂穂.attr], ['thunder', 'wind', 'fire', 'ice']);
+
+    check('玉殿に咲き満ちる玄華は増幅器・共鳴スキル+36', [r.玄華.weaponType, r.玄華.dmg_skill], ['増幅器', 36]);
+    check('雲琅は気動ダメ5スタック分+56', r.雲琅.dmg_wind, 56);
+    check('幾千の導きはゲームデータの基礎攻撃力412', r.幾千.base_atk, 412);
+    check('血の盟約は迅刀', r.血の盟約.weaponType, '迅刀');
+    checkTrue('夕霞の飲露から「キャラ未登録」の注記が外れている', !r.夕霞desc.includes('未登録'));
+
+    check('銜夢照世の心 2セットは電導+10', r.銜夢2.dmg_thunder, 10);
+    check('銜夢照世の心 5セットは電導+32.5・クリ率+15', [r.銜夢5.dmg_thunder, r.銜夢5.crit_rate], [32.5, 15]);
+    check('ナイトメア・スペクターは1セット', r.スペクター.setType, '1');
+    check('ナイトメア・スペクターは通常/重撃+35', [r.スペクター効果.dmg_normal, r.スペクター効果.dmg_heavy], [35, 35]);
+});
+
+suite('1セットのハーモニーを選ぶとセット数1で効果が入る');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        onHarmonySelect(1, 'スペクター');
+        // 枠0は空なので、画面上の最初のセット表示が枠1のもの
+        return {
+            setLevel: S.harmony[1].setLevel,
+            custom: S.harmony[1].custom,
+            toggle: document.querySelector('.set-toggle .set-btn.active')?.textContent.trim(),
+            total: getHarmonyTotal(),
+        };
+    });
+    check('セット数は1', r.setLevel, 1);
+    check('枠の効果に通常攻撃+35が入る', r.custom.dmg_normal, 35);
+    check('セット表示は「1」', r.toggle, '1');
+    check('ハーモニー合計に重撃+35が入る', r.total.dmg_heavy, 35);
 });
 
 await finish();
