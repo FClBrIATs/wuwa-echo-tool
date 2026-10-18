@@ -1123,6 +1123,88 @@
         }
 
         /* ED DISPLAY */
+        .h-add-btn {
+            width: 100%;
+            min-height: 36px;
+            border: 1px dashed var(--border2);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--p);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .h-add-btn:hover {
+            background: var(--card2);
+        }
+
+        .setup-summary {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card2);
+        }
+
+        .setup-summary.open {
+            border-color: var(--p);
+        }
+
+        .ss-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ss-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .ss-chip:not(:last-child)::after {
+            content: '／';
+            margin-left: 3px;
+            color: var(--text3);
+        }
+
+        .ss-chip small {
+            font-size: 9px;
+            color: var(--text3);
+            margin-left: 1px;
+        }
+
+        .ss-chip .attr-icon {
+            width: 11px;
+            height: 11px;
+        }
+
+        .ss-ph {
+            color: var(--text3);
+        }
+
+        .ss-btn {
+            flex-shrink: 0;
+            min-height: 32px;
+            padding: 4px 12px;
+            border: 1px solid var(--p);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--p);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
         .er-row {
             display: flex;
             flex-wrap: wrap;
@@ -1150,25 +1232,48 @@
         }
 
         .ed-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
             margin-bottom: 10px;
         }
 
-        .ed-box {
-            background: var(--card2);
-            border: 1px solid var(--border);
-            border-radius: 7px;
-            padding: 10px;
-            text-align: center;
+        .ed-main {
+            flex-shrink: 0;
+            min-width: 120px;
         }
 
-        .ed-val {
+        .ed-main .ed-val {
             font-family: 'IBM Plex Mono', monospace;
-            font-size: 20px;
+            font-size: 30px;
             font-weight: 600;
+            line-height: 1.1;
             color: var(--gold);
+        }
+
+        .ed-subs {
+            flex: 1;
+            display: grid;
+            gap: 3px;
+            padding-left: 14px;
+            border-left: 1px solid var(--border);
+        }
+
+        .ed-sub {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .ed-sub b {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+        }
+
+        .ed-ph {
+            color: var(--text3);
+            font-weight: 400;
         }
 
         .ed-label {
@@ -2358,19 +2463,6 @@
             }
         }
 
-        /* --- ED GRID (ダメージ表示) --- */
-        @media(max-width:480px) {
-            .ed-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        @media(max-width:360px) {
-            .ed-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         /* --- RATIO INPUT ROW (ratio vis) --- */
         @media(max-width:500px) {
             .mode-sw {
@@ -2585,6 +2677,9 @@
                             </div>
                         </details>
 
+                        <!-- 設定（キャラ〜基準）。一度決めたら1行のまとめに畳んでおき、結果を上に出す -->
+                        <div class="setup-summary" id="setupSummary"></div>
+                        <div id="setupBody">
                         <!-- 選択式の入力（キャラ・武器・ハーモニー）をまとめる -->
                         <div id="select_block">
                             <div class="sec-title">キャラ / 武器</div>
@@ -2677,6 +2772,7 @@
                             <button id="statModeBtn_hp" class="mode-btn" onclick="setStatMode('hp',this)">HP基準</button>
                             <button id="statModeBtn_def" class="mode-btn" onclick="setStatMode('def',this)">防御力基準</button>
                         </div>
+                        </div><!-- /setupBody -->
 
                         <!-- ===== ステータスバランス（レーダー） ===== -->
                         <!-- 常時表示にしたいので、他のsec-titleのように自動折りたたみの
@@ -3718,6 +3814,9 @@
             // 共鳴効率：目標値と、音骸以外（キャラ・武器・ハーモニーなど）からの加算分
             erTarget: 125,
             erOther: 0,
+            // 選択中のキャラ・武器のID。以前は隠しselectにしか無く、再読み込みで外れていた
+            charaId: '',
+            weaponId: '',
             harmony: [
                 { id: '', setLevel: 5, custom: B() },
                 { id: '', setLevel: 5, custom: B() },
@@ -3987,7 +4086,10 @@
         function getWeaponBuff() { return getSingleTypeBuff('weapon'); }
         function getCharaBuff() { return getSingleTypeBuff('chara'); }
 
-        function onCharaWeaponChange() {
+        // applyDefaults: キャラのダメージ比率・属性を①タブへ反映するか。
+        // ユーザーが選び直したときだけ反映し、保存状態の復元時は反映しない
+        // （復元のたびに自分で調整した比率が上書きされるため）。
+        function onCharaWeaponChange(applyDefaults = true) {
             const CW = getCharaWeaponBuff();
             const labelMap = {
                 base_atk: '基礎攻撃力', base_hp: '基礎HP', base_def: '基礎防御力',
@@ -4007,6 +4109,7 @@
 
             // キャラに ratio が登録されていれば S.ratio に反映、なければデフォルトにリセット
             const selChara = document.getElementById('sel_chara');
+            if (!applyDefaults) return;
             ratioSource = 'manual';
             if (selChara && selChara.value) {
                 const charaEntry = getCharaEntries('chara').find(e => e.id === selChara.value);
@@ -4043,18 +4146,18 @@
         // キャラ・武器の選択もハーモニーと同じグリッド選択パネルにする。
         // 内部状態は引き続き隠しselect（id="sel_chara"/"sel_weapon"）で持つ。
         // getCharaWeaponBuff() 等の既存コードがこの2つのselectをそのまま読むため。
-        function rebuildCharaWeaponSelects() {
+        function rebuildCharaWeaponSelects(applyDefaults = true) {
             ['chara', 'weapon'].forEach(type => buildCWPicker(type));
-            onCharaWeaponChange();
+            onCharaWeaponChange(applyDefaults);
         }
 
         function buildCWPicker(type) {
             const container = document.getElementById('cwPicker_' + type); if (!container) return;
-            const prevSel = document.getElementById('sel_' + type);
-            const prevId = prevSel ? prevSel.value : '';
+            const prevId = S[type + 'Id'] || '';
             const entries = getCharaEntries(type);
             const stillExists = entries.some(e => e.id === prevId);
             const selectedId = stillExists ? prevId : '';
+            S[type + 'Id'] = selectedId; // 削除された登録を選んでいた場合は外す
             const selected = entries.find(e => e.id === selectedId);
 
             const items = entries.map(e => {
@@ -4093,8 +4196,7 @@
         }
 
         function pickCharaWeapon(type, id) {
-            const sel = document.getElementById('sel_' + type);
-            if (sel) sel.value = id;
+            S[type + 'Id'] = id;
             buildCWPicker(type);
             onCharaWeaponChange();
             recalcAll();
@@ -4385,7 +4487,8 @@
 
         function setStatMode(m, btn) {
             statMode = m;
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            // 登録タブの切り替えボタンも .mode-btn なので、自分のグループだけ切り替える
+            btn.parentElement.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const ml = { atk: '攻撃力', hp: 'HP', def: '防御力' }[m];
             const lbd = document.getElementById('lbl_base_d'); if (lbd) lbd.textContent = `基礎${ml}`;
@@ -4504,12 +4607,15 @@
             const p = getPartials();
             const d = document.getElementById('edDisplay'); if (!d) return;
             const ml = { atk: '全体攻撃力', hp: '全体HP', def: '全体防御力' }[statMode];
+            // 主役は期待ダメージ指数1つ。残りはその内訳として小さく添える
+            const dash = '<span class="ed-ph">—</span>';
             d.innerHTML = `
-    <div class="ed-box"><div class="ed-val">${p.E > 0 ? p.E.toFixed(0) : ''}</div><div class="ed-label">期待ダメージ指数 (E)</div></div>
-    <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#2563eb">${p.stat_eff > 0 ? p.stat_eff.toFixed(0) : ''}</div><div class="ed-label">${ml}</div></div>
-    <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#15803d">${p.crit_factor > 1 ? (p.crit_factor * 100 - 100).toFixed(1) + '%' : ''}</div><div class="ed-label">クリ期待値ボーナス</div></div>
-    <div class="ed-box"><div class="ed-val" style="font-size:17px;color:#8f5a06">${p.DMG_eff > 0 ? (p.DMG_eff * 100).toFixed(1) + '%' : ''}</div><div class="ed-label">全体ダメバフ</div></div>
-  `;
+    <div class="ed-main"><div class="ed-val">${p.E > 0 ? p.E.toFixed(0) : dash}</div><div class="ed-label">期待ダメージ指数 (E)</div></div>
+    <div class="ed-subs">
+      <div class="ed-sub"><span class="ed-label">${ml}</span><b style="color:#2563eb">${p.stat_eff > 0 ? p.stat_eff.toFixed(0) : dash}</b></div>
+      <div class="ed-sub"><span class="ed-label">クリ期待値ボーナス</span><b style="color:#15803d">${p.crit_factor > 1 ? (p.crit_factor * 100 - 100).toFixed(1) + '%' : dash}</b></div>
+      <div class="ed-sub"><span class="ed-label">全体ダメバフ</span><b style="color:#8f5a06">${p.DMG_eff > 0 ? (p.DMG_eff * 100).toFixed(1) + '%' : dash}</b></div>
+    </div>`;
             const bn = document.getElementById('balanceNote'); if (!bn) return;
             const box = (col, txt) => `<div style="font-size:10px;color:${col};padding:6px 10px;background:var(--card2);border:1px solid var(--border);border-radius:5px;margin-top:6px;">${txt}</div>`;
             const cr = p.cr_eff, cd = p.cd_eff;
@@ -4796,10 +4902,28 @@
         // ================================================================
         // HARMONY PICKER
         // ================================================================
+        // 空の枠は並べない。選んだ枠だけ出し、空き枠は「＋追加」を押したときに1つだけ開く。
+        // 1つも選んでいないときは最初の枠を開いておく（選ぶ場所が無くなるので）。
+        let hAddOpen = false;
+        function addHarmonySlot() { hAddOpen = true; buildHarmonyPicker(); }
+
         function buildHarmonyPicker() {
             const d = document.getElementById('harmonyPicker'); if (!d) return;
             d.innerHTML = '';
-            for (let i = 0; i < 3; i++) d.appendChild(buildHSlotEl(i));
+            const filled = S.harmony.map((h, i) => h.id ? i : -1).filter(i => i >= 0);
+            const firstEmpty = S.harmony.findIndex(h => !h.id);
+            const showEmpty = firstEmpty >= 0 && (hAddOpen || !filled.length);
+            for (let i = 0; i < 3; i++) {
+                if (filled.includes(i) || (showEmpty && i === firstEmpty)) d.appendChild(buildHSlotEl(i));
+            }
+            if (firstEmpty >= 0 && !showEmpty) {
+                const add = document.createElement('button');
+                add.type = 'button';
+                add.className = 'h-add-btn';
+                add.textContent = '＋ ハーモニーを追加';
+                add.onclick = addHarmonySlot;
+                d.appendChild(add);
+            }
             d.appendChild(buildManualHSlotEl());
             // close dropdown on outside click
             document.addEventListener('click', closeDropdowns, { once: false });
@@ -4993,6 +5117,7 @@
         }
 
         function onHarmonySelect(i, hId) {
+            hAddOpen = false;
             S.harmony[i].id = hId;
             const h = allHarmonies().find(x => x.id === hId);
             if (h) S.harmony[i].setLevel = h.setType === '3' ? 3 : h.setType === '1' ? 1 : 5;
@@ -5265,6 +5390,8 @@
                 S.radarTarget = { atk: 100, dmgbuf: 100 };
                 S.erTarget = ER_TARGET_DEFAULT;
                 S.erOther = 0;
+                S.charaId = '';
+                S.weaponId = '';
                 fillErInputs();
                 useAttr = '';
 
@@ -5278,7 +5405,7 @@
 
                 // 5. 再描画
                 buildHarmonyPicker();
-                onCharaWeaponChange();
+                rebuildCharaWeaponSelects();
                 fillDetailInputs();
                 updateRatioVis();
                 recalcAll();
@@ -5538,7 +5665,70 @@
             updateAutoStatRows();
             renderStatRadar();
             updateErNow();
+            renderSetupSummary();
             requestAnimationFrame(autoSizeAll);
+        }
+
+        // ================================================================
+        // 設定のまとめ（①タブ上部）
+        // ================================================================
+        // キャラ・武器・ハーモニー・属性・比率・基準・共鳴効率は最初に1回決めれば
+        // 普段は触らない。決めたあとは1行に畳み、毎回見る結果を上に出す。
+        const SETUP_OPEN_KEY = 'ww_setup_open';
+        let setupOpen = true;
+
+        function isSetupConfigured() {
+            return !!(document.getElementById('sel_chara')?.value || document.getElementById('sel_weapon')?.value
+                || S.harmony.some(h => h.id));
+        }
+
+        function initSetupOpen() {
+            let saved = null;
+            try { saved = localStorage.getItem(SETUP_OPEN_KEY); } catch { }
+            setupOpen = saved == null ? !isSetupConfigured() : saved === '1';
+            renderSetupSummary();
+        }
+
+        function toggleSetup() {
+            setupOpen = !setupOpen;
+            try { localStorage.setItem(SETUP_OPEN_KEY, setupOpen ? '1' : '0'); } catch { }
+            renderSetupSummary();
+        }
+
+        function ratioLabel() {
+            const r = S.ratio;
+            const p = RATIO_PRESETS.find(x => Object.keys(x.r).every(k => n(x.r[k]) === n(r[k])));
+            if (p) return p.name;
+            const L = { normal: '通常', heavy: '重撃', skill: 'スキル', lib: '解放', echo: '音骸' };
+            return Object.keys(L).filter(k => n(r[k]) > 0).map(k => `${L[k]}${n(r[k])}`).join('/') || '比率未設定';
+        }
+
+        function renderSetupSummary() {
+            const el = document.getElementById('setupSummary'); if (!el) return;
+            const body = document.getElementById('setupBody');
+            if (body) body.style.display = setupOpen ? '' : 'none';
+            const selText = id => {
+                const sel = document.getElementById(id);
+                return sel && sel.value ? sel.options[sel.selectedIndex]?.textContent.trim() : '';
+            };
+            const hs = S.harmony.map(slot => {
+                const h = slot.id ? allHarmonies().find(x => x.id === slot.id) : null;
+                if (!h) return null;
+                const a = ATTR[h.attr] || ATTR.other;
+                return `<span class="attr-icon ${a.cls}"></span>${esc(h.name)}<small>${slot.setLevel}</small>`;
+            }).filter(Boolean);
+            const chips = [
+                selText('sel_chara') || '<span class="ss-ph">キャラ未選択</span>',
+                selText('sel_weapon') || '<span class="ss-ph">武器未選択</span>',
+                ...(hs.length ? hs : ['<span class="ss-ph">ハーモニーなし</span>']),
+                useAttr ? `<span style="color:${ATTR[useAttr].color}">${ATTR[useAttr].label}</span>` : '全属性',
+                esc(ratioLabel()),
+                { atk: '攻撃力基準', hp: 'HP基準', def: '防御力基準' }[statMode],
+                erTarget() > 100 ? `共鳴効率 ${erTarget()}%` : '共鳴効率 評価なし',
+            ];
+            el.innerHTML = `<div class="ss-chips">${chips.map(c => `<span class="ss-chip">${c}</span>`).join('')}</div>
+    <button type="button" class="ss-btn" onclick="toggleSetup()" aria-expanded="${setupOpen}">${setupOpen ? '閉じる ▴' : '変更 ▾'}</button>`;
+            el.classList.toggle('open', setupOpen);
         }
 
         // 共鳴効率の現在値（音骸の内訳つき）
@@ -7307,6 +7497,8 @@ rebuildCharaWeaponSelects();
                 S.erOther = n(S.erOther);
                 if (['atk', 'hp', 'def'].includes(saved.statMode)) statMode = saved.statMode;
                 if (typeof saved.useAttr === 'string') useAttr = saved.useAttr;
+                S.charaId = typeof S.charaId === 'string' ? S.charaId : '';
+                S.weaponId = typeof S.weaponId === 'string' ? S.weaponId : '';
                 return true;
             } catch {
                 return false;
@@ -7349,7 +7541,7 @@ rebuildCharaWeaponSelects();
             renderCharaList();
                         initCollapsibleSections();
                         initCardCollapse();
-rebuildCharaWeaponSelects();
+rebuildCharaWeaponSelects(false);
             if (restored) {
                 fillRatioInputs();
                 const smBtn = document.getElementById('statModeBtn_' + statMode);
@@ -7361,6 +7553,7 @@ rebuildCharaWeaponSelects();
                 updateRatioVis();
             }
             recalcAll();
+            initSetupOpen();
             // 入力・選択のあと必ず保存されるように、変更イベントを一括で拾う
             document.addEventListener('keydown', onGlobalKeydown);
             document.addEventListener('input', scheduleSave, true);

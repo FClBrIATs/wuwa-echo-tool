@@ -1199,13 +1199,21 @@ await withPage(async page => {
         const o = {};
         o.初期状態は3枠 = S.harmony.length;
         buildHarmonyPicker();
-        o.ピッカーが3枠描画される = document.querySelectorAll('.h-slot').length;
+        // 空の枠は並べない：未選択なら最初の1枠だけ
+        o.未選択では1枠だけ描画 = document.querySelectorAll('.h-slot').length;
+        o.未選択では追加ボタンなし = !document.querySelector('.h-add-btn');
+        S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
+        buildHarmonyPicker();
+        o.選択後は選んだ枠と追加ボタン = [document.querySelectorAll('.h-slot').length, !!document.querySelector('.h-add-btn')];
+        document.querySelector('.h-add-btn').click();
+        o.追加で空き枠が1つ開く = [document.querySelectorAll('.h-slot').length, !!document.querySelector('.h-add-btn')];
 
         // 3枠それぞれに別のハーモニーを選べる
         S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
         S.harmony[1] = { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) };
         S.harmony[2] = { id: 'アストロ', setLevel: 2, custom: getPresetBuff('アストロ', 2) };
         buildHarmonyPicker(); recalcAll();
+        o.全枠選ぶと3枠描画で追加ボタンなし = [document.querySelectorAll('.h-slot').length, !!document.querySelector('.h-add-btn')];
         const H = getHarmonyTotal();
         // 3枠とも合算に反映されているか（3枠目だけ抜けていないか）を確認
         const h0 = getPresetBuff('リフレクト', 5), h1 = getPresetBuff('静寂', 5), h2 = getPresetBuff('アストロ', 2);
@@ -1217,7 +1225,11 @@ await withPage(async page => {
         return o;
     });
     check('初期状態でハーモニーが3枠ある', r.初期状態は3枠, 3);
-    check('選択パネルも3枠描画される', r.ピッカーが3枠描画される, 3);
+    check('未選択では1枠だけ描画される', r.未選択では1枠だけ描画, 1);
+    checkTrue('未選択では追加ボタンを出さない', r.未選択では追加ボタンなし);
+    check('選択後は選んだ枠＋追加ボタン', r.選択後は選んだ枠と追加ボタン, [1, true]);
+    check('追加を押すと空き枠が1つ開く', r.追加で空き枠が1つ開く, [2, false]);
+    check('3枠選ぶと3枠描画され追加ボタンは消える', r.全枠選ぶと3枠描画で追加ボタンなし, [3, false]);
     check('3枠すべてのバフが合算に反映される（3枠目の抜け漏れ無し）', r.攻撃力バフが3枠分合算される, 0);
     check('リセットしても3枠のまま', r.リセット後も3枠, 3);
     checkTrue('リセットで3枠とも空になる', r.リセット後は全枠空);
@@ -1965,6 +1977,47 @@ await withPage(async page => {
     check('未入力のときは全13種', r.未入力の行数, 13);
     checkTrue('未入力のときは切り替えを出さない', r.未入力で切替なし);
     checkTrue('③タブの音骸名の欄は無い', r.名前欄なし);
+});
+
+suite('キャラ・武器の選択が再読み込みで外れない');
+await withPage(async page => {
+    await page.evaluate(() => {
+        try { localStorage.removeItem('ww_setup_open'); } catch { }
+        const id = t => [...document.getElementById('sel_' + t).options].find(o => o.value)?.value;
+        pickCharaWeapon('chara', id('chara'));
+        pickCharaWeapon('weapon', id('weapon'));
+        // キャラ選択で入った比率を自分で変える（復元時に上書きされないこと）
+        S.ratio = { normal: 30, heavy: 0, skill: 70, lib: 0, echo: 0 };
+        window.__before = [S.charaId, S.weaponId, Math.round(getPartials().E)];
+        saveState();
+    });
+    const before = await page.evaluate(() => window.__before);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
+    const r = await page.evaluate(() => {
+        const o = {
+            選択: [document.getElementById('sel_chara').value, document.getElementById('sel_weapon').value],
+            E: Math.round(getPartials().E),
+            比率: S.ratio,
+            ボタン表示: document.querySelector('#cwPicker_chara .custom-sel-btn').textContent.trim(),
+            設定は畳まれている: document.getElementById('setupBody').style.display === 'none',
+            まとめにキャラ名: document.getElementById('setupSummary').textContent,
+        };
+        document.querySelector('#setupSummary .ss-btn').click();
+        o.変更で開く = document.getElementById('setupBody').style.display === '';
+        window.confirmDialog = (msg, fn) => fn();
+        resetStatsTab();
+        o.リセットで外れる = [S.charaId, S.weaponId, document.querySelector('#cwPicker_chara .custom-sel-btn').textContent.replace(/[\s▾]+/g, '')];
+        return o;
+    });
+    check('キャラ・武器が戻る', r.選択, before.slice(0, 2));
+    check('期待ダメージも同じ', r.E, before[2]);
+    check('自分で変えた比率は上書きされない', r.比率, { normal: 30, heavy: 0, skill: 70, lib: 0, echo: 0 });
+    checkTrue('選択ボタンにも名前が出る', !r.ボタン表示.startsWith('なし'));
+    checkTrue('設定済みなら再読み込み後は畳まれる', r.設定は畳まれている);
+    checkTrue('まとめにキャラ名が出る', r.まとめにキャラ名.includes(r.ボタン表示.replace('▾', '').trim()));
+    checkTrue('「変更」で設定が開く', r.変更で開く);
+    check('リセットで選択が外れボタンも戻る', r.リセットで外れる, ['', '', 'なし']);
 });
 
 await finish();
