@@ -21,7 +21,6 @@ const SETSUB = `
 const BUILD = SETSUB + `
   S.other = { base:'500', stat:'2100', cr:'68', cd:'245' };
   S.ratio={normal:0,heavy:0,skill:100,lib:0,echo:0};
-  S.erTarget = 100; // 共鳴効率は評価しない（ダメージ側の検証を共鳴効率に左右させない）
 `;
 
 // ── サブステの正規データ ────────────────────────────────
@@ -887,9 +886,7 @@ await withPage(async page => {
     // カード幅に収まらない表を、狭い枠内でスクロールさせずに丸ごと見せる
     checkTrue('パネルを開いたカードに目印が付く', r.目印が付く);
     checkTrue('カードからはみ出せる', r.はみ出せる);
-    // 編集欄が1枚になり幅に余裕ができたので、カードからはみ出さずに収まる場合もある。
-    // 目的は「表を狭い枠でスクロールさせず丸ごと見せる」こと
-    checkTrue('パネルが表の必要幅以上ある', r.パネル幅 >= r.表の必要幅);
+    checkTrue('パネルがカードより広い', r.パネル幅 > r.カード幅);
     checkTrue('表が横スクロールなしで収まる', r.表示領域 >= r.表の必要幅);
     checkTrue('ページ自体は横スクロールしない', !r.ページ横スクロール);
 
@@ -1201,21 +1198,13 @@ await withPage(async page => {
         const o = {};
         o.初期状態は3枠 = S.harmony.length;
         buildHarmonyPicker();
-        // 空の枠は並べない：未選択なら最初の1枠だけ
-        o.未選択では1枠だけ描画 = document.querySelectorAll('.h-slot').length;
-        o.未選択では追加ボタンなし = !document.querySelector('.h-add-btn');
-        S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
-        buildHarmonyPicker();
-        o.選択後は選んだ枠と追加ボタン = [document.querySelectorAll('.h-slot').length, !!document.querySelector('.h-add-btn')];
-        document.querySelector('.h-add-btn').click();
-        o.追加で空き枠が1つ開く = [document.querySelectorAll('.h-slot').length, !!document.querySelector('.h-add-btn')];
+        o.ピッカーが3枠描画される = document.querySelectorAll('.h-slot').length;
 
         // 3枠それぞれに別のハーモニーを選べる
         S.harmony[0] = { id: 'リフレクト', setLevel: 5, custom: getPresetBuff('リフレクト', 5) };
         S.harmony[1] = { id: '静寂', setLevel: 5, custom: getPresetBuff('静寂', 5) };
         S.harmony[2] = { id: 'アストロ', setLevel: 2, custom: getPresetBuff('アストロ', 2) };
         buildHarmonyPicker(); recalcAll();
-        o.全枠選ぶと3枠描画で追加ボタンなし = [document.querySelectorAll('.h-slot').length, !!document.querySelector('.h-add-btn')];
         const H = getHarmonyTotal();
         // 3枠とも合算に反映されているか（3枠目だけ抜けていないか）を確認
         const h0 = getPresetBuff('リフレクト', 5), h1 = getPresetBuff('静寂', 5), h2 = getPresetBuff('アストロ', 2);
@@ -1227,11 +1216,7 @@ await withPage(async page => {
         return o;
     });
     check('初期状態でハーモニーが3枠ある', r.初期状態は3枠, 3);
-    check('未選択では1枠だけ描画される', r.未選択では1枠だけ描画, 1);
-    checkTrue('未選択では追加ボタンを出さない', r.未選択では追加ボタンなし);
-    check('選択後は選んだ枠＋追加ボタン', r.選択後は選んだ枠と追加ボタン, [1, true]);
-    check('追加を押すと空き枠が1つ開く', r.追加で空き枠が1つ開く, [2, false]);
-    check('3枠選ぶと3枠描画され追加ボタンは消える', r.全枠選ぶと3枠描画で追加ボタンなし, [3, false]);
+    check('選択パネルも3枠描画される', r.ピッカーが3枠描画される, 3);
     check('3枠すべてのバフが合算に反映される（3枠目の抜け漏れ無し）', r.攻撃力バフが3枠分合算される, 0);
     check('リセットしても3枠のまま', r.リセット後も3枠, 3);
     checkTrue('リセットで3枠とも空になる', r.リセット後は全枠空);
@@ -1874,284 +1859,6 @@ await withPage(async page => {
     checkTrue('フラワー・レミニセンス 2セットは未対応フィールドのため空', !r.フラワー2);
     check('フラワー・レミニセンス 5セットは攻撃力+25（10+15）', r.フラワー5, 25);
     check('ショアキーパーのHP%はスキルツリーの12', r.ショアキーパーhp, 12);
-});
-
-// ── 共鳴効率のスコア化 ───────────────────────────────────
-suite('共鳴効率：目標までは最優先サブステと同じ価値、超過分は逓減');
-await withPage(async page => {
-    const r = await page.evaluate(b => {
-        eval(b);
-        const sdER = SUB_STATS.find(s => s.key === 'res_eff');
-        const roll = expectedVal(sdER);
-        const o = {};
-        S.erTarget = 125; S.erOther = 0; recalcAll();
-        o.未達1ロール = mv('res_eff', roll, false);
-        o.最優先1ロール = topSubRollValue();
-        // 目標+10%（逓減区間の中央）では1%あたりの価値が半分
-        S.erOther = 35;
-        o.中央の1pct = mv('res_eff', 0.01, false) / 0.01;
-        o.未達の1pct = erUnit();
-        // 目標+20%を超えると価値0
-        S.erOther = 46;
-        o.超過 = mv('res_eff', roll, false);
-        // 目標100以下は評価しない
-        S.erOther = 0; S.erTarget = 100; recalcAll();
-        o.評価しない = mv('res_eff', roll, false);
-        o.評価しないとき順位に出ない = !document.getElementById('mvRanking').textContent.includes('共鳴効率');
-        S.erTarget = 125; recalcAll();
-        o.順位に出る = document.getElementById('mvRanking').textContent.includes('共鳴効率');
-        // 装備中スロットの共鳴効率がスコアに入る（厳密差分のまま）
-        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'res_eff', val: '10.0' },
-        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
-        recalcAll();
-        o.スロットのスコア = echoScoreAt(0);
-        o.共鳴効率の寄与 = subScoresAt(0)[1];
-        o.寄与の合計 = subScoresAt(0).reduce((a, b) => a + b, 0);
-        S.erTarget = 100; recalcAll();
-        o.評価しないときのスコア = echoScoreAt(0);
-        return o;
-    }, BUILD);
-    checkNear('目標未満：共鳴効率1ロール＝最優先サブステ1ロール', r.未達1ロール, r.最優先1ロール, 1e-6);
-    checkNear('目標+10%では1%あたりの価値が半分', r.中央の1pct, r.未達の1pct / 2, r.未達の1pct * 0.01);
-    check('目標+20%を超えた分は価値0', r.超過, 0);
-    check('目標100以下は評価しない', r.評価しない, 0);
-    checkTrue('評価しないときは優先度に出ない', r.評価しないとき順位に出ない);
-    checkTrue('評価するときは優先度に出る', r.順位に出る);
-    checkTrue('共鳴効率のサブステがスロットのスコアに入る', r.共鳴効率の寄与 > 0);
-    checkNear('サブステ寄与の合計はスロットのスコアに一致', r.寄与の合計, r.スロットのスコア, 1e-6);
-    checkTrue('評価しないとスコアが下がる', r.評価しないときのスコア < r.スロットのスコア);
-});
-
-suite('共鳴効率：目標と加算分が保存・復元される');
-await withPage(async page => {
-    await page.evaluate(() => {
-        const t = document.getElementById('er_target'); t.value = '140'; t.dispatchEvent(new Event('input', { bubbles: true }));
-        const o = document.getElementById('er_other'); o.value = '22'; o.dispatchEvent(new Event('input', { bubbles: true }));
-        saveState();
-    });
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
-    const r = await page.evaluate(() => ({
-        target: S.erTarget, other: S.erOther,
-        欄: [document.getElementById('er_target').value, document.getElementById('er_other').value],
-        現在値: document.getElementById('er_now').textContent,
-    }));
-    check('目標', r.target, 140);
-    check('加算分', r.other, 22);
-    check('入力欄に戻る', r.欄, ['140', '22']);
-    checkTrue('現在値は100＋加算分', r.現在値.includes('122.0%'));
-});
-
-suite('サブステ選択：今のビルドで価値0の種類は畳む');
-await withPage(async page => {
-    const r = await page.evaluate(b => {
-        eval(b);
-        recalcAll();
-        const rows = () => document.querySelectorAll('#ebd_0 .pk-mx tbody tr').length;
-        const o = {};
-        openPicker(0, 0);
-        o.畳んだ行数 = rows();
-        o.切替ボタン = !!document.querySelector('#ebd_0 .pk-dead-toggle');
-        o.ボタンの文言 = document.querySelector('#ebd_0 .pk-dead-toggle').textContent;
-        document.querySelector('#ebd_0 .pk-dead-toggle').click();
-        o.全部の行数 = rows();
-        document.querySelector('#ebd_0 .pk-dead-toggle').click();
-        o.戻した行数 = rows();
-        closePicker();
-        // ③タブも同じ
-        document.getElementById('newLevel').value = '10'; buildNewSubs(); openNewPicker(0);
-        o.新規の行数 = document.querySelectorAll('#newSubRows .pk-mx tbody tr').length;
-        closeNewPicker();
-        // 何も入力されていない（全種類が価値0）なら全部出す
-        S.other = {}; recalcAll(); openPicker(0, 0);
-        o.未入力の行数 = rows();
-        o.未入力で切替なし = !document.querySelector('#ebd_0 .pk-dead-toggle');
-        o.名前欄なし = !document.getElementById('newName');
-        return o;
-    }, BUILD);
-    // 攻撃力基準・スキル100%・共鳴効率は評価しない：価値があるのはクリ率・クリダメ・攻撃力%・攻撃力実数・スキルバフの5種
-    check('価値のある5種だけ出る', r.畳んだ行数, 5);
-    checkTrue('価値0の種類を出す切り替えがある', r.切替ボタン);
-    checkTrue('畳んだ種類の数が分かる', r.ボタンの文言.includes('8種'));
-    check('切り替えると全13種', r.全部の行数, 13);
-    check('もう一度押すと畳む', r.戻した行数, 5);
-    check('③タブの選択も同じ', r.新規の行数, 5);
-    check('未入力のときは全13種', r.未入力の行数, 13);
-    checkTrue('未入力のときは切り替えを出さない', r.未入力で切替なし);
-    checkTrue('③タブの音骸名の欄は無い', r.名前欄なし);
-});
-
-suite('キャラ・武器の選択が再読み込みで外れない');
-await withPage(async page => {
-    await page.evaluate(() => {
-        try { localStorage.removeItem('ww_setup_open'); } catch { }
-        const id = t => [...document.getElementById('sel_' + t).options].find(o => o.value)?.value;
-        pickCharaWeapon('chara', id('chara'));
-        pickCharaWeapon('weapon', id('weapon'));
-        // キャラ選択で入った比率を自分で変える（復元時に上書きされないこと）
-        S.ratio = { normal: 30, heavy: 0, skill: 70, lib: 0, echo: 0 };
-        window.__before = [S.charaId, S.weaponId, Math.round(getPartials().E)];
-        saveState();
-    });
-    const before = await page.evaluate(() => window.__before);
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
-    const r = await page.evaluate(() => {
-        const o = {
-            選択: [document.getElementById('sel_chara').value, document.getElementById('sel_weapon').value],
-            E: Math.round(getPartials().E),
-            比率: S.ratio,
-            ボタン表示: document.querySelector('#cwPicker_chara .custom-sel-btn').textContent.trim(),
-            設定は畳まれている: document.getElementById('setupBody').style.display === 'none',
-            まとめにキャラ名: document.getElementById('setupSummary').textContent,
-        };
-        document.querySelector('#setupSummary .ss-btn').click();
-        o.変更で開く = document.getElementById('setupBody').style.display === '';
-        window.confirmDialog = (msg, fn) => fn();
-        resetStatsTab();
-        o.リセットで外れる = [S.charaId, S.weaponId, document.querySelector('#cwPicker_chara .custom-sel-btn').textContent.replace(/[\s▾]+/g, '')];
-        return o;
-    });
-    check('キャラ・武器が戻る', r.選択, before.slice(0, 2));
-    check('期待ダメージも同じ', r.E, before[2]);
-    check('自分で変えた比率は上書きされない', r.比率, { normal: 30, heavy: 0, skill: 70, lib: 0, echo: 0 });
-    checkTrue('選択ボタンにも名前が出る', !r.ボタン表示.startsWith('なし'));
-    checkTrue('設定済みなら再読み込み後は畳まれる', r.設定は畳まれている);
-    checkTrue('まとめにキャラ名が出る', r.まとめにキャラ名.includes(r.ボタン表示.replace('▾', '').trim()));
-    checkTrue('「変更」で設定が開く', r.変更で開く);
-    check('リセットで選択が外れボタンも戻る', r.リセットで外れる, ['', '', 'なし']);
-});
-
-suite('②タブ：一覧は表、入力欄は編集中の1スロットだけ');
-await withPage(async page => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    const r = await page.evaluate(b => {
-        eval(b);
-        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
-        { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '9.4' }, { key: 'flat_atk', val: '50' }];
-        S.echoes[1].main = { cost: 3, key1: 'atk_pct', val1: 30, key2: 'flat_atk', val2: 100 };
-        S.echoes[1].subs = [{ key: 'crit_dmg', val: '13.8' }, { key: 'hp_pct', val: '7.1' },
-        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
-        buildEchoGrid(); recalcAll();
-        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('装備音骸')).click();
-        const o = {};
-        o.入力欄は1枚 = document.querySelectorAll('.echo-card').length;
-        o.スロットボタンは5つ = document.querySelectorAll('.slot-tab').length;
-        o.最初はスロット1 = !!document.getElementById('ec_0');
-        document.getElementById('stab_1').click();
-        o.ボタンで切り替わる = [!!document.getElementById('ec_1'), !document.getElementById('ec_0'), editSlot];
-        const row = [...document.querySelectorAll('.rk-row')].find(tr => tr.textContent.includes('スロット1'));
-        row.click();
-        o.表の行で切り替わる = editSlot;
-        o.選択中の行に印 = document.querySelectorAll('.rk-row.editing').length;
-        openPicker(3, 0);
-        o.別スロットのパネルを開くと切り替わる = [editSlot, !!document.querySelector('#ec_3 .pk-cell')];
-        closePicker();
-        o.表にメインステ = document.querySelector('.rk-table').textContent.includes('C3 攻撃力% 30%');
-        // 未入力が混ざっていても、最弱・最強の印は入力済みどうしで付く
-        o.最弱 = document.querySelector('.slot-tab.worst')?.id;
-        o.最強 = document.querySelector('.slot-tab.best')?.id;
-        o.未入力の表示 = document.getElementById('stabs_4').textContent;
-        // スマホ幅でもサブステ列が画面内に収まる（表を横スクロールさせない）
-        const subs = [...document.querySelectorAll('.rk-subs')].map(x => x.getBoundingClientRect().right);
-        o.サブステが画面内 = Math.max(...subs) <= document.documentElement.clientWidth;
-        o.ページ横スクロールなし = document.documentElement.scrollWidth <= document.documentElement.clientWidth;
-        return o;
-    }, BUILD);
-    check('入力欄は1枚だけ', r.入力欄は1枚, 1);
-    check('スロットボタンは5つ', r.スロットボタンは5つ, 5);
-    checkTrue('最初はスロット1を編集', r.最初はスロット1);
-    check('スロットボタンで切り替わる', r.ボタンで切り替わる, [true, true, 1]);
-    check('表の行を押すとそのスロットを編集', r.表の行で切り替わる, 0);
-    check('編集中の行に印が付く', r.選択中の行に印, 1);
-    check('別スロットのパネルを開くとそのスロットへ切り替わる', r.別スロットのパネルを開くと切り替わる, [3, true]);
-    checkTrue('表にコスト・メインステが出る', r.表にメインステ);
-    check('最弱の印は入力済みの中で弱いスロット', r.最弱, 'stab_1');
-    check('最強の印は入力済みの中で強いスロット', r.最強, 'stab_0');
-    check('未入力スロットのボタンは「未入力」', r.未入力の表示, '未入力');
-    checkTrue('スマホ幅でもサブステ列が画面内', r.サブステが画面内);
-    checkTrue('ページは横スクロールしない', r.ページ横スクロールなし);
-});
-
-suite('③タブ：判定前は比較カードを出さない');
-await withPage(async page => {
-    const r = await page.evaluate(b => {
-        eval(b);
-        S.echoes[0].subs = [{ key: 'crit_dmg', val: '13.8' }, { key: 'atk_pct', val: '7.1' },
-        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
-        buildEchoGrid(); recalcAll();
-        const shown = () => document.getElementById('probCard').style.display !== 'none';
-        const o = { 判定前: shown() };
-        document.getElementById('newLevel').value = '10';
-        setNewSub(0, 'crit_rate', 8.1); setNewSub(1, 'crit_dmg', 16.2);
-        runJudge();
-        o.判定後 = shown();
-        o.注記 = document.querySelector('#tab-new > .info-box').textContent;
-        return o;
-    }, BUILD);
-    checkTrue('判定前は出さない', !r.判定前);
-    checkTrue('判定すると出る', r.判定後);
-    checkTrue('注記は実装どおり（2,000件・毎回同じ）', r.注記.includes('2,000件') && r.注記.includes('毎回同じ') && !r.注記.includes('20,000'));
-});
-
-suite('登録タブ：一覧が主役、フォームは新規登録・編集で開く');
-await withPage(async page => {
-    const r = await page.evaluate(() => {
-        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('登録')).click();
-        const shown = () => document.getElementById('regFormCard').style.display !== 'none';
-        const visible = id => { const el = document.getElementById(id); return !!el && !el.closest('.cw-hidden'); };
-        const o = { 最初は閉じている: !shown() };
-        document.getElementById('regNewBtn').click();
-        o.新規登録で開く = shown();
-        o.見出し = document.getElementById('reg_form_head').textContent;
-        // 値の無い効果欄は畳み、属性ダメバフは常に出す
-        o.属性ダメバフは出る = visible('c2Dmg') && visible('cDmg');
-        o.クリ率は畳む = !visible('cCR');
-        const add = document.querySelector('#cSet5Block .cw-add');
-        add.value = 'cCR'; add.dispatchEvent(new Event('change'));
-        o.追加で出る = visible('cCR');
-        document.getElementById('cName').value = '折りたたみテスト';
-        document.getElementById('cCR').value = '12';
-        addCustomHarmony();
-        o.登録で閉じる = !shown();
-        // 編集で開くと、値の入っている欄は出ている
-        const mine = customHarmonies().find(h => h.name === '折りたたみテスト');
-        editCustomHarmony(mine.id);
-        o.編集で開く = shown();
-        o.編集の見出し = document.getElementById('reg_form_head').textContent;
-        o.値のある欄は出る = visible('cCR');
-        o.値の無い欄は畳む = !visible('cCD');
-        closeRegForm();
-        o.閉じると編集も終わる = editingHarmonyId === null && !shown();
-        // 絞り込み
-        const total = document.querySelectorAll('#customList .custom-item').length;
-        setRegFilter('fire');
-        const fire = [...document.querySelectorAll('#customList .custom-item')];
-        o.絞り込み = [fire.length > 0, fire.length < total];
-        o.焦熱だけ = fire.every(x => x.querySelector('.attr-icon').classList.contains('si-fire'));
-        setRegFilter('');
-        o.すべてに戻る = document.querySelectorAll('#customList .custom-item').length === total;
-        // 武器は武器種で絞る
-        setRegType('weapon');
-        o.武器のタブ = [...document.querySelectorAll('#regFilter .gpk-tab')].map(b => b.querySelector('span').textContent);
-        return o;
-    });
-    checkTrue('フォームは最初は閉じている', r.最初は閉じている);
-    checkTrue('「＋新規登録」で開く', r.新規登録で開く);
-    check('見出しは新規登録', r.見出し, 'ハーモニーを新規登録');
-    checkTrue('属性ダメバフは常に出す', r.属性ダメバフは出る);
-    checkTrue('値の無い効果欄は畳む', r.クリ率は畳む);
-    checkTrue('「＋効果を追加」で欄が出る', r.追加で出る);
-    checkTrue('登録するとフォームを閉じる', r.登録で閉じる);
-    checkTrue('一覧の「編集」で開く', r.編集で開く);
-    check('見出しは編集', r.編集の見出し, 'ハーモニーを編集');
-    checkTrue('編集では値のある欄が出る', r.値のある欄は出る);
-    checkTrue('編集でも値の無い欄は畳む', r.値の無い欄は畳む);
-    checkTrue('閉じると編集状態も終わる', r.閉じると編集も終わる);
-    check('属性で絞り込める', r.絞り込み, [true, true]);
-    checkTrue('絞り込むとその属性だけ', r.焦熱だけ);
-    checkTrue('「すべて」で戻る', r.すべてに戻る);
-    checkTrue('武器は武器種のタブ', r.武器のタブ[0] === 'すべて' && r.武器のタブ.includes('迅刀'));
 });
 
 await finish();

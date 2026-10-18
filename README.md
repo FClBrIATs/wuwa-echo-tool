@@ -98,6 +98,7 @@ echo-optimizer-v5.index.html   # ツール本体（単一ファイル）
 index.html                     # 本体への転送ページ（GitHub Pages のトップ用）
 README.md
 PHASES.md                      # 改修フェーズ計画
+proto-compact.html             # 試作：情報量を整理した版（PHASES.md の Phase 22）
 LICENSE
 ```
 
@@ -151,7 +152,10 @@ LICENSE
 npm install
 npx playwright install chromium   # 初回のみ
 npm test
+npm run test:proto                # 試作 proto-compact.html のテスト
 ```
+
+Chromium を別の場所に置いている場合は `CHROMIUM_PATH` で実行ファイルを指定できます。
 
 テストは配布物のHTMLをそのままブラウザで開き、ページ内の関数を呼んで検証します。
 ソースを分割してビルドする方式は取っていないため、単一ファイルの編集フローは変わりません。
