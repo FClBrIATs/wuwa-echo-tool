@@ -887,7 +887,9 @@ await withPage(async page => {
     // カード幅に収まらない表を、狭い枠内でスクロールさせずに丸ごと見せる
     checkTrue('パネルを開いたカードに目印が付く', r.目印が付く);
     checkTrue('カードからはみ出せる', r.はみ出せる);
-    checkTrue('パネルがカードより広い', r.パネル幅 > r.カード幅);
+    // 編集欄が1枚になり幅に余裕ができたので、カードからはみ出さずに収まる場合もある。
+    // 目的は「表を狭い枠でスクロールさせず丸ごと見せる」こと
+    checkTrue('パネルが表の必要幅以上ある', r.パネル幅 >= r.表の必要幅);
     checkTrue('表が横スクロールなしで収まる', r.表示領域 >= r.表の必要幅);
     checkTrue('ページ自体は横スクロールしない', !r.ページ横スクロール);
 
@@ -2018,6 +2020,57 @@ await withPage(async page => {
     checkTrue('まとめにキャラ名が出る', r.まとめにキャラ名.includes(r.ボタン表示.replace('▾', '').trim()));
     checkTrue('「変更」で設定が開く', r.変更で開く);
     check('リセットで選択が外れボタンも戻る', r.リセットで外れる, ['', '', 'なし']);
+});
+
+suite('②タブ：一覧は表、入力欄は編集中の1スロットだけ');
+await withPage(async page => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'crit_rate', val: '10.5' },
+        { key: 'atk_pct', val: '11.6' }, { key: 'dmg_skill', val: '9.4' }, { key: 'flat_atk', val: '50' }];
+        S.echoes[1].main = { cost: 3, key1: 'atk_pct', val1: 30, key2: 'flat_atk', val2: 100 };
+        S.echoes[1].subs = [{ key: 'crit_dmg', val: '13.8' }, { key: 'hp_pct', val: '7.1' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        buildEchoGrid(); recalcAll();
+        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('装備音骸')).click();
+        const o = {};
+        o.入力欄は1枚 = document.querySelectorAll('.echo-card').length;
+        o.スロットボタンは5つ = document.querySelectorAll('.slot-tab').length;
+        o.最初はスロット1 = !!document.getElementById('ec_0');
+        document.getElementById('stab_1').click();
+        o.ボタンで切り替わる = [!!document.getElementById('ec_1'), !document.getElementById('ec_0'), editSlot];
+        const row = [...document.querySelectorAll('.rk-row')].find(tr => tr.textContent.includes('スロット1'));
+        row.click();
+        o.表の行で切り替わる = editSlot;
+        o.選択中の行に印 = document.querySelectorAll('.rk-row.editing').length;
+        openPicker(3, 0);
+        o.別スロットのパネルを開くと切り替わる = [editSlot, !!document.querySelector('#ec_3 .pk-cell')];
+        closePicker();
+        o.表にメインステ = document.querySelector('.rk-table').textContent.includes('C3 攻撃力% 30%');
+        // 未入力が混ざっていても、最弱・最強の印は入力済みどうしで付く
+        o.最弱 = document.querySelector('.slot-tab.worst')?.id;
+        o.最強 = document.querySelector('.slot-tab.best')?.id;
+        o.未入力の表示 = document.getElementById('stabs_4').textContent;
+        // スマホ幅でもサブステ列が画面内に収まる（表を横スクロールさせない）
+        const subs = [...document.querySelectorAll('.rk-subs')].map(x => x.getBoundingClientRect().right);
+        o.サブステが画面内 = Math.max(...subs) <= document.documentElement.clientWidth;
+        o.ページ横スクロールなし = document.documentElement.scrollWidth <= document.documentElement.clientWidth;
+        return o;
+    }, BUILD);
+    check('入力欄は1枚だけ', r.入力欄は1枚, 1);
+    check('スロットボタンは5つ', r.スロットボタンは5つ, 5);
+    checkTrue('最初はスロット1を編集', r.最初はスロット1);
+    check('スロットボタンで切り替わる', r.ボタンで切り替わる, [true, true, 1]);
+    check('表の行を押すとそのスロットを編集', r.表の行で切り替わる, 0);
+    check('編集中の行に印が付く', r.選択中の行に印, 1);
+    check('別スロットのパネルを開くとそのスロットへ切り替わる', r.別スロットのパネルを開くと切り替わる, [3, true]);
+    checkTrue('表にコスト・メインステが出る', r.表にメインステ);
+    check('最弱の印は入力済みの中で弱いスロット', r.最弱, 'stab_1');
+    check('最強の印は入力済みの中で強いスロット', r.最強, 'stab_0');
+    check('未入力スロットのボタンは「未入力」', r.未入力の表示, '未入力');
+    checkTrue('スマホ幅でもサブステ列が画面内', r.サブステが画面内);
+    checkTrue('ページは横スクロールしない', r.ページ横スクロールなし);
 });
 
 await finish();

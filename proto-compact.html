@@ -1366,6 +1366,7 @@
         }
 
         .slot-lbl {
+            white-space: nowrap;
             font-family: 'IBM Plex Mono', monospace;
             font-size: 10px;
             font-weight: 600;
@@ -1850,11 +1851,159 @@
             transition: width .3s;
         }
 
-        .rk-subs {
+        /* td 自体を flex にすると表のセルでなくなり、行の罫線がずれるので内側で並べる */
+        .rk-subs-in {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
             max-width: 340px;
+        }
+
+        .rk-wrap {
+            overflow-x: auto;
+        }
+
+        .rk-row {
+            cursor: pointer;
+        }
+
+        .rk-row:hover td {
+            background: var(--card2);
+        }
+
+        .rk-row.editing td {
+            background: rgba(37, 99, 235, .07);
+        }
+
+        .rk-row.editing td:first-child {
+            box-shadow: inset 3px 0 0 var(--p);
+        }
+
+        .rk-main {
+            font-size: 10px;
+            font-weight: 400;
+            color: var(--text3);
+            margin-top: 2px;
+        }
+
+        /* スマホ：横スクロールさせず、1スロットを2〜3段に折り返す。
+           サブステ列が画面外に出て「なぜ弱いのか」が見えなくなるのを防ぐ */
+        @media(max-width:640px) {
+            .rk-table {
+                min-width: 0;
+            }
+
+            .rk-table thead {
+                display: none;
+            }
+
+            .rk-table tr {
+                display: grid;
+                grid-template-columns: 1.8em minmax(0, 1fr) auto auto;
+                align-items: center;
+                column-gap: 8px;
+                row-gap: 5px;
+                padding: 9px 4px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .rk-table tbody tr:last-child {
+                border-bottom: none;
+            }
+
+            .rk-table td {
+                display: block;
+                padding: 0;
+                border-bottom: none;
+            }
+
+            .rk-name {
+                white-space: normal;
+            }
+
+            .rk-barcell {
+                grid-column: 2 / -1;
+                width: auto;
+                min-width: 0;
+            }
+
+            .rk-subs {
+                grid-column: 2 / -1;
+            }
+
+            .rk-subs-in {
+                max-width: none;
+            }
+
+            /* 行が grid になるので、選択中の色はセルではなく行に付ける */
+            .rk-row.editing td,
+            .rk-row:hover td {
+                background: transparent;
+            }
+
+            .rk-row.editing {
+                background: rgba(37, 99, 235, .07);
+                box-shadow: inset 3px 0 0 var(--p);
+            }
+
+            .rk-row.editing td:first-child {
+                box-shadow: none;
+            }
+        }
+
+        .slot-editor {
+            max-width: 640px;
+        }
+
+        .slot-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .slot-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            min-height: 44px;
+            padding: 4px 2px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--card);
+            color: var(--text2);
+            cursor: pointer;
+        }
+
+        .slot-tab.on {
+            border-color: var(--p);
+            background: rgba(37, 99, 235, .08);
+            color: var(--p);
+        }
+
+        .slot-tab.worst {
+            border-color: var(--red);
+        }
+
+        .slot-tab.best {
+            border-color: var(--green);
+        }
+
+        .slot-tab.on.worst,
+        .slot-tab.on.best {
+            box-shadow: inset 0 -3px 0 var(--p);
+        }
+
+        .slot-tab-n {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .slot-tab-s {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
         }
 
         .rk-sub {
@@ -2444,7 +2593,7 @@
             }
 
             .slot-lbl {
-                width: 36px;
+                width: auto;
                 font-size: 10px;
             }
         }
@@ -2991,8 +3140,8 @@
                 <b>装備中の音骸5スロットのステータスを入力してスコアを比較します。</b><br>
                 <b>コスト・メインステ</b>：ボタン1つで組み合わせ（全19通り）が決まります。①タブのバフ計算に自動反映されます。<br>
                 <b>サブステ</b>：種類×値のマトリクスから1タップで選択（最大5枠）。セルの色は今のビルドでの価値です。選ぶと次の空き枠へ自動で進みます。<br>
-                <b>スコア</b>：①タブのステータスを基準にした期待ダメージへの貢献度。<span style="color:#dc2626">赤枠が最弱</span>、<span
-                    style="color:#15803d">緑枠が最強</span>スロットです。
+                <b>スコア</b>：①タブのステータスを基準にした期待ダメージへの貢献度。上の表で弱い順に並びます。<br>
+                <b>スロットの切り替え</b>：表の行か、入力欄の上のスロットボタンを押すと、そのスロットを編集できます。
             </div>
         </details>
         <div class="card">
@@ -3003,8 +3152,14 @@
                 <div style="color:var(--text3);font-size:11px;">音骸のサブステを入力すると優先度が表示されます</div>
             </div>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <div class="sec-title" style="margin:0;">スロットの入力</div>
+            <button class="btn" onclick="resetEquipTab()"
+                style="padding:4px 10px;font-size:10px;background:rgba(220,38,38,.12);color:#b91c1c;border-color:rgba(220,38,38,.4);">↺ このタブをリセット</button>
+        </div>
+        <div class="slot-editor" id="echoGrid"></div>
         <!-- Echo Preset UI -->
-        <div class="card" style="margin-bottom:12px;">
+        <div class="card" style="margin:12px 0;">
             <div class="card-head">
                 <h2>音骸セット 保存 / 呼び出し</h2>
             </div>
@@ -3023,12 +3178,6 @@
                 <span id="echoPresetMsg" style="font-size:10px;color:var(--green);"></span>
             </div>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <div class="sec-title" style="margin:0;">装備音骸 5スロット</div>
-            <button class="btn" onclick="resetEquipTab()"
-                style="padding:4px 10px;font-size:10px;background:rgba(220,38,38,.12);color:#b91c1c;border-color:rgba(220,38,38,.4);">↺ このタブをリセット</button>
-        </div>
-        <div class="grid5" id="echoGrid"></div>
     </div>
 
     <!-- TAB 3 -->
@@ -5867,10 +6016,35 @@
             el._t = setTimeout(() => { el.textContent = ''; }, 3000);
         }
 
+        // 5スロットの一覧は上の厳選優先度の表が担う。入力欄は編集中の1スロットだけ出し、
+        // スロットボタン（または表の行）で切り替える。
+        let editSlot = 0;
+
         function buildEchoGrid() {
             const g = document.getElementById('echoGrid'); if (!g) return;
-            g.innerHTML = '';
-            S.echoes.forEach((_, i) => g.appendChild(buildEchoCardEl(i)));
+            if (editSlot < 0 || editSlot >= S.echoes.length) editSlot = 0;
+            g.innerHTML = `<div class="slot-tabs" role="tablist">${S.echoes.map((e, i) =>
+                `<button type="button" role="tab" class="slot-tab${i === editSlot ? ' on' : ''}" id="stab_${i}"
+        aria-selected="${i === editSlot}" onclick="selectEditSlot(${i})">
+        <span class="slot-tab-n">SLOT ${i + 1}</span><span class="slot-tab-s" id="stabs_${i}"></span></button>`).join('')}</div>`;
+            g.appendChild(buildEchoCardEl(editSlot));
+        }
+
+        // fromTable: 表の行から選んだとき。スマホでは入力欄が画面外なのでそこまで送る
+        function selectEditSlot(i, fromTable = false) {
+            if (picker && picker.ei !== i) picker = null;
+            editSlot = i;
+            buildEchoGrid();
+            buildEchoSubRows(i);
+            updateEchoScores();
+            if (fromTable) document.getElementById('echoGrid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // コスト・メインステの1行表示（表とボタンで共用）
+        function echoMainText(echo) {
+            const cd = echo.main.cost ? COST_DATA[echo.main.cost] : null;
+            const st = cd && echo.main.key1 ? cd.stats.find(x => x.key === echo.main.key1) : null;
+            return st ? `C${echo.main.cost} ${st.name} ${st.val}${st.unit}` : (echo.main.cost ? `C${echo.main.cost}` : '');
         }
 
         function makeStatSelectHTML(id, sel, onch, cls = '', usedKeys = []) {
@@ -5967,8 +6141,10 @@
         // picker: {ei, si} … サブステ入力中 / {ei, main:true} … コスト・メインステ選択中
         let picker = null;
 
-        function openPicker(ei, si) { picker = { ei, si }; buildEchoSubRows(ei); }
-        function openMainPicker(ei) { picker = { ei, main: true }; buildEchoSubRows(ei); }
+        // 編集中でないスロットの入力を開くときは、先にそのスロットへ切り替える
+        function ensureEditSlot(ei) { if (ei !== editSlot) { editSlot = ei; buildEchoGrid(); updateEchoScores(); } }
+        function openPicker(ei, si) { ensureEditSlot(ei); picker = { ei, si }; buildEchoSubRows(ei); }
+        function openMainPicker(ei) { ensureEditSlot(ei); picker = { ei, main: true }; buildEchoSubRows(ei); }
         function closePicker() {
             const ei = picker && picker.ei;
             picker = null;
@@ -6223,10 +6399,16 @@
                 const col = pctR > .75 ? '#15803d' : pctR > .5 ? '#2563eb' : pctR > .25 ? '#8f5a06' : '#dc2626';
                 const disp = E > 0 ? (score / E * 100).toFixed(2) + '%' : (score * 10000).toFixed(0);
                 if (badge) { badge.textContent = disp; badge.style.background = col + '18'; badge.style.color = col; badge.style.border = `1px solid ${col}40`; }
-                if (card) card.classList.remove('worst', 'best');
+                const tabScore = document.getElementById(`stabs_${idx}`);
+                if (tabScore) { tabScore.textContent = isEchoUntouched(S.echoes[idx]) ? '未入力' : disp; tabScore.style.color = col; }
+                document.getElementById(`stab_${idx}`)?.classList.remove('worst', 'best');
             });
-            if (sorted[0]) document.getElementById(`ec_${sorted[0].idx}`)?.classList.add('worst');
-            if (sorted[4]) document.getElementById(`ec_${sorted[4].idx}`)?.classList.add('best');
+            // 最弱・最強の印は、入力済みのスロットどうしで比べたときだけ付ける
+            const real = sorted.filter(x => !isEchoUntouched(S.echoes[x.idx]));
+            if (real.length >= 2) {
+                document.getElementById(`stab_${real[0].idx}`)?.classList.add('worst');
+                document.getElementById(`stab_${real[real.length - 1].idx}`)?.classList.add('best');
+            }
 
             // Sub MV labels
             for (let i = 0; i < 5; i++) {
@@ -6302,20 +6484,21 @@
                     const dead = mv(x.key, x.val) <= 0;
                     return `<span class="rk-sub${dead ? ' dead' : ''}">${sd.name} ${x.val}${sd.unit}</span>`;
                 }).filter(Boolean).join('');
-                return `<tr>
+                const mainTxt = echoMainText(echo);
+                return `<tr class="rk-row${s.idx === editSlot ? ' editing' : ''}" onclick="selectEditSlot(${s.idx}, true)" title="押すとこのスロットを編集">
       <td class="rk-num" style="color:${rankCol}">${rank + 1}</td>
-      <td class="rk-name">${esc(echo.name)}${untouched ? '<span class="rk-tag">未入力</span>' : ''}${isTop ? '<span class="rk-first">← 最優先</span>' : ''}</td>
+      <td class="rk-name">${esc(echo.name)}${untouched ? '<span class="rk-tag">未入力</span>' : ''}${isTop ? '<span class="rk-first">← 最優先</span>' : ''}${mainTxt ? `<div class="rk-main">${esc(mainTxt)}</div>` : ''}</td>
       <td class="rk-score" style="color:${barCol}">${disp}</td>
       <td class="rk-top">${topTxt}</td>
       <td class="rk-barcell"><div class="rk-track"><div class="rk-fill" style="width:${(pctR * 100).toFixed(1)}%;background:${barCol}"></div></div></td>
-      <td class="rk-subs">${subTxt || '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="rk-subs"><div class="rk-subs-in">${subTxt || '<span style="color:var(--text3)">—</span>'}</div></td>
     </tr>`;
             }).join('');
-            body.innerHTML = `<div class="scrollx"><table class="rk-table">
+            body.innerHTML = `<div class="rk-wrap"><table class="rk-table">
       <thead><tr><th></th><th>スロット</th><th>スコア</th><th>入れ替え難易度</th><th></th><th>サブステ</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     <div class="note-sm">「入れ替え難易度」は、ランダムに拾った音骸がこのスロットを超える確率です。
-      上位1%のスロットを引き直すのは現実的ではありません。灰色のサブステはこのビルドでは価値0です。</div>`;
+      上位1%のスロットを引き直すのは現実的ではありません。灰色のサブステはこのビルドでは価値0です。行を押すとそのスロットを編集できます。</div>`;
         }
 
         // ================================================================
