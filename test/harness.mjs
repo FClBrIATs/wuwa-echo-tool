@@ -13,7 +13,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-export const TOOL_URL = 'file://' + resolve(HERE, '..', 'echo-optimizer-v5.index.html');
+// TOOL_FILE で検証対象を切り替えられる（試作ファイルを同じテストで確かめるため）
+export const TOOL_URL = 'file://' + resolve(HERE, '..', process.env.TOOL_FILE || 'echo-optimizer-v5.index.html');
 
 // CI やコンテナでは実行可能パスを明示できるようにしておく
 const EXECUTABLE = process.env.CHROMIUM_PATH || undefined;

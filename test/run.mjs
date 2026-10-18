@@ -21,6 +21,7 @@ const SETSUB = `
 const BUILD = SETSUB + `
   S.other = { base:'500', stat:'2100', cr:'68', cd:'245' };
   S.ratio={normal:0,heavy:0,skill:100,lib:0,echo:0};
+  S.erTarget = 100; // 共鳴効率は評価しない（ダメージ側の検証を共鳴効率に左右させない）
 `;
 
 // ── サブステの正規データ ────────────────────────────────
@@ -1859,6 +1860,111 @@ await withPage(async page => {
     checkTrue('フラワー・レミニセンス 2セットは未対応フィールドのため空', !r.フラワー2);
     check('フラワー・レミニセンス 5セットは攻撃力+25（10+15）', r.フラワー5, 25);
     check('ショアキーパーのHP%はスキルツリーの12', r.ショアキーパーhp, 12);
+});
+
+// ── 共鳴効率のスコア化 ───────────────────────────────────
+suite('共鳴効率：目標までは最優先サブステと同じ価値、超過分は逓減');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        const sdER = SUB_STATS.find(s => s.key === 'res_eff');
+        const roll = expectedVal(sdER);
+        const o = {};
+        S.erTarget = 125; S.erOther = 0; recalcAll();
+        o.未達1ロール = mv('res_eff', roll, false);
+        o.最優先1ロール = topSubRollValue();
+        // 目標+10%（逓減区間の中央）では1%あたりの価値が半分
+        S.erOther = 35;
+        o.中央の1pct = mv('res_eff', 0.01, false) / 0.01;
+        o.未達の1pct = erUnit();
+        // 目標+20%を超えると価値0
+        S.erOther = 46;
+        o.超過 = mv('res_eff', roll, false);
+        // 目標100以下は評価しない
+        S.erOther = 0; S.erTarget = 100; recalcAll();
+        o.評価しない = mv('res_eff', roll, false);
+        o.評価しないとき順位に出ない = !document.getElementById('mvRanking').textContent.includes('共鳴効率');
+        S.erTarget = 125; recalcAll();
+        o.順位に出る = document.getElementById('mvRanking').textContent.includes('共鳴効率');
+        // 装備中スロットの共鳴効率がスコアに入る（厳密差分のまま）
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '21.0' }, { key: 'res_eff', val: '10.0' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        recalcAll();
+        o.スロットのスコア = echoScoreAt(0);
+        o.共鳴効率の寄与 = subScoresAt(0)[1];
+        o.寄与の合計 = subScoresAt(0).reduce((a, b) => a + b, 0);
+        S.erTarget = 100; recalcAll();
+        o.評価しないときのスコア = echoScoreAt(0);
+        return o;
+    }, BUILD);
+    checkNear('目標未満：共鳴効率1ロール＝最優先サブステ1ロール', r.未達1ロール, r.最優先1ロール, 1e-6);
+    checkNear('目標+10%では1%あたりの価値が半分', r.中央の1pct, r.未達の1pct / 2, r.未達の1pct * 0.01);
+    check('目標+20%を超えた分は価値0', r.超過, 0);
+    check('目標100以下は評価しない', r.評価しない, 0);
+    checkTrue('評価しないときは優先度に出ない', r.評価しないとき順位に出ない);
+    checkTrue('評価するときは優先度に出る', r.順位に出る);
+    checkTrue('共鳴効率のサブステがスロットのスコアに入る', r.共鳴効率の寄与 > 0);
+    checkNear('サブステ寄与の合計はスロットのスコアに一致', r.寄与の合計, r.スロットのスコア, 1e-6);
+    checkTrue('評価しないとスコアが下がる', r.評価しないときのスコア < r.スロットのスコア);
+});
+
+suite('共鳴効率：目標と加算分が保存・復元される');
+await withPage(async page => {
+    await page.evaluate(() => {
+        const t = document.getElementById('er_target'); t.value = '140'; t.dispatchEvent(new Event('input', { bubbles: true }));
+        const o = document.getElementById('er_other'); o.value = '22'; o.dispatchEvent(new Event('input', { bubbles: true }));
+        saveState();
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => typeof SUB_STATS !== 'undefined');
+    const r = await page.evaluate(() => ({
+        target: S.erTarget, other: S.erOther,
+        欄: [document.getElementById('er_target').value, document.getElementById('er_other').value],
+        現在値: document.getElementById('er_now').textContent,
+    }));
+    check('目標', r.target, 140);
+    check('加算分', r.other, 22);
+    check('入力欄に戻る', r.欄, ['140', '22']);
+    checkTrue('現在値は100＋加算分', r.現在値.includes('122.0%'));
+});
+
+suite('サブステ選択：今のビルドで価値0の種類は畳む');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        recalcAll();
+        const rows = () => document.querySelectorAll('#ebd_0 .pk-mx tbody tr').length;
+        const o = {};
+        openPicker(0, 0);
+        o.畳んだ行数 = rows();
+        o.切替ボタン = !!document.querySelector('#ebd_0 .pk-dead-toggle');
+        o.ボタンの文言 = document.querySelector('#ebd_0 .pk-dead-toggle').textContent;
+        document.querySelector('#ebd_0 .pk-dead-toggle').click();
+        o.全部の行数 = rows();
+        document.querySelector('#ebd_0 .pk-dead-toggle').click();
+        o.戻した行数 = rows();
+        closePicker();
+        // ③タブも同じ
+        document.getElementById('newLevel').value = '10'; buildNewSubs(); openNewPicker(0);
+        o.新規の行数 = document.querySelectorAll('#newSubRows .pk-mx tbody tr').length;
+        closeNewPicker();
+        // 何も入力されていない（全種類が価値0）なら全部出す
+        S.other = {}; recalcAll(); openPicker(0, 0);
+        o.未入力の行数 = rows();
+        o.未入力で切替なし = !document.querySelector('#ebd_0 .pk-dead-toggle');
+        o.名前欄なし = !document.getElementById('newName');
+        return o;
+    }, BUILD);
+    // 攻撃力基準・スキル100%・共鳴効率は評価しない：価値があるのはクリ率・クリダメ・攻撃力%・攻撃力実数・スキルバフの5種
+    check('価値のある5種だけ出る', r.畳んだ行数, 5);
+    checkTrue('価値0の種類を出す切り替えがある', r.切替ボタン);
+    checkTrue('畳んだ種類の数が分かる', r.ボタンの文言.includes('8種'));
+    check('切り替えると全13種', r.全部の行数, 13);
+    check('もう一度押すと畳む', r.戻した行数, 5);
+    check('③タブの選択も同じ', r.新規の行数, 5);
+    check('未入力のときは全13種', r.未入力の行数, 13);
+    checkTrue('未入力のときは切り替えを出さない', r.未入力で切替なし);
+    checkTrue('③タブの音骸名の欄は無い', r.名前欄なし);
 });
 
 await finish();
