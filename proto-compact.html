@@ -1123,6 +1123,80 @@
         }
 
         /* ED DISPLAY */
+        .reg-layout {
+            max-width: 860px;
+        }
+
+        .reg-type-sw {
+            margin-bottom: 10px;
+        }
+
+        .reg-toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .reg-new-btn {
+            align-self: flex-start;
+            min-height: 36px;
+            padding: 6px 16px;
+        }
+
+        .reg-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .reg-filter .gpk-tab small {
+            margin-left: 4px;
+            font-size: 9px;
+            color: inherit;
+            opacity: .7;
+        }
+
+        .reg-filter .attr-icon {
+            width: 11px;
+            height: 11px;
+            flex-shrink: 0;
+        }
+
+        .reg-close {
+            margin-left: auto;
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        .reg-desc {
+            margin-top: 3px;
+            font-size: 9.5px;
+            color: var(--text3);
+        }
+
+        .reg-desc summary {
+            cursor: pointer;
+            color: var(--p);
+            width: fit-content;
+        }
+
+        .reg-desc > div {
+            margin-top: 2px;
+            line-height: 1.6;
+        }
+
+        .cw-hidden {
+            display: none !important;
+        }
+
+        .cw-add {
+            width: 100%;
+            margin: 4px 0 8px;
+            color: var(--p);
+            font-weight: 700;
+        }
+
         .h-add-btn {
             width: 100%;
             min-height: 36px;
@@ -3258,7 +3332,8 @@
                         <div class="info-box">新規音骸のサブステを入力して「判定する」を押してください。</div>
                     </div>
                 </div>
-                <div class="card">
+                <!-- 判定するまでは中身が無いので出さない -->
+                <div class="card" id="probCard" style="display:none;">
                     <div class="card-head">
                         <h2>強化継続 vs 新規 比較</h2>
                     </div>
@@ -3269,24 +3344,27 @@
             </div>
         </div>
         <div class="info-box" style="font-size:10px;margin-top:0;">
-            ※ 確率計算は鳴潮wiki公開の抽選確率データに基づいています。サブステの<b>種類</b>は全13種の均等抽選、<b>値</b>は種類ごとの実際の出現確率で重み付けしています。モンテカルロ法（20,000試行）による推定のため、実行ごとに小数点以下がわずかに変動します。
+            ※ 確率計算は鳴潮wiki公開の抽選確率データに基づいています。サブステの<b>種類</b>は全13種の均等抽選、<b>値</b>は種類ごとの実際の出現確率で重み付けしています。モンテカルロ法（各2,000件の標本）による推定です。乱数を固定しているので、同じ入力なら毎回同じ結果になります。
         </div>
     </div>
 
     <!-- TAB 4: 登録 -->
     <div id="tab-custom" class="page">
-        <div class="grid2">
+        <div class="reg-layout">
 
-            <!-- 左：切り替えフォーム -->
-            <div class="card">
+            <!-- 種別の切り替え（一覧とフォームで共通） -->
+            <div class="mode-sw reg-type-sw">
+                <button class="mode-btn active" id="regtype_harmony"
+                    onclick="setRegType('harmony',this)">ハーモニー</button>
+                <button class="mode-btn" id="regtype_weapon" onclick="setRegType('weapon',this)">武器</button>
+                <button class="mode-btn" id="regtype_chara" onclick="setRegType('chara',this)">キャラ</button>
+            </div>
+
+            <!-- 登録フォーム。「＋新規登録」か一覧の「編集」で開く -->
+            <div class="card" id="regFormCard" style="display:none;">
                 <div class="card-head" style="gap:10px;">
-                    <h2>登録</h2>
-                    <div class="mode-sw" style="margin:0;flex:1;">
-                        <button class="mode-btn active" id="regtype_harmony"
-                            onclick="setRegType('harmony',this)">ハーモニー</button>
-                        <button class="mode-btn" id="regtype_weapon" onclick="setRegType('weapon',this)">武器</button>
-                        <button class="mode-btn" id="regtype_chara" onclick="setRegType('chara',this)">キャラ</button>
-                    </div>
+                    <h2 id="reg_form_head">新規登録</h2>
+                    <button type="button" class="btn reg-close" onclick="closeRegForm()">閉じる ✕</button>
                 </div>
                 <div class="card-body">
 
@@ -3394,8 +3472,10 @@
                                             placeholder="0"><span class="unit">%</span></div>
                                 </div>
                             </div>
+                            <div class="cw-add-slot"></div>
                             <div class="sec-title" style="color:#7c3aed;margin-top:4px;">5セット効果（2セット込み累計）</div>
                         </div>
+                        <div id="cSet5Block">
                         <div class="sec-title" id="cSet5Title" style="color:#7c3aed;display:none;">3セット効果</div>
                         <div class="cw-grid">
                             <div class="cw-field"><label>属性ダメバフ</label>
@@ -3476,6 +3556,7 @@
                                         class="unit">%</span></div>
                             </div>
                         </div>
+                        </div><!-- /cSet5Block -->
                         <div class="divider"></div>
                         <div class="cw-field" style="margin-bottom:8px;"><label>説明（任意）</label><input type="text"
                                 id="cDesc" placeholder="発動条件など"></div>
@@ -3524,7 +3605,7 @@
                             <input type="text" id="ch_desc" placeholder="例：精錬5、パッシブ込み">
                         </div>
                         <button class="btn btn-p" onclick="addCharaEntry()" style="width:100%;">武器を登録</button>
-                        <button class="btn" class="cha-cancel-edit" onclick="cancelCharaEdit()"
+                        <button class="btn cha-cancel-edit" onclick="cancelCharaEdit()"
                             style="width:100%;margin-top:6px;display:none;">編集をやめる</button>
                     </div>
 
@@ -3589,17 +3670,21 @@
                             <input type="text" id="ch_desc_c" placeholder="例：共鳴スキルLv10、パッシブ込み">
                         </div>
                         <button class="btn btn-p" onclick="addCharaEntry()" style="width:100%;">キャラを登録</button>
-                        <button class="btn" class="cha-cancel-edit" onclick="cancelCharaEdit()"
+                        <button class="btn cha-cancel-edit" onclick="cancelCharaEdit()"
                             style="width:100%;margin-top:6px;display:none;">編集をやめる</button>
                     </div>
 
                 </div>
             </div>
 
-            <!-- 右：登録済みリスト -->
+            <!-- 登録済みの一覧（このタブの主役） -->
             <div class="card">
                 <div class="card-head">
                     <h2 id="reg_list_head">登録済みハーモニー</h2>
+                </div>
+                <div class="card-body reg-toolbar" id="regToolbar">
+                    <button type="button" class="btn btn-p reg-new-btn" id="regNewBtn" onclick="openRegForm()">＋ 新規登録</button>
+                    <div class="reg-filter" id="regFilter" role="tablist"></div>
                 </div>
                 <div id="customList" class="card-body">
                     <div style="color:var(--text3);font-size:11px;">登録データなし</div>
@@ -6760,6 +6845,7 @@
         // compare: 比較先スロットのスコア＝合格ライン
         function updateProbability(remainSlots, needed, existingKeys = [], compare = null, slotIdx = 0, existingSubs = null) {
             const d = document.getElementById('probResult'); if (!d) return;
+            const card = document.getElementById('probCard'); if (card) card.style.display = '';
             const E = getPartials().E;
             const line = compare != null ? compare : needed;
             if (E <= 0) { d.innerHTML = ''; return; }
@@ -6981,6 +7067,8 @@
 
         function clearHarmonyForm() {
             H_FIELD_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            resetCompactShown();
+            compactRegForm();
         }
 
         // 保存済みのバフ値をフォームに戻す。
@@ -7001,6 +7089,7 @@
             if (btn) btn.textContent = id ? 'ハーモニーの変更を保存' : 'ハーモニーを登録';
             const cancel = document.getElementById('hCancelEdit');
             if (cancel) cancel.style.display = id ? 'block' : 'none';
+            updateRegFormHead();
         }
 
         function editCustomHarmony(id) {
@@ -7016,6 +7105,8 @@
             fillBuffForm('c2', h.set2 || B(), attr);
             setHarmonyEditMode(id);
             renderCustomList();
+            resetCompactShown();
+            openRegForm();
             const nameEl = document.getElementById('cName');
             if (nameEl) { nameEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); nameEl.focus(); }
         }
@@ -7054,7 +7145,9 @@
             try { localStorage.setItem('echo_custom_h', JSON.stringify(custom)); } catch { }
             clearHarmonyForm();
             setHarmonyEditMode(null);
+            closeRegForm();
             renderCustomList();
+            renderRegFilter();
             buildHarmonyPicker();
             recalcAll();
         }
@@ -7064,6 +7157,7 @@
             try { localStorage.setItem('echo_custom_h', JSON.stringify(custom)); } catch { }
             if (editingHarmonyId === id) { clearHarmonyForm(); setHarmonyEditMode(null); }
             renderCustomList();
+            renderRegFilter();
             buildHarmonyPicker();
         }
 
@@ -7072,7 +7166,8 @@
             // 固定プリセット（HARMONIES）とユーザー登録分の両方を出す。
             // 以前はユーザー登録分しか見ておらず、①タブのピッカーには30件出るのに
             // ここには1件も出ないという食い違いがあった。
-            const list = allHarmonies();
+            const f = regFilter.harmony;
+            const list = allHarmonies().filter(h => !f || regItemTab('harmony', h) === f);
             if (!list.length) { d.innerHTML = '<div style="color:var(--text3);font-size:11px;">登録データなし</div>'; return; }
             const bLabel = k => ({
                 base_atk: '基礎攻撃力', base_hp: '基礎HP', base_def: '基礎防御力',
@@ -7104,7 +7199,8 @@
       <div style="flex:1;min-width:0;">
         <div style="font-size:11px;font-weight:500;">${esc(h.name)} <span style="font-size:9px;color:var(--text3);font-weight:400;">${esc(h.setType)}</span>${h.id === editingHarmonyId ? ' <span style="font-size:9px;color:var(--p)">編集中</span>' : ''}</div>
         ${s2str ? `<div style="font-size:9px;color:#2563eb;">2セット: ${s2str}</div>` : ''}
-        <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : h.setType === '1' ? '1セット: ' : '3セット: '}${s5str || '未設定'}${h.desc ? `<span style="color:var(--text3);margin-left:5px;">${esc(h.desc)}</span>` : ''}</div>
+        <div style="font-size:9px;color:var(--text2);">${h.setType === '2+5' ? '5セット: ' : h.setType === '1' ? '1セット: ' : '3セット: '}${s5str || '未設定'}</div>
+        ${h.desc ? `<details class="reg-desc"><summary>発動条件・説明</summary><div>${esc(h.desc)}</div></details>` : ''}
         ${warn}
       </div>
       ${isBuiltin
@@ -7143,6 +7239,121 @@
             document.getElementById('customList').style.display = type === 'harmony' ? '' : 'none';
             document.getElementById('charaList').style.display = (type === 'weapon' || type === 'chara') ? '' : 'none';
             if (type === 'weapon' || type === 'chara') { charaType = type; renderCharaList(); }
+            renderRegFilter();
+            updateRegFormHead();
+            compactRegForm();
+        }
+
+        // ================================================================
+        // 登録タブ：一覧が主役。フォームは「＋新規登録」か「編集」で開く
+        // ================================================================
+        const REG_LABEL = { harmony: 'ハーモニー', weapon: '武器', chara: 'キャラ' };
+
+        function updateRegFormHead() {
+            const h = document.getElementById('reg_form_head'); if (!h) return;
+            const editing = regType === 'harmony' ? editingHarmonyId : editingCharaId;
+            h.textContent = `${REG_LABEL[regType]}を${editing ? '編集' : '新規登録'}`;
+        }
+
+        function openRegForm() {
+            const card = document.getElementById('regFormCard'); if (!card) return;
+            card.style.display = '';
+            const nb = document.getElementById('regNewBtn'); if (nb) nb.style.display = 'none';
+            updateRegFormHead();
+            compactRegForm();
+            card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        }
+
+        function closeRegForm() {
+            if (editingHarmonyId) cancelHarmonyEdit();
+            if (editingCharaId) cancelCharaEdit();
+            const card = document.getElementById('regFormCard'); if (card) card.style.display = 'none';
+            const nb = document.getElementById('regNewBtn'); if (nb) nb.style.display = '';
+        }
+
+        // 一覧の絞り込み（ハーモニー・キャラは属性、武器は武器種）。登録が増えても探せるように
+        const regFilter = { harmony: '', weapon: '', chara: '' };
+
+        function regItemTab(type, e) {
+            if (type === 'weapon') return WEAPON_TYPES.includes(e.weaponType) ? e.weaponType : 'その他';
+            const a = type === 'chara' ? (e.attr || inferCharaAttr(e)) : e.attr;
+            return a && ATTR[a] ? a : 'other';
+        }
+
+        function regItems(type) { return type === 'harmony' ? allHarmonies() : getCharaEntries(type); }
+
+        function renderRegFilter() {
+            const d = document.getElementById('regFilter'); if (!d) return;
+            const type = regType;
+            const items = regItems(type);
+            const tabs = type === 'weapon' ? weaponTabs() : attrTabs();
+            const counts = {};
+            items.forEach(e => { const k = regItemTab(type, e); counts[k] = (counts[k] || 0) + 1; });
+            if (regFilter[type] && !counts[regFilter[type]]) regFilter[type] = '';
+            const btn = (key, label, cnt, icon = '') =>
+                `<button type="button" role="tab" class="gpk-tab${regFilter[type] === key ? ' active' : ''}" aria-selected="${regFilter[type] === key}"
+        onclick="setRegFilter('${key}')">${icon}<span>${esc(label)}</span><small>${cnt}</small></button>`;
+            d.innerHTML = btn('', 'すべて', items.length)
+                + tabs.filter(t => counts[t.key]).map(t => btn(t.key, t.label, counts[t.key], t.iconHtml || '')).join('');
+        }
+
+        function setRegFilter(key) {
+            regFilter[regType] = key;
+            renderRegFilter();
+            if (regType === 'harmony') renderCustomList(); else renderCharaList();
+        }
+
+        // 効果の入力欄は値の入っているものだけ出し、残りは「＋効果を追加」から1つずつ出す。
+        // 1つのセット効果に入るのは2〜3項目なので、13欄すべてを並べる必要はない。
+        // 名前・基礎ステ・属性ダメバフ・ダメージ比率など、ほぼ必ず入れる欄は常に出す。
+        const REG_KEEP_IDS = ['c2Dmg', 'cDmg', 'ch_base_atk', 'ch_base_atk_c', 'ch_base_hp_c', 'ch_base_def_c'];
+        const REG_COMPACT_AREAS = ['cSet2Block', 'cSet5Block', 'chFieldsWeapon', 'chFieldsChara'];
+
+        function compactRegForm() {
+            REG_COMPACT_AREAS.forEach(id => {
+                const area = document.getElementById(id); if (!area) return;
+                const fields = [...area.querySelectorAll('.cw-field')].filter(f => f.querySelector('input[type=number]'));
+                const hidden = [];
+                fields.forEach(f => {
+                    const inp = f.querySelector('input[type=number]');
+                    const keep = REG_KEEP_IDS.includes(inp.id) || f.dataset.shown === '1' || n(inp.value) !== 0;
+                    f.classList.toggle('cw-hidden', !keep);
+                    if (!keep) hidden.push(f);
+                });
+                // 欄が1つも出ていない見出しは見出しごと畳む
+                area.querySelectorAll('.cw-grid').forEach(g => {
+                    const any = [...g.querySelectorAll(':scope > .cw-field')].some(f => !f.classList.contains('cw-hidden'));
+                    g.classList.toggle('cw-hidden', !any);
+                    const title = g.previousElementSibling;
+                    if (title && title.classList.contains('sec-title') && title.dataset.compactTitle !== 'keep') {
+                        title.classList.toggle('cw-hidden', !any);
+                    }
+                });
+                let add = area.querySelector('.cw-add');
+                if (!add) {
+                    add = document.createElement('select');
+                    add.className = 'cw-add';
+                    add.setAttribute('aria-label', '効果を追加');
+                    add.onchange = () => {
+                        const f = fields.find(x => x.querySelector('input').id === add.value);
+                        if (f) { f.dataset.shown = '1'; compactRegForm(); f.querySelector('input').focus(); }
+                    };
+                    const slot = area.querySelector('.cw-add-slot');
+                    if (slot) slot.appendChild(add); else area.appendChild(add);
+                }
+                add.style.display = hidden.length ? '' : 'none';
+                add.innerHTML = `<option value="">＋ 効果を追加（${hidden.length}）</option>` + hidden.map(f => {
+                    const g = f.closest('.cw-grid');
+                    const title = g && g.previousElementSibling && g.previousElementSibling.classList.contains('sec-title')
+                        ? g.previousElementSibling.textContent.trim() + '：' : '';
+                    return `<option value="${f.querySelector('input').id}">${esc(title + f.querySelector('label').textContent.trim())}</option>`;
+                }).join('');
+            });
+        }
+
+        // フォームを空にしたら「＋効果を追加」で出した欄も畳み直す
+        function resetCompactShown() {
+            REG_COMPACT_AREAS.forEach(id => document.getElementById(id)?.querySelectorAll('.cw-field').forEach(f => { delete f.dataset.shown; }));
         }
         function setCharaType(type, btn) {
             // 種別を跨いで編集状態が残ると、別種のフォームに値が残って紛らわしい
@@ -7511,15 +7722,18 @@
             const wt = entry ? (entry.weaponType || '') : '';
             const wtBtn = wt ? document.querySelector(`#chWeaponTypeBtns .attr-sel-btn[data-wt="${wt}"]`) : null;
             setWeaponType(wt, wtBtn);
+            resetCompactShown();
+            compactRegForm();
         }
 
         // 編集モードの見た目を切り替える
         function setCharaEditMode(id) {
             editingCharaId = id;
             const label = charaType === 'chara' ? 'キャラ' : '武器';
-            const btn = document.querySelector(`#tab-custom [onclick="addCharaEntry()"]`);
+            const btn = document.querySelector(`#form_${charaType} [onclick="addCharaEntry()"]`);
             if (btn) btn.textContent = id ? `${label}の変更を保存` : `${label}を登録`;
             document.querySelectorAll('.cha-cancel-edit').forEach(el => { el.style.display = id ? 'block' : 'none'; });
+            updateRegFormHead();
         }
 
         function editCharaEntry(type, id) {
@@ -7530,6 +7744,7 @@
             fillCharaForm(entry);
             setCharaEditMode(id);
             renderCharaList();
+            openRegForm();
             const nameEl = charaField('name');
             if (nameEl) { nameEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); nameEl.focus(); }
         }
@@ -7578,7 +7793,9 @@
             saveCharaEntries(charaType, list);
             fillCharaForm(null);
             setCharaEditMode(null);
+            closeRegForm();
             renderCharaList();
+            renderRegFilter();
                         initCollapsibleSections();
                         initCardCollapse();
 rebuildCharaWeaponSelects();
@@ -7589,6 +7806,7 @@ rebuildCharaWeaponSelects();
             saveCharaEntries(type, list);
             if (editingCharaId === id) { fillCharaForm(null); setCharaEditMode(null); }
             renderCharaList();
+            renderRegFilter();
                         initCollapsibleSections();
                         initCardCollapse();
 rebuildCharaWeaponSelects();
@@ -7596,7 +7814,8 @@ rebuildCharaWeaponSelects();
 
         function renderCharaList() {
             const d = document.getElementById('charaList'); if (!d) return;
-            const list = getCharaEntries(charaType);
+            const f = regFilter[charaType];
+            const list = getCharaEntries(charaType).filter(e => !f || regItemTab(charaType, e) === f);
             if (!list.length) { d.innerHTML = '<div style="color:var(--text3);font-size:11px;">登録データなし</div>'; return; }
             d.innerHTML = list.map(e => {
                 const chLabel = { base_atk: '基礎攻撃力', base_hp: '基礎HP', base_def: '基礎防御力',
@@ -7620,7 +7839,7 @@ rebuildCharaWeaponSelects();
         <div style="font-size:11px;font-weight:500;">${attrStr}${wtStr}${esc(e.name)}${e.id === editingCharaId ? ' <span style="font-size:9px;color:var(--p)">編集中</span>' : ''}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:2px;">${buffParts.join('　') || 'ステータス未設定'}</div>
         ${ratioStr ? `<div style="font-size:9px;color:var(--p);margin-top:2px;">${ratioStr}</div>` : ''}
-        ${e.desc ? `<div style="font-size:9px;color:var(--text3);margin-top:1px;">${esc(e.desc)}</div>` : ''}
+        ${e.desc ? `<details class="reg-desc"><summary>説明</summary><div>${esc(e.desc)}</div></details>` : ''}
       </div>
       ${e._builtin
                         ? '<span style="font-size:9px;color:var(--text3);padding:2px 6px;border:1px solid var(--border);border-radius:3px;">固定</span>'
@@ -7722,6 +7941,8 @@ rebuildCharaWeaponSelects();
             buildNewSubs();
             renderCustomList();
             renderCharaList();
+            renderRegFilter();
+            compactRegForm();
                         initCollapsibleSections();
                         initCardCollapse();
 rebuildCharaWeaponSelects(false);

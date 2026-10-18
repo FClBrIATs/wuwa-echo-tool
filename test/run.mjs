@@ -2073,4 +2073,85 @@ await withPage(async page => {
     checkTrue('ページは横スクロールしない', r.ページ横スクロールなし);
 });
 
+suite('③タブ：判定前は比較カードを出さない');
+await withPage(async page => {
+    const r = await page.evaluate(b => {
+        eval(b);
+        S.echoes[0].subs = [{ key: 'crit_dmg', val: '13.8' }, { key: 'atk_pct', val: '7.1' },
+        { key: '', val: '' }, { key: '', val: '' }, { key: '', val: '' }];
+        buildEchoGrid(); recalcAll();
+        const shown = () => document.getElementById('probCard').style.display !== 'none';
+        const o = { 判定前: shown() };
+        document.getElementById('newLevel').value = '10';
+        setNewSub(0, 'crit_rate', 8.1); setNewSub(1, 'crit_dmg', 16.2);
+        runJudge();
+        o.判定後 = shown();
+        o.注記 = document.querySelector('#tab-new > .info-box').textContent;
+        return o;
+    }, BUILD);
+    checkTrue('判定前は出さない', !r.判定前);
+    checkTrue('判定すると出る', r.判定後);
+    checkTrue('注記は実装どおり（2,000件・毎回同じ）', r.注記.includes('2,000件') && r.注記.includes('毎回同じ') && !r.注記.includes('20,000'));
+});
+
+suite('登録タブ：一覧が主役、フォームは新規登録・編集で開く');
+await withPage(async page => {
+    const r = await page.evaluate(() => {
+        [...document.querySelectorAll('.tab-btn')].find(x => x.textContent.includes('登録')).click();
+        const shown = () => document.getElementById('regFormCard').style.display !== 'none';
+        const visible = id => { const el = document.getElementById(id); return !!el && !el.closest('.cw-hidden'); };
+        const o = { 最初は閉じている: !shown() };
+        document.getElementById('regNewBtn').click();
+        o.新規登録で開く = shown();
+        o.見出し = document.getElementById('reg_form_head').textContent;
+        // 値の無い効果欄は畳み、属性ダメバフは常に出す
+        o.属性ダメバフは出る = visible('c2Dmg') && visible('cDmg');
+        o.クリ率は畳む = !visible('cCR');
+        const add = document.querySelector('#cSet5Block .cw-add');
+        add.value = 'cCR'; add.dispatchEvent(new Event('change'));
+        o.追加で出る = visible('cCR');
+        document.getElementById('cName').value = '折りたたみテスト';
+        document.getElementById('cCR').value = '12';
+        addCustomHarmony();
+        o.登録で閉じる = !shown();
+        // 編集で開くと、値の入っている欄は出ている
+        const mine = customHarmonies().find(h => h.name === '折りたたみテスト');
+        editCustomHarmony(mine.id);
+        o.編集で開く = shown();
+        o.編集の見出し = document.getElementById('reg_form_head').textContent;
+        o.値のある欄は出る = visible('cCR');
+        o.値の無い欄は畳む = !visible('cCD');
+        closeRegForm();
+        o.閉じると編集も終わる = editingHarmonyId === null && !shown();
+        // 絞り込み
+        const total = document.querySelectorAll('#customList .custom-item').length;
+        setRegFilter('fire');
+        const fire = [...document.querySelectorAll('#customList .custom-item')];
+        o.絞り込み = [fire.length > 0, fire.length < total];
+        o.焦熱だけ = fire.every(x => x.querySelector('.attr-icon').classList.contains('si-fire'));
+        setRegFilter('');
+        o.すべてに戻る = document.querySelectorAll('#customList .custom-item').length === total;
+        // 武器は武器種で絞る
+        setRegType('weapon');
+        o.武器のタブ = [...document.querySelectorAll('#regFilter .gpk-tab')].map(b => b.querySelector('span').textContent);
+        return o;
+    });
+    checkTrue('フォームは最初は閉じている', r.最初は閉じている);
+    checkTrue('「＋新規登録」で開く', r.新規登録で開く);
+    check('見出しは新規登録', r.見出し, 'ハーモニーを新規登録');
+    checkTrue('属性ダメバフは常に出す', r.属性ダメバフは出る);
+    checkTrue('値の無い効果欄は畳む', r.クリ率は畳む);
+    checkTrue('「＋効果を追加」で欄が出る', r.追加で出る);
+    checkTrue('登録するとフォームを閉じる', r.登録で閉じる);
+    checkTrue('一覧の「編集」で開く', r.編集で開く);
+    check('見出しは編集', r.編集の見出し, 'ハーモニーを編集');
+    checkTrue('編集では値のある欄が出る', r.値のある欄は出る);
+    checkTrue('編集でも値の無い欄は畳む', r.値の無い欄は畳む);
+    checkTrue('閉じると編集状態も終わる', r.閉じると編集も終わる);
+    check('属性で絞り込める', r.絞り込み, [true, true]);
+    checkTrue('絞り込むとその属性だけ', r.焦熱だけ);
+    checkTrue('「すべて」で戻る', r.すべてに戻る);
+    checkTrue('武器は武器種のタブ', r.武器のタブ[0] === 'すべて' && r.武器のタブ.includes('迅刀'));
+});
+
 await finish();
