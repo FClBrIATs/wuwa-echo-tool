@@ -2041,8 +2041,8 @@
             flex-direction: column;
             align-items: center;
             gap: 1px;
-            min-height: 44px;
-            padding: 4px 2px;
+            min-height: 52px;
+            padding: 5px 2px;
             border: 1px solid var(--border);
             border-radius: 7px;
             background: var(--card);
@@ -2071,8 +2071,9 @@
 
         .slot-tab-n {
             font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px;
+            font-size: 18px;
             font-weight: 700;
+            line-height: 1.1;
         }
 
         .slot-tab-s {
@@ -6111,8 +6112,8 @@
             if (editSlot < 0 || editSlot >= S.echoes.length) editSlot = 0;
             g.innerHTML = `<div class="slot-tabs" role="tablist">${S.echoes.map((e, i) =>
                 `<button type="button" role="tab" class="slot-tab${i === editSlot ? ' on' : ''}" id="stab_${i}"
-        aria-selected="${i === editSlot}" onclick="selectEditSlot(${i})">
-        <span class="slot-tab-n">SLOT ${i + 1}</span><span class="slot-tab-s" id="stabs_${i}"></span></button>`).join('')}</div>`;
+        aria-selected="${i === editSlot}" aria-label="スロット${i + 1}" onclick="selectEditSlot(${i})">
+        <span class="slot-tab-n">${i + 1}</span><span class="slot-tab-s" id="stabs_${i}"></span></button>`).join('')}</div>`;
             g.appendChild(buildEchoCardEl(editSlot));
         }
 
